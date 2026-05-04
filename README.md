@@ -74,13 +74,33 @@ The built extension will be in the `dist\` folder.
 
 ## Installing into Chrome
 
+You can install Web Harvester either using the pre-built output included in this repository, or by building it yourself from source.
+
+### Option 1 — Use the pre-built output (no build required)
+
+The `dist/` folder in this repository contains a ready-to-use build. You can clone the repo and load it directly into Chrome without installing Node.js or pnpm.
+
+```bash
+git clone https://github.com/nitekeeper/web-harvester.git
+```
+
+Then follow the steps below, pointing Chrome at the `dist/` folder inside the cloned directory.
+
+### Option 2 — Build from source
+
+Follow the [Prerequisites](#prerequisites) and [Building](#building) sections above to produce your own `dist/` folder from the source code.
+
+### Loading into Chrome
+
+Once you have the `dist/` folder (from either option):
+
 1. Open Chrome and navigate to `chrome://extensions`
 2. Enable **Developer mode** using the toggle in the top-right corner
 3. Click **Load unpacked**
-4. Select the `dist/` folder inside the project directory
+4. Select the `dist/` folder
 5. The Web Harvester icon will appear in your Chrome toolbar
 
-To update after rebuilding, click the refresh icon on the Web Harvester card on the `chrome://extensions` page.
+To update after rebuilding from source, click the refresh icon on the Web Harvester card on the `chrome://extensions` page.
 
 ---
 
