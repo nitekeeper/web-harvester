@@ -28,7 +28,9 @@ export function SaveButton({ isSaving, isDisabled, onSave }: SaveButtonProps) {
       disabled={isDisabled || isSaving}
       onClick={onSave}
     >
-      {isSaving ? fmt({ id: 'popup.saving' }) : fmt({ id: 'popup.save' })}
+      {isSaving
+        ? fmt({ id: 'popup.saving', defaultMessage: 'Saving…' })
+        : fmt({ id: 'popup.save', defaultMessage: 'Save' })}
     </Button>
   );
 }

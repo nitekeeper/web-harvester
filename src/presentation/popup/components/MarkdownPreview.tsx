@@ -18,7 +18,7 @@ export function MarkdownPreview({ markdown }: MarkdownPreviewProps) {
   if (!markdown) {
     return (
       <p data-testid="markdown-preview" className="text-xs text-muted-foreground italic">
-        {fmt({ id: 'popup.previewEmpty' })}
+        {fmt({ id: 'popup.previewEmpty', defaultMessage: 'Preview will appear here' })}
       </p>
     );
   }

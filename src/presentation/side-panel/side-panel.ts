@@ -9,20 +9,9 @@
 
 import 'reflect-metadata';
 
-import { StrictMode, createElement } from 'react';
-import { createRoot } from 'react-dom/client';
-
 import '@presentation/styles/global.css';
-import { bootstrapTheme } from '@presentation/theme/bootstrapTheme';
+import { mountApp } from '@presentation/lib/mountApp';
 
 import { SidePanel } from './SidePanel';
 
-const rootEl = document.getElementById('root');
-if (!rootEl) throw new Error('Root element not found');
-
-bootstrapTheme()
-  .catch(() => {})
-  .then(() => {
-    createRoot(rootEl).render(createElement(StrictMode, null, createElement(SidePanel)));
-  })
-  .catch(() => {});
+mountApp(SidePanel);

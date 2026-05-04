@@ -26,7 +26,9 @@ export function PickerToggle({ isActive, onToggle }: PickerToggleProps) {
       size="sm"
       onClick={onToggle}
     >
-      {isActive ? fmt({ id: 'popup.picker.stop' }) : fmt({ id: 'popup.picker.start' })}
+      {isActive
+        ? fmt({ id: 'popup.picker.stop', defaultMessage: 'Stop picker' })
+        : fmt({ id: 'popup.picker.start', defaultMessage: 'Start picker' })}
     </Button>
   );
 }

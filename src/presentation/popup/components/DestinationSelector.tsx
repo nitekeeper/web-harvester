@@ -34,7 +34,7 @@ export function DestinationSelector({
   if (destinations.length === 0) {
     return (
       <p data-testid="destination-selector" className="text-sm text-muted-foreground">
-        {fmt({ id: 'popup.noDestinations' })}
+        {fmt({ id: 'popup.noDestinations', defaultMessage: 'No destinations configured' })}
       </p>
     );
   }
@@ -42,7 +42,12 @@ export function DestinationSelector({
   return (
     <Select value={selectedId ?? undefined} onValueChange={onSelect}>
       <SelectTrigger data-testid="destination-selector" className="w-full">
-        <SelectValue placeholder={fmt({ id: 'popup.selectDestination' })} />
+        <SelectValue
+          placeholder={fmt({
+            id: 'popup.selectDestination',
+            defaultMessage: 'Select destination…',
+          })}
+        />
       </SelectTrigger>
       <SelectContent>
         {destinations.map((d) => (

@@ -8,20 +8,9 @@
 
 import 'reflect-metadata';
 
-import { StrictMode, createElement } from 'react';
-import { createRoot } from 'react-dom/client';
-
 import '@presentation/styles/global.css';
-import { bootstrapTheme } from '@presentation/theme/bootstrapTheme';
+import { mountApp } from '@presentation/lib/mountApp';
 
 import { Settings } from './Settings';
 
-const rootEl = document.getElementById('root');
-if (!rootEl) throw new Error('Root element not found');
-
-bootstrapTheme()
-  .catch(() => {})
-  .then(() => {
-    createRoot(rootEl).render(createElement(StrictMode, null, createElement(Settings)));
-  })
-  .catch(() => {});
+mountApp(Settings);

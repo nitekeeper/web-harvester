@@ -31,7 +31,9 @@ export function TemplateSelector({ templates, selectedId, onSelect }: TemplateSe
   return (
     <Select value={selectedId ?? undefined} onValueChange={onSelect}>
       <SelectTrigger data-testid="template-selector" className="w-full">
-        <SelectValue placeholder={fmt({ id: 'popup.selectTemplate' })} />
+        <SelectValue
+          placeholder={fmt({ id: 'popup.selectTemplate', defaultMessage: 'Select template…' })}
+        />
       </SelectTrigger>
       <SelectContent>
         {templates.map((t) => (

@@ -28,7 +28,7 @@ describe('DestinationSelector', () => {
 
   it('shows the empty-state notice when the destinations list is empty', () => {
     render(<DestinationSelector destinations={[]} selectedId={null} onSelect={NOOP} />);
-    expect(screen.getByText('popup.noDestinations')).not.toBeNull();
+    expect(screen.getByText('No destinations configured')).not.toBeNull();
   });
 
   it('renders destination labels when destinations are provided', () => {
