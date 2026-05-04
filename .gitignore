@@ -9,6 +9,7 @@ coverage/
 Thumbs.db
 .vscode/
 .idea/
+.claude/
 docs/superpowers/
 
 # Audit reports (generated at runtime — not committed)
