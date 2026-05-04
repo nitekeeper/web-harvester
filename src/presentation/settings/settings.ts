@@ -1,16 +1,60 @@
 // src/presentation/settings/settings.ts
 //
-// Settings SPA entry point. Mounts the {@link Settings} component into the
-// root element. Composition root wiring (stores, services) lives in a later
-// task; this entry is intentionally minimal so the bundle stays trivially
-// inspectable. Uses `createElement` rather than JSX so the file can keep its
-// `.ts` extension (referenced verbatim from `manifest.chrome.json`).
+// Settings SPA composition root. Wires the chrome.storage adapter to the
+// singleton settings store via `bootstrapStore`, opens the IDB-backed
+// destination storage, pushes its current contents into the store, and then
+// mounts the React tree wrapped in a `DestinationStorageProvider` so the
+// settings sections can pick up the storage facade via context. Uses
+// `createElement` (not JSX) so the file keeps its `.ts` extension referenced
+// verbatim in `manifest.chrome.json`. See ADR-022.
 
 import 'reflect-metadata';
 
-import '@presentation/styles/global.css';
-import { mountApp } from '@presentation/lib/mountApp';
+import { StrictMode, createElement } from 'react';
+import { createRoot } from 'react-dom/client';
 
+import { ChromeAdapter } from '@infrastructure/adapters/chrome/ChromeAdapter';
+import { createDestinationStorage } from '@infrastructure/storage/destinations';
+import type { IDestinationPort } from '@presentation/ports/IDestinationPort';
+import '@presentation/styles/global.css';
+import { bootstrapStore } from '@presentation/stores/bootstrapStore';
+import { useSettingsStore } from '@presentation/stores/useSettingsStore';
+import { bootstrapTheme } from '@presentation/theme/bootstrapTheme';
+import { createLogger } from '@shared/logger';
+
+import { DestinationStorageProvider } from './DestinationStorageContext';
 import { Settings } from './Settings';
 
-mountApp(Settings);
+const logger = createLogger('settings');
+
+async function init(): Promise<void> {
+  const rootEl = document.getElementById('root');
+  if (!rootEl) throw new Error('Root element not found');
+
+  const adapter = new ChromeAdapter();
+  await bootstrapStore(adapter, 'settings-state', useSettingsStore, {
+    serialize: (s) => ({ settings: s.settings, templates: s.templates }),
+  });
+
+  const idbStorage = await createDestinationStorage();
+  // Structural typing: `Destination` matches `DestinationView` field-for-field.
+  const port: IDestinationPort = idbStorage;
+  const destinations = await idbStorage.getAll();
+  useSettingsStore.setState({ destinations });
+
+  bootstrapTheme().catch(() => {});
+  createRoot(rootEl).render(
+    createElement(
+      StrictMode,
+      null,
+      createElement(DestinationStorageProvider, {
+        storage: port,
+        children: createElement(Settings),
+      }),
+    ),
+  );
+}
+
+init().catch((err: unknown) => {
+  logger.error('settings init failed', err);
+});

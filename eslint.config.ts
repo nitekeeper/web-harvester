@@ -223,10 +223,18 @@ export default tseslint.config(
   {
     // Carve-out: the background service worker entry is the extension's
     // composition root and must wire concrete classes from every layer
-    // (infrastructure/core/domain/plugins). See ADR-020.
+    // (infrastructure/core/domain/plugins). See ADR-020. The popup, settings,
+    // and side-panel UI page entry files are also composition roots — each
+    // wires storage adapters and storage facades to the React tree before
+    // mount — and are extended into the same carve-out per ADR-022.
     // The chrome.* and console.* bans remain in force; only the cross-layer
-    // import-direction rule is relaxed for this entry point.
-    files: ['src/presentation/background/**/*.ts'],
+    // import-direction rule is relaxed for these entry points.
+    files: [
+      'src/presentation/background/**/*.ts',
+      'src/presentation/popup/index.tsx',
+      'src/presentation/settings/settings.ts',
+      'src/presentation/side-panel/side-panel.ts',
+    ],
     rules: {
       'import/no-restricted-paths': 'off',
     },

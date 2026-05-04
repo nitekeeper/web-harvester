@@ -43,6 +43,26 @@ export function stripFunctions<T extends object>(state: T): NonFunctionProps<T> 
   ) as NonFunctionProps<T>;
 }
 
+/**
+ * Pulls the `newValue` for `storageKey` out of an `onChanged` payload and
+ * narrows it to `Partial<T>`. Returns `undefined` when the key is absent,
+ * the change record is missing, or the new value is not a plain object —
+ * so callers can guard with a single early return.
+ */
+export function extractKeyChange<T extends object>(
+  changes: Record<string, { oldValue?: unknown; newValue?: unknown }>,
+  storageKey: string,
+): Partial<T> | undefined {
+  if (!Object.prototype.hasOwnProperty.call(changes, storageKey)) return undefined;
+  const change = Reflect.get(changes, storageKey) as
+    | { oldValue?: unknown; newValue?: unknown }
+    | undefined;
+  if (!change) return undefined;
+  const { newValue } = change;
+  if (!newValue || typeof newValue !== 'object') return undefined;
+  return newValue as Partial<T>;
+}
+
 function persistState<T extends object>(
   adapter: IStorageSyncPort,
   storageKey: string,
@@ -77,15 +97,8 @@ function subscribeToExternalChanges<T extends object>(
   apply: (partial: Partial<T>) => void,
 ): void {
   adapter.onChanged((changes) => {
-    if (!Object.prototype.hasOwnProperty.call(changes, storageKey)) return;
-    const change = Reflect.get(changes, storageKey) as
-      | { oldValue?: unknown; newValue?: unknown }
-      | undefined;
-    if (!change) return;
-    const { newValue } = change;
-    if (newValue && typeof newValue === 'object') {
-      apply(newValue as Partial<T>);
-    }
+    const partial = extractKeyChange<T>(changes, storageKey);
+    if (partial) apply(partial);
   });
 }
 

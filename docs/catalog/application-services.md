@@ -216,7 +216,17 @@ Zustand middleware that mirrors a store's data slice into a browser-storage key 
 | -------------------------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `IStorageSyncPort`                                 | Interface | Minimal storage port: `getLocal(key)`, `setLocal(key, value)`, `onChanged(handler)`. Mirrors the relevant slice of infrastructure's `IStorageAdapter`.                                                                                                                         |
 | `stripFunctions<T>(state)`                         | Function  | Returns a copy of `state` with every function-valued property removed; used by the middleware so action methods never reach storage.                                                                                                                                           |
+| `extractKeyChange<T>(changes, storageKey)`         | Function  | Pulls the `newValue` for `storageKey` out of an `onChanged` payload, narrowing it to `Partial<T>`. Returns `undefined` when the key is absent, the change record is missing, or the new value is not a plain object. Shared by `withStorageSync` and `bootstrapStore`.         |
 | `withStorageSync<T>(storageKey, adapter)(creator)` | Function  | Curried Zustand middleware. First call captures `storageKey` and the adapter; the returned wrapper takes a `StateCreator<T, [], []>` and produces a new one that mirrors state to storage on every `set()`, hydrates from storage on creation, and reacts to external changes. |
+
+### `src/presentation/stores/bootstrapStore.ts`
+
+Generic async utility that wires chrome.storage sync to an existing Zustand singleton. Singletons in this codebase (`useSettingsStore`, `usePopupStore`) are created without `withStorageSync` so the entry point that owns the adapter (popup, settings, side-panel — see ADR-022) can plug in the concrete `IStorageSyncPort` at boot time. Loads the persisted slice first so the React tree never renders empty when storage already has data, then wires the persistence subscriber and the `onChanged` listener; an internal `applyingExternal` flag suppresses persistence while applying external changes so we never echo a value we just received.
+
+| Name                                                      | Kind      | Description                                                                                                                                                                                                                                                                                                      |
+| --------------------------------------------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `BootstrapStoreOptions<T>`                                | Interface | Optional configuration: `serialize?: (state: T) => Partial<T>` selects the slice persisted to storage. Use to drop fields that are not serializable (e.g. `FileSystemDirectoryHandle` in the settings store). When omitted, every non-function property is persisted via `stripFunctions`.                       |
+| `bootstrapStore<T>(adapter, storageKey, store, options?)` | Function  | Async — loads initial state, wires `store.subscribe()` for persistence, and wires `adapter.onChanged()` for inbound updates. Resolves once initial hydration completes (whether it succeeded or failed); subscribers are wired in either case so subsequent writes still flow even after a transient load error. |
 
 ### `src/presentation/stores/usePopupStore.ts`
 
@@ -228,7 +238,7 @@ Popup state slice — UI-local data plus mutators — exposed in two flavours so
 | `PickerResult`              | Interface | Output of the element picker overlay: `{ excludedXPaths: readonly string[] }`.                                                                                                                                                                                                                                                                                    |
 | `PopupStoreState`           | Interface | Full slice — eight data fields (`activeTab`, `selectedDestinationId`, `selectedTemplateId`, `isPickerActive`, `pickerResult`, `previewMarkdown`, `isSaving`, `error`) plus nine actions (`setActiveTab`, `setSelectedDestinationId`, `setSelectedTemplateId`, `setPickerActive`, `setPickerResult`, `setPreviewMarkdown`, `setSaving`, `setError`, `clearError`). |
 | `createPopupStore(adapter)` | Function  | Test-facing factory. Builds a fresh `createStore`-style popup store wired to `withStorageSync` against the supplied adapter. Storage key: `popup-state`.                                                                                                                                                                                                          |
-| `usePopupStore`             | Hook      | Singleton React hook variant created without storage sync; entry-point code is responsible for wiring sync because it knows which `IStorageAdapter` to inject.                                                                                                                                                                                                    |
+| `usePopupStore`             | Hook      | Singleton React hook variant created without storage sync; entry-point code wires sync via `bootstrapStore` because it owns the concrete `IStorageAdapter` (see ADR-022).                                                                                                                                                                                         |
 
 ### `src/presentation/stores/useSettingsStore.ts`
 
@@ -239,7 +249,7 @@ Settings state slice — global settings record, destinations list, templates li
 | `DestinationView`              | Interface | Presentation-layer view of a persisted destination folder. Mirrors `Destination` from `@infrastructure/storage/destinations` so the store can hold the full record without importing infrastructure.                                                                |
 | `SettingsStoreState`           | Interface | Full slice — four data fields (`settings`, `destinations`, `templates`, `isLoading`) plus five actions (`setSettings`, `updateSettings`, `setDestinations`, `setTemplates`, `setLoading`). `updateSettings` merges a partial into the current `AppSettings` record. |
 | `createSettingsStore(adapter)` | Function  | Test-facing factory. Builds a fresh `createStore`-style settings store wired to `withStorageSync` against the supplied adapter. Storage key: `settings-state`.                                                                                                      |
-| `useSettingsStore`             | Hook      | Singleton React hook variant created without storage sync; entry-point code is responsible for wiring sync because it knows which `IStorageAdapter` to inject.                                                                                                      |
+| `useSettingsStore`             | Hook      | Singleton React hook variant created without storage sync; entry-point code wires sync via `bootstrapStore` because it owns the concrete `IStorageAdapter` (see ADR-022).                                                                                           |
 
 ### `src/presentation/hooks/useFormatMessage.ts`
 
@@ -266,7 +276,7 @@ Plugin UI slot registry hook + React context provider. Plugins call `register(sl
 
 ### `src/presentation/popup/Popup.tsx` and `src/presentation/popup/components/*`
 
-Popup React UI shell. The root `Popup` mounts a fixed-width vertical stack: toolbar slot, destination/template selectors, picker toggle, markdown preview, save button. Components are rendered with safe inert defaults; state wiring (stores, services) is added by the popup composition root in a later task.
+Popup React UI shell. The root `Popup` mounts a fixed-width vertical stack: toolbar slot, destination/template selectors, picker toggle, markdown preview, and save button. State wiring is performed by the popup composition root (`popup/index.tsx`), which awaits `bootstrapStore` for both singleton stores before mounting the React tree (see ADR-022).
 
 | Name                  | Kind      | Description                                                                                                                                                                                                    |
 | --------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -278,9 +288,45 @@ Popup React UI shell. The root `Popup` mounts a fixed-width vertical stack: tool
 | `SaveButton`          | Component | Primary action button. Disabled when `isDisabled` is set or `isSaving` is true; the label switches to the "saving" string during the in-flight window. `data-testid="save-button"`.                            |
 | `PickerToggle`        | Component | Start/stop toggle for the visual element picker. Uses the destructive variant while active. `data-testid="picker-toggle"`.                                                                                     |
 
+### `src/presentation/ports/IDestinationPort.ts`
+
+Presentation-layer port interface for destination CRUD. Lets settings components depend on an abstraction instead of the infrastructure facade `IDestinationStorage` (which would violate the layer rule). The settings composition root has the ESLint carve-out (ADR-022) and assigns the concrete `IDestinationStorage` to this port via structural typing — the shapes are deliberately identical (`Destination` matches `DestinationView` field-for-field).
+
+| Name               | Kind      | Description                                                                                                                                                                                                                          |
+| ------------------ | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `IDestinationPort` | Interface | CRUD facade over the persisted destinations store: `add(label, dirHandle)`, `getAll()`, `update(id, changes)`, `remove(id)`. Conforming infrastructure implementations are bound by the settings composition root via React context. |
+
+### `src/presentation/settings/DestinationStorageContext.tsx`
+
+React context that provides an `IDestinationPort` to the settings component tree. The settings composition root creates the concrete destination storage facade and wraps the React tree in `<DestinationStorageProvider storage={...}>` so hooks downstream (e.g. `useDestinationHandlers`) can pick it up via `useContext`.
+
+| Name                              | Kind      | Description                                                                                                                                          |
+| --------------------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DestinationStorageContext`       | Constant  | `React.Context<IDestinationPort \| null>` — `null` when no provider is mounted (e.g. tests that mount one section without wiring storage).           |
+| `DestinationStorageProviderProps` | Interface | `{ storage: IDestinationPort; children: ReactNode }`.                                                                                                |
+| `DestinationStorageProvider`      | Component | Wraps `children` with the context so descendant components can read the storage facade. Mounted by the settings composition root once per page load. |
+
+### `src/presentation/settings/useDestinationHandlers.ts`
+
+Hook that composes the FSA picker, the destination storage facade (read from `DestinationStorageContext`), and the global settings store into the three async handlers consumed by `DestinationsSection`. Each handler refreshes the `destinations` slice in the store after its mutation completes so the UI stays in sync with the IDB-backed truth. When no provider is mounted the handlers log a warning and return without mutating state, so render trees that do not need destination management stay safe to use.
+
+| Name                       | Kind      | Description                                                                                                                                                                                                                              |
+| -------------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DestinationHandlers`      | Interface | `{ onAdd; onRemove; onRename }` — all `Promise<void>`-returning. `onAdd` opens `window.showDirectoryPicker` and persists the choice; `onRemove` deletes by id; `onRename` updates the `label` field. Each refreshes the store afterward. |
+| `useDestinationHandlers()` | Hook      | Returns memoised `DestinationHandlers` wired to the storage facade in context.                                                                                                                                                           |
+
+### `src/presentation/settings/useTemplateHandlers.ts`
+
+Hook that produces the three async handlers consumed by `TemplatesSection`. Templates live only in the Zustand settings store (no IDB), so each handler is a pure store mutation; persistence to chrome.storage is handled by `bootstrapStore` watching the settings store.
+
+| Name                    | Kind      | Description                                                                                                                                                                            |
+| ----------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TemplateHandlers`      | Interface | `{ onAdd; onRemove; onUpdate }` — all `Promise<void>`-returning. `onAdd` appends a new template with `crypto.randomUUID()` id; `onUpdate` merges field changes by id.                  |
+| `useTemplateHandlers()` | Hook      | Returns memoised `TemplateHandlers` wired to the singleton settings store. Reads `templates` and `setTemplates` via the store hook so handlers always operate on the current snapshot. |
+
 ### `src/presentation/settings/Settings.tsx` and `src/presentation/settings/sections/*`
 
-Settings SPA mounted by the extension's `options_ui` page. The root `Settings` component renders a `Tabs`-based shell with five sections — General, Destinations, Templates, Theme, Debug — each rendered with safe inert defaults so the shell can render before the settings composition root wires real handlers. The entry point lives at `settings.html` + `settings.ts` (uses `React.createElement` so the `.ts` file referenced by `manifest.chrome.json` does not need JSX transformation).
+Settings SPA mounted by the extension's `options_ui` page. The root `Settings` component renders a `Tabs`-based shell with five sections — General, Destinations, Templates, Theme, Debug. Real handlers are wired via `useDestinationHandlers` and `useTemplateHandlers`; the destinations and templates slices are read from the singleton `useSettingsStore`. The entry point at `settings.html` + `settings.ts` is the page's composition root (ADR-022) and uses `React.createElement` so the `.ts` file referenced by `manifest.chrome.json` does not need JSX transformation.
 
 | Name                  | Kind      | Description                                                                                                                                                                                                                                                                                                                   |
 | --------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -294,7 +340,7 @@ Settings SPA mounted by the extension's `options_ui` page. The root `Settings` c
 
 ### `src/presentation/side-panel/SidePanel.tsx`
 
-Compact clipping surface mounted by the Chrome side panel (`side_panel.default_path` in `manifest.chrome.json`). Reuses the popup's `DestinationSelector`, `MarkdownPreview`, and `SaveButton` components but omits the broader settings/template navigation so the side panel stays focused on the clip-now workflow. Reads from the shared `usePopupStore` and `useSettingsStore` singletons; storage sync is wired by the side-panel composition root in a later task. The save handler dispatches a `SAVE_CLIP` IPC message to the background service worker — a sanctioned boundary documented in the plan, gated by a narrow file-scoped `no-restricted-syntax` disable on the single send-message call. Entry point lives at `side-panel.html` + `side-panel.ts` (uses `React.createElement` so the `.ts` file referenced by `manifest.chrome.json` does not need JSX transformation).
+Compact clipping surface mounted by the Chrome side panel (`side_panel.default_path` in `manifest.chrome.json`). Reuses the popup's `DestinationSelector`, `MarkdownPreview`, and `SaveButton` components but omits the broader settings/template navigation so the side panel stays focused on the clip-now workflow. Reads from the shared `usePopupStore` and `useSettingsStore` singletons; storage sync is wired by the side-panel composition root (`side-panel.ts`) via `bootstrapStore` (ADR-022). The save handler dispatches a `SAVE_CLIP` IPC message to the background service worker — a sanctioned boundary documented in the plan, gated by a narrow file-scoped `no-restricted-syntax` disable on the single send-message call. Entry point lives at `side-panel.html` + `side-panel.ts` (uses `React.createElement` so the `.ts` file referenced by `manifest.chrome.json` does not need JSX transformation).
 
 | Name        | Kind      | Description                                                                                                                                              |
 | ----------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
