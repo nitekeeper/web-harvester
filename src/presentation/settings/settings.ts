@@ -42,7 +42,9 @@ async function init(): Promise<void> {
   const destinations = await idbStorage.getAll();
   useSettingsStore.setState({ destinations });
 
-  bootstrapTheme().catch(() => {});
+  bootstrapTheme().catch((err: unknown) => {
+    logger.error('theme bootstrap failed', err);
+  });
   createRoot(rootEl).render(
     createElement(
       StrictMode,

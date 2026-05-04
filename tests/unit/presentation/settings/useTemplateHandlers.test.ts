@@ -37,6 +37,22 @@ describe('useTemplateHandlers — onAdd', () => {
     expect(stored[0]?.name).toBe('Sample');
     expect(stored[0]?.id).toBeTruthy();
   });
+
+  it('preserves both items when two onAdd calls fire before re-render', async () => {
+    // Regression: handlers used to capture `templates` in a useCallback
+    // closure, so the second mutation overwrote the first when both fired
+    // inside one act() (no re-render between them). Reading fresh store
+    // state inside each callback makes the additions cumulative.
+    const second: Omit<TemplateConfig, 'id'> = { ...newTemplate, name: 'Second' };
+    const { result } = renderHook(() => useTemplateHandlers());
+    await act(async () => {
+      await result.current.onAdd(newTemplate);
+      await result.current.onAdd(second);
+    });
+    const stored = useSettingsStore.getState().templates;
+    expect(stored).toHaveLength(2);
+    expect(stored.map((t) => t.name).sort()).toEqual(['Sample', 'Second']);
+  });
 });
 
 describe('useTemplateHandlers — onRemove', () => {

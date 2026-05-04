@@ -43,7 +43,9 @@ async function refresh(storage: IDestinationPort): Promise<void> {
 /**
  * Opens the FSA directory picker (when available) and persists the user's
  * choice via the supplied storage facade, then refreshes the store. Logs and
- * returns a no-op result if the picker is not available in the host browser.
+ * returns a no-op result if the picker is not available in the host browser,
+ * or if the user cancels the OS dialog (which surfaces as a `DOMException`
+ * named `AbortError`). Any other rejection is re-thrown.
  */
 async function pickAndAdd(storage: IDestinationPort): Promise<void> {
   // `showDirectoryPicker` is a standard browser API but is not yet in the
@@ -56,7 +58,16 @@ async function pickAndAdd(storage: IDestinationPort): Promise<void> {
     logger.warn('showDirectoryPicker is unavailable');
     return;
   }
-  const dirHandle = await picker({ mode: 'readwrite' });
+  let dirHandle: FileSystemDirectoryHandle;
+  try {
+    dirHandle = await picker({ mode: 'readwrite' });
+  } catch (err: unknown) {
+    if (err instanceof DOMException && err.name === 'AbortError') {
+      logger.info('directory picker cancelled');
+      return;
+    }
+    throw err;
+  }
   await storage.add(dirHandle.name, dirHandle);
   await refresh(storage);
 }

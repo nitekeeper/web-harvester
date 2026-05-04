@@ -37,7 +37,9 @@ async function init(): Promise<void> {
     bootstrapStore(adapter, 'popup-state', usePopupStore),
   ]);
 
-  bootstrapTheme().catch(() => {});
+  bootstrapTheme().catch((err: unknown) => {
+    logger.error('theme bootstrap failed', err);
+  });
   createRoot(rootEl).render(
     <StrictMode>
       <Popup />

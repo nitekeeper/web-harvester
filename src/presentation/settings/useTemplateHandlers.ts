@@ -27,33 +27,38 @@ export interface TemplateHandlers {
 
 /**
  * Returns memoised template handlers wired to the singleton settings store.
- * Reads `templates` and `setTemplates` via the store hook so the handlers
- * always operate on the current snapshot.
+ * Each handler reads the latest `templates` snapshot via
+ * `useSettingsStore.getState()` rather than a closed-over selector value, so
+ * back-to-back mutations that fire before React re-renders both observe the
+ * up-to-date list. `setTemplates` is a stable Zustand action reference, so
+ * the callbacks remain referentially stable across renders.
  */
 export function useTemplateHandlers(): TemplateHandlers {
-  const templates = useSettingsStore((s) => s.templates);
   const setTemplates = useSettingsStore((s) => s.setTemplates);
 
   const onAdd = useCallback(
     async (template: Omit<TemplateConfig, 'id'>): Promise<void> => {
+      const current = useSettingsStore.getState().templates;
       const newTemplate: TemplateConfig = { ...template, id: crypto.randomUUID() };
-      setTemplates([...templates, newTemplate]);
+      setTemplates([...current, newTemplate]);
     },
-    [templates, setTemplates],
+    [setTemplates],
   );
 
   const onRemove = useCallback(
     async (id: string): Promise<void> => {
-      setTemplates(templates.filter((t) => t.id !== id));
+      const current = useSettingsStore.getState().templates;
+      setTemplates(current.filter((t) => t.id !== id));
     },
-    [templates, setTemplates],
+    [setTemplates],
   );
 
   const onUpdate = useCallback(
     async (id: string, changes: Partial<TemplateConfig>): Promise<void> => {
-      setTemplates(templates.map((t) => (t.id === id ? { ...t, ...changes } : t)));
+      const current = useSettingsStore.getState().templates;
+      setTemplates(current.map((t) => (t.id === id ? { ...t, ...changes } : t)));
     },
-    [templates, setTemplates],
+    [setTemplates],
   );
 
   return { onAdd, onRemove, onUpdate };

@@ -78,6 +78,41 @@ describe('useDestinationHandlers — onAdd', () => {
   });
 });
 
+describe('useDestinationHandlers — onAdd picker error handling', () => {
+  it('resolves silently and does not call storage.add when the picker is cancelled', async () => {
+    // Cancelling the OS directory dialog surfaces as a DOMException named
+    // AbortError; treating it as an error would produce noisy unhandled
+    // rejections, so the handler swallows that one specific case.
+    const storage = makeStorage();
+    const abort = new DOMException('user cancelled', 'AbortError');
+    Reflect.set(window, 'showDirectoryPicker', vi.fn().mockRejectedValue(abort));
+
+    const { result } = renderHook(() => useDestinationHandlers(), { wrapper: wrapper(storage) });
+    await expect(
+      act(async () => {
+        await result.current.onAdd();
+      }),
+    ).resolves.toBeUndefined();
+
+    expect(storage.add).not.toHaveBeenCalled();
+    expect(storage.getAll).not.toHaveBeenCalled();
+  });
+
+  it('re-throws non-AbortError picker rejections so callers can surface them', async () => {
+    const storage = makeStorage();
+    const fatal = new Error('disk on fire');
+    Reflect.set(window, 'showDirectoryPicker', vi.fn().mockRejectedValue(fatal));
+
+    const { result } = renderHook(() => useDestinationHandlers(), { wrapper: wrapper(storage) });
+    await expect(
+      act(async () => {
+        await result.current.onAdd();
+      }),
+    ).rejects.toThrow('disk on fire');
+    expect(storage.add).not.toHaveBeenCalled();
+  });
+});
+
 describe('useDestinationHandlers — onRemove', () => {
   it('calls storage.remove and refreshes the destinations list in the store', async () => {
     const storage = makeStorage();
