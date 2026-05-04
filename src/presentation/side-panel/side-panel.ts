@@ -13,10 +13,16 @@ import { StrictMode, createElement } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import '@presentation/styles/global.css';
+import { bootstrapTheme } from '@presentation/theme/bootstrapTheme';
 
 import { SidePanel } from './SidePanel';
 
-const container = document.getElementById('root');
-if (!container) throw new Error('Root element not found');
+const rootEl = document.getElementById('root');
+if (!rootEl) throw new Error('Root element not found');
 
-createRoot(container).render(createElement(StrictMode, null, createElement(SidePanel)));
+bootstrapTheme()
+  .catch(() => {})
+  .then(() => {
+    createRoot(rootEl).render(createElement(StrictMode, null, createElement(SidePanel)));
+  })
+  .catch(() => {});

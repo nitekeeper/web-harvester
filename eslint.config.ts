@@ -232,6 +232,15 @@ export default tseslint.config(
     },
   },
   {
+    // Carve-out: bootstrapTheme.ts is the UI-page composition root for the
+    // theme plugin and must wire concrete classes from infrastructure/core/plugins,
+    // mirroring the same exception granted to the background entry (ADR-020).
+    files: ['src/presentation/theme/bootstrapTheme.ts'],
+    rules: {
+      'import/no-restricted-paths': 'off',
+    },
+  },
+  {
     // Carve-out: ChromeAdapter.ts is the single sanctioned consumer of chrome.*.
     files: ['src/infrastructure/adapters/chrome/ChromeAdapter.ts'],
     rules: {

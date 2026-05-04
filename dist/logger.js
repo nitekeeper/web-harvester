@@ -1,1 +1,0 @@
-function s(c,t={}){const e=`[${c}]`,n=t.production??(typeof process<"u"&&!0);return{debug(o,r){n||console.debug(e,o,r)},info(o,r){n||console.info(e,o,r)},warn(o,r){console.warn(e,o,r)},error(o,r){console.error(e,o,r)}}}export{s as c};

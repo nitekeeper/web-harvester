@@ -35,7 +35,6 @@ import { HighlighterPlugin } from '@plugins/highlighter/HighlighterPlugin';
 import { ReaderPlugin } from '@plugins/reader/ReaderPlugin';
 import { SettingsPlugin } from '@plugins/settings/SettingsPlugin';
 import { TemplatePlugin } from '@plugins/template/TemplatePlugin';
-import { ThemePlugin } from '@plugins/theme/ThemePlugin';
 import { createLogger } from '@shared/logger';
 
 import {
@@ -218,12 +217,13 @@ function broadcastInitialSettings(settingsService: ISettingsService, hooks: Core
 }
 
 /**
- * Registers the six plugin instances into the supplied registry. Plugin
+ * Registers the five background plugins into the supplied registry. Plugin
  * activation order is determined by the registry's topological sort over
  * `manifest.dependencies`, not by registration order here.
+ * ThemePlugin is intentionally absent — it is a UI-only plugin activated
+ * per-page via `bootstrapTheme()` in popup/settings/side-panel entry points.
  */
 function registerPlugins(registry: PluginRegistry): void {
-  registry.register(new ThemePlugin());
   registry.register(new ClipperPlugin());
   registry.register(new TemplatePlugin());
   registry.register(new HighlighterPlugin());
