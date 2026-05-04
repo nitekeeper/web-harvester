@@ -1,0 +1,14 @@
+{
+  "save-button": {
+    "message": "Save",
+    "description": "The save button label"
+  },
+  "clip-success": {
+    "message": "Clipped to {destination}",
+    "description": "Success notification"
+  },
+  "highlight-count": {
+    "message": "{count, plural, one {# highlight} other {# highlights}}",
+    "description": "Number of highlights on the page"
+  }
+}

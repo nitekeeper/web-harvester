@@ -1,0 +1,171 @@
+# .github/workflows/release.yml
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '9'
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false   # do not cancel mid-publish; release artifacts and tags must stay consistent
+
+jobs:
+  # Re-run all PR check jobs on merge to main.
+  # Duplicated rather than reused so release failures are
+  # clearly attributed to main, not a PR branch.
+
+  fast:
+    name: Fast Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.18.3/gitleaks_8.18.3_linux_x64.tar.gz | tar -xz -C /usr/local/bin gitleaks
+      - run: npm install -g web-ext@8
+      - run: pnpm typecheck
+      - run: pnpm format:check
+      - run: pnpm lint
+      - run: pnpm knip
+      - run: pnpm jscpd src/ --threshold 0
+      - run: gitleaks detect --source . --redact
+      - run: web-ext lint --source-dir src/
+      - run: pnpm madge --circular --extensions ts src/
+
+  medium:
+    name: Medium Checks
+    runs-on: ubuntu-latest
+    needs: fast
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test:coverage
+      - run: pnpm build:chrome
+      - run: pnpm size-limit
+      - run: npm audit --audit-level=high
+      - run: pnpm license-checker --onlyAllow "MIT;ISC;Apache-2.0;BSD-2-Clause;BSD-3-Clause;0BSD;CC0-1.0;CC-BY-3.0;CC-BY-4.0;Unlicense;BlueOak-1.0.0"
+      - run: pnpm jsdoc-check
+
+  slow:
+    name: Slow Checks
+    runs-on: ubuntu-latest
+    needs: medium
+    env:
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm playwright install --with-deps chromium
+      - run: pnpm test:browser
+      - run: pnpm test:e2e
+      - name: Snyk deep scan
+        if: env.SNYK_TOKEN != ''
+        uses: snyk/actions/node@master
+        with:
+          args: --severity-threshold=high
+
+  # ──────────────────────────────────────────────────────────────
+  # RELEASE: Build, package, audit, publish
+  # ──────────────────────────────────────────────────────────────
+  release:
+    name: Build and Release
+    runs-on: ubuntu-latest
+    needs: [fast, medium, slow]
+    permissions:
+      contents: write    # needed to create a GitHub Release
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # needed so git rev-parse can find existing release tags
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Chrome extension
+        run: pnpm build:chrome
+
+      - name: Read version from package.json
+        id: pkg
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Package extension zip
+        run: |
+          cd dist
+          zip -r "../web-harvester-chrome-v${{ steps.pkg.outputs.version }}.zip" .
+
+      - name: Generate audit report
+        run: pnpm audit:report
+
+      - name: Upload extension artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-harvester-chrome-v${{ steps.pkg.outputs.version }}
+          path: web-harvester-chrome-v${{ steps.pkg.outputs.version }}.zip
+          retention-days: 90
+
+      - name: Upload audit report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: audit-report-${{ steps.pkg.outputs.version }}
+          path: audits/reports/
+          retention-days: 90
+
+      - name: Check if version tag exists
+        id: tag_check
+        run: |
+          if git rev-parse "v${{ steps.pkg.outputs.version }}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create GitHub Release
+        if: steps.tag_check.outputs.exists == 'false'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.pkg.outputs.version }}
+          name: Web Harvester v${{ steps.pkg.outputs.version }}
+          body: |
+            Release generated automatically from main branch.
+            See [CHANGELOG](./CHANGELOG.md) for details.
+          files: web-harvester-chrome-v${{ steps.pkg.outputs.version }}.zip
+          draft: false
+          prerelease: false

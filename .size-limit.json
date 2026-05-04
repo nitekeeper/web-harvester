@@ -1,0 +1,5 @@
+[
+  { "path": "dist/popup.js", "limit": "200 KB" },
+  { "path": "dist/background.js", "limit": "50 KB" },
+  { "path": "dist/content.js", "limit": "100 KB" }
+]

@@ -1,0 +1,17 @@
+node_modules/
+dist/
+coverage/
+.env
+.env.*
+!.env.chrome
+!.env.firefox
+*.log
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+docs/superpowers/
+
+# Audit reports (generated at runtime — not committed)
+audits/reports/*/
+!audits/reports/.gitkeep

@@ -1,0 +1,14 @@
+{
+  "save-button": {
+    "message": "حفظ",
+    "description": "The save button label"
+  },
+  "clip-success": {
+    "message": "تم الحفظ في {destination}",
+    "description": "Success notification"
+  },
+  "highlight-count": {
+    "message": "{count, plural, one {# تظليل} other {# تظليلات}}",
+    "description": "Number of highlights on the page"
+  }
+}

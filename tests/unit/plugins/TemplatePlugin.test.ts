@@ -1,0 +1,252 @@
+// tests/unit/plugins/TemplatePlugin.test.ts
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { TYPES } from '@core/types';
+import type { ClipContent, IPluginContext } from '@domain/types';
+import { TemplatePlugin } from '@plugins/template/TemplatePlugin';
+
+import { createMockContext } from '../../helpers/createMockContext';
+
+/** Bundle of objects produced by `setupHarness` and shared by each test. */
+interface TemplateTestHarness {
+  plugin: TemplatePlugin;
+  ctx: IPluginContext;
+  templateService: {
+    getDefault: ReturnType<typeof vi.fn>;
+    render: ReturnType<typeof vi.fn>;
+    getAll: ReturnType<typeof vi.fn>;
+  };
+}
+
+/** Builds a fresh TemplatePlugin + mock context with a stubbed ITemplateService. */
+function setupHarness(): TemplateTestHarness {
+  const plugin = new TemplatePlugin();
+  const ctx = createMockContext();
+
+  const templateService = {
+    getDefault: vi.fn().mockResolvedValue({
+      id: 'default',
+      name: 'Default',
+      frontmatterTemplate: '',
+      bodyTemplate: '# {{title}}',
+      noteNameTemplate: '{{title}}',
+    }),
+    render: vi.fn().mockResolvedValue({ ok: true, output: '# Hello World', errors: [] }),
+    getAll: vi.fn().mockResolvedValue([]),
+  };
+
+  vi.mocked(ctx.container.get).mockImplementation((token) => {
+    if (Object.is(token, TYPES.ITemplateService)) {
+      return templateService;
+    }
+    return undefined;
+  });
+
+  return { plugin, ctx, templateService };
+}
+
+describe('TemplatePlugin — manifest', () => {
+  let plugin: TemplatePlugin;
+
+  beforeEach(() => {
+    plugin = new TemplatePlugin();
+  });
+
+  it('has id "template"', () => {
+    expect(plugin.manifest.id).toBe('template');
+  });
+
+  it('declares "clipper" as a dependency', () => {
+    expect(plugin.manifest.dependencies).toContain('clipper');
+  });
+
+  it('has the correct name and version', () => {
+    expect(plugin.manifest.name).toBe('Template');
+    expect(plugin.manifest.version).toBe('1.0.0');
+  });
+});
+
+describe('TemplatePlugin — activate() container resolution', () => {
+  let harness: TemplateTestHarness;
+
+  beforeEach(() => {
+    harness = setupHarness();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('resolves ITemplateService from container', async () => {
+    await harness.plugin.activate(harness.ctx);
+
+    expect(harness.ctx.container.get).toHaveBeenCalledWith(TYPES.ITemplateService);
+  });
+});
+
+describe('TemplatePlugin — activate() UI registration and logging', () => {
+  let harness: TemplateTestHarness;
+
+  beforeEach(() => {
+    harness = setupHarness();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('registers TemplateSelector in the popup-properties slot', async () => {
+    await harness.plugin.activate(harness.ctx);
+
+    expect(harness.ctx.ui.addToSlot).toHaveBeenCalledWith(
+      'popup-properties',
+      expect.objectContaining({ component: 'TemplateSelector' }),
+    );
+  });
+
+  it('registers TemplateSettingsPanel in the settings-section slot', async () => {
+    await harness.plugin.activate(harness.ctx);
+
+    expect(harness.ctx.ui.addToSlot).toHaveBeenCalledWith(
+      'settings-section',
+      expect.objectContaining({ component: 'TemplateSettingsPanel' }),
+    );
+  });
+
+  it('logs activation info', async () => {
+    await harness.plugin.activate(harness.ctx);
+
+    expect(harness.ctx.logger.info).toHaveBeenCalledWith('TemplatePlugin activated');
+  });
+});
+
+describe('TemplatePlugin — activate() hook taps', () => {
+  let harness: TemplateTestHarness;
+
+  beforeEach(() => {
+    harness = setupHarness();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('taps hooks.beforeClip with tapAsync', async () => {
+    const beforeClipSpy = vi.spyOn(harness.ctx.hooks.beforeClip, 'tapAsync');
+
+    await harness.plugin.activate(harness.ctx);
+
+    expect(beforeClipSpy).toHaveBeenCalledWith(expect.any(Function));
+  });
+
+  it('taps hooks.onTemplateRender with tapAsync', async () => {
+    const onTemplateRenderSpy = vi.spyOn(harness.ctx.hooks.onTemplateRender, 'tapAsync');
+
+    await harness.plugin.activate(harness.ctx);
+
+    expect(onTemplateRenderSpy).toHaveBeenCalledWith(expect.any(Function));
+  });
+});
+
+describe('TemplatePlugin — beforeClip handler behavior', () => {
+  let harness: TemplateTestHarness;
+  const baseContent: ClipContent = {
+    title: 'Hello',
+    url: 'https://example.com',
+    body: '<p>raw</p>',
+    selectedText: '',
+  };
+
+  beforeEach(() => {
+    harness = setupHarness();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('calls templateService.getDefault() then render(template.id, content)', async () => {
+    await harness.plugin.activate(harness.ctx);
+    await harness.ctx.hooks.beforeClip.call(baseContent);
+
+    expect(harness.templateService.getDefault).toHaveBeenCalledTimes(1);
+    expect(harness.templateService.render).toHaveBeenCalledWith('default', baseContent);
+  });
+
+  it('returns content with body replaced by render output when result.ok is true', async () => {
+    await harness.plugin.activate(harness.ctx);
+    const result = await harness.ctx.hooks.beforeClip.call(baseContent);
+
+    expect(result.body).toBe('# Hello World');
+    expect(result.title).toBe(baseContent.title);
+    expect(result.url).toBe(baseContent.url);
+  });
+
+  it('returns content unchanged when result.ok is false', async () => {
+    harness.templateService.render.mockResolvedValueOnce({
+      ok: false,
+      output: 'failed',
+      errors: ['oops'],
+    });
+
+    await harness.plugin.activate(harness.ctx);
+    const result = await harness.ctx.hooks.beforeClip.call(baseContent);
+
+    expect(result).toEqual(baseContent);
+  });
+});
+
+describe('TemplatePlugin — onTemplateRender handler behavior', () => {
+  let harness: TemplateTestHarness;
+
+  beforeEach(() => {
+    harness = setupHarness();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('passes the rendered string through unchanged', async () => {
+    await harness.plugin.activate(harness.ctx);
+    const out = await harness.ctx.hooks.onTemplateRender.call('rendered output');
+
+    expect(out).toBe('rendered output');
+  });
+});
+
+describe('TemplatePlugin — deactivate()', () => {
+  let harness: TemplateTestHarness;
+
+  beforeEach(() => {
+    harness = setupHarness();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('resolves without error after activate()', async () => {
+    await harness.plugin.activate(harness.ctx);
+    await expect(harness.plugin.deactivate()).resolves.toBeUndefined();
+  });
+
+  it('resolves without error before activate()', async () => {
+    await expect(harness.plugin.deactivate()).resolves.toBeUndefined();
+  });
+
+  it('unsubscribes the beforeClip tap so subsequent calls do not invoke render', async () => {
+    await harness.plugin.activate(harness.ctx);
+    await harness.plugin.deactivate();
+
+    harness.templateService.render.mockClear();
+    await harness.ctx.hooks.beforeClip.call({
+      title: 'After deactivate',
+      url: 'https://example.com',
+      body: 'body',
+      selectedText: '',
+    });
+
+    expect(harness.templateService.render).not.toHaveBeenCalled();
+  });
+});

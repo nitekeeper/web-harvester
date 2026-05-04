@@ -1,0 +1,9 @@
+dist/
+node_modules/
+coverage/
+pnpm-lock.yaml
+
+# shadcn-generated UI components — treated as vendored external code
+src/presentation/components/ui/
+src/presentation/lib/utils.ts
+src/presentation/styles/global.css
