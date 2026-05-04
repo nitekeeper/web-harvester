@@ -17,7 +17,26 @@ Web Harvester is a Chrome extension that lets you select any part of a web page,
 Both Windows and macOS require the following tools before building:
 
 - **Node.js 20** — [nodejs.org](https://nodejs.org)
-- **pnpm** — install after Node.js with `npm install -g pnpm`
+- **pnpm** — install after Node.js using one of the methods below:
+
+### macOS / Linux
+
+```bash
+npm install -g pnpm
+```
+
+### Windows (choose one)
+
+```powershell
+# Via npm
+npm install -g pnpm
+
+# Via PowerShell installer
+Invoke-WebRequest https://get.pnpm.io/install.ps1 -UseBasicParsing | Invoke-Expression
+
+# Via Winget
+winget install pnpm.pnpm
+```
 
 ---
 
