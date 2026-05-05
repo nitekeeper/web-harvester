@@ -33,6 +33,16 @@ describe('StatusBar', () => {
     expect(screen.getByText('Permission denied')).not.toBeNull();
   });
 
+  it('shows "Save failed" fallback when status is error and no errorMessage given', () => {
+    render(<StatusBar status="error" destinationLabel={null} />);
+    expect(screen.getByText('Save failed')).not.toBeNull();
+  });
+
+  it('shows "Saved" when status is success with no destination label', () => {
+    render(<StatusBar status="success" destinationLabel={null} />);
+    expect(screen.getByText('Saved')).not.toBeNull();
+  });
+
   it('has a data-testid of status-bar', () => {
     render(<StatusBar status="idle" destinationLabel={null} />);
     expect(document.querySelector('[data-testid="status-bar"]')).not.toBeNull();

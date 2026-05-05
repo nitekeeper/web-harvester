@@ -100,12 +100,16 @@ function buildStatusView(
     };
   }
   if (status === 'success') {
+    const successText =
+      destinationLabel != null && destinationLabel !== ''
+        ? fmt({ id: 'popup.status.saved', defaultMessage: 'Saved to {folder}' }).replace(
+            '{folder}',
+            destinationLabel,
+          )
+        : fmt({ id: 'popup.status.saved.simple', defaultMessage: 'Saved' });
     return {
       icon: <CheckIcon />,
-      text: fmt({ id: 'popup.status.saved', defaultMessage: 'Saved to {folder}' }).replace(
-        '{folder}',
-        destinationLabel ?? '',
-      ),
+      text: successText,
       className: 'text-green-600 dark:text-green-400',
     };
   }
