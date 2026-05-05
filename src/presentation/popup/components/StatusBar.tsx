@@ -1,7 +1,8 @@
 // src/presentation/popup/components/StatusBar.tsx
 
-import type { CSSProperties, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
+import { IconSvg } from '@presentation/components/IconSvg';
 import { useFormatMessage, type FormatMessageFn } from '@presentation/hooks/useFormatMessage';
 
 /** Possible save-flow states tracked by {@link StatusBar}. */
@@ -22,38 +23,6 @@ interface StatusView {
   readonly icon: ReactNode;
   readonly text: string;
   readonly className: string;
-}
-
-/** Props for the shared {@link IconSvg} wrapper. */
-interface IconSvgProps {
-  /** Stroke width applied to the inline SVG path(s). */
-  readonly strokeWidth: number;
-  /** Whether to round line joins (used by the check + warn glyphs). */
-  readonly joinRound?: boolean;
-  /** Optional inline style — only the spinner uses this for its animation. */
-  readonly style?: CSSProperties;
-  /** SVG body — `<path>`, `<polyline>`, `<line>`, etc. */
-  readonly children: ReactNode;
-}
-
-/** Shared 14 × 14 SVG wrapper with the attributes common to all status icons. */
-function IconSvg({ strokeWidth, joinRound, style, children }: IconSvgProps) {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={strokeWidth}
-      strokeLinecap="round"
-      strokeLinejoin={joinRound ? 'round' : undefined}
-      style={style}
-      aria-hidden="true"
-    >
-      {children}
-    </svg>
-  );
 }
 
 /** Inline spinner icon — 14 × 14 px, animated. */
