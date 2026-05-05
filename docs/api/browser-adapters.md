@@ -113,7 +113,7 @@ Registers a listener that fires on install or update. The handler receives the i
 
 Use `sendMessage` / `onMessage` to invoke background service worker logic from popup or
 side-panel pages. The typed message contract lives in `src/shared/messages.ts` — import
-`ClipPageMessage`, `ClipPageResponse`, and `isClipPageMessage` from there.
+`MSG_CLIP`, `ClipPageMessage`, `ClipPageResponse`, and `isClipPageMessage` from there.
 
 **Popup → background (send side):**
 

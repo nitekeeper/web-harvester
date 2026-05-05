@@ -23,8 +23,8 @@ Use **request-response** (`chrome.runtime.sendMessage` / `chrome.runtime.onMessa
 
 A typed contract is defined in `src/shared/messages.ts` (`ClipPageMessage`, `ClipPageResponse`,
 `isClipPageMessage`). The background registers one `onMessage` handler per message type via
-`wireMessageListener`. Popup/side-panel call `adapter.sendMessage()` and await the response to
-drive UI state transitions in the popup store.
+`wireMessageListener` in `src/presentation/background/wiring.ts`. Popup/side-panel call
+`adapter.sendMessage()` and await the response to drive UI state transitions in the popup store.
 
 ## Consequences
 
