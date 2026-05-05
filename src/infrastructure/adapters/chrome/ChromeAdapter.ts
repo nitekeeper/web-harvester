@@ -52,6 +52,13 @@ export class ChromeAdapter
     await chrome.scripting.executeScript({ target: { tabId }, func: fn });
   }
 
+  async evaluateOnTab<T>(tabId: number, fn: () => T): Promise<T> {
+    const results = await chrome.scripting.executeScript({ target: { tabId }, func: fn });
+    const first = results[0];
+    if (!first) throw new Error(`executeScript returned no result for tab ${tabId.toString()}`);
+    return first.result as T;
+  }
+
   async insertCSS(tabId: number, css: string): Promise<void> {
     await chrome.scripting.insertCSS({ target: { tabId }, css });
   }

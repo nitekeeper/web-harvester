@@ -20,7 +20,7 @@ function createMockTabAdapter() {
     }),
     executeScript: vi.fn().mockResolvedValue(undefined),
     insertCSS: vi.fn().mockResolvedValue(undefined),
-    sendMessageToTab: vi.fn().mockResolvedValue({ html: '<p>Hello</p>' }),
+    evaluateOnTab: vi.fn().mockResolvedValue('<p>Hello</p>'),
     onTabActivated: vi.fn(),
     onTabUpdated: vi.fn(),
   };
@@ -186,5 +186,28 @@ describe('ClipService — notifications + result', () => {
       fileName: expect.any(String),
       destination: expect.any(String),
     });
+  });
+});
+
+describe('ClipService — html extraction via evaluateOnTab', () => {
+  it('calls evaluateOnTab to extract page HTML', async () => {
+    await service.clip(defaultRequest);
+    expect(tabAdapter.evaluateOnTab).toHaveBeenCalledWith(1, expect.any(Function));
+  });
+
+  it('passes extracted html to beforeClip hook', async () => {
+    tabAdapter.evaluateOnTab.mockResolvedValue('<article>content</article>');
+    await service.clip(defaultRequest);
+    expect(hooks.beforeClip.call).toHaveBeenCalledWith(
+      expect.objectContaining({ html: '<article>content</article>' }),
+    );
+  });
+
+  it('succeeds with empty html when evaluateOnTab rejects (e.g. content script unavailable)', async () => {
+    tabAdapter.evaluateOnTab.mockRejectedValue(
+      new Error('Could not establish connection. Receiving end does not exist.'),
+    );
+    const result = await service.clip(defaultRequest);
+    expect(result).toMatchObject({ fileName: expect.any(String), destination: expect.any(String) });
   });
 });

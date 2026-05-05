@@ -103,7 +103,8 @@ export interface NotificationPayload {
  */
 export interface ITabAdapterPort {
   getActiveTab(): Promise<Tab>;
-  sendMessageToTab(tabId: number, msg: unknown): Promise<unknown>;
+  /** Runs {@link fn} in the context of the given tab and returns its return value. */
+  evaluateOnTab<T>(tabId: number, fn: () => T): Promise<T>;
 }
 
 /**
@@ -306,20 +307,19 @@ export class ClipService implements IClipService {
   }
 
   /**
-   * Asks the active tab's content script for the page HTML by sending a
-   * `{ type: 'getHtml' }` message. The content script is expected to respond
-   * with `{ html: string }`. If the response is malformed, an empty string
-   * is returned so the rest of the flow can still proceed (plugins may
-   * substitute richer content via `beforeClip`).
+   * Extracts the full outer HTML of the active tab by evaluating a function
+   * directly in the tab's context via `chrome.scripting.executeScript`. Falls
+   * back to an empty string if the tab is not scriptable (e.g. `chrome://`
+   * pages or tabs opened before the extension was installed) so the rest of
+   * the clip flow can still proceed — `beforeClip` hooks may substitute
+   * richer content.
    */
   private async extractHtml(tabId: number): Promise<string> {
-    const response = (await this.tabAdapter.sendMessageToTab(tabId, { type: 'getHtml' })) as
-      | { html?: unknown }
-      | undefined;
-    if (response && typeof response === 'object' && typeof response.html === 'string') {
-      return response.html;
+    try {
+      return await this.tabAdapter.evaluateOnTab(tabId, () => document.documentElement.outerHTML);
+    } catch (err: unknown) {
+      this.logger.warn('Page not scriptable — using empty string', err);
+      return '';
     }
-    this.logger.warn('Content script returned no html — using empty string');
-    return '';
   }
 }

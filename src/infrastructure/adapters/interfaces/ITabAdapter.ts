@@ -17,6 +17,8 @@ export interface Tab {
 export interface ITabAdapter {
   getActiveTab(): Promise<Tab>;
   executeScript(tabId: number, fn: () => void): Promise<void>;
+  /** Runs {@link fn} in the context of the given tab and returns its return value. */
+  evaluateOnTab<T>(tabId: number, fn: () => T): Promise<T>;
   insertCSS(tabId: number, css: string): Promise<void>;
   removeCSS(tabId: number, css: string): Promise<void>;
   sendMessageToTab(tabId: number, msg: unknown): Promise<unknown>;

@@ -45,6 +45,7 @@ export class MockAdapter
   }
 
   executeScript = vi.fn().mockResolvedValue(undefined);
+  evaluateOnTab = vi.fn().mockResolvedValue(undefined);
   insertCSS = vi.fn().mockResolvedValue(undefined);
   removeCSS = vi.fn().mockResolvedValue(undefined);
   sendMessageToTab = vi.fn().mockResolvedValue(undefined);
