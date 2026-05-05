@@ -2,6 +2,7 @@
 
 import { create, createStore, type StoreApi } from 'zustand';
 
+import { DEFAULT_TEMPLATE } from '@shared/defaultTemplate';
 import type { AppSettings, TemplateConfig } from '@shared/types';
 
 import { type IStorageSyncPort, withStorageSync } from './storageSyncMiddleware';
@@ -67,7 +68,7 @@ function makeSlice(
   return {
     settings: DEFAULT_SETTINGS,
     destinations: [],
-    templates: [],
+    templates: [DEFAULT_TEMPLATE],
     isLoading: false,
 
     setSettings: (settings): void => set({ settings }),

@@ -3,6 +3,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { createSettingsStore } from '@presentation/stores/useSettingsStore';
+import { DEFAULT_TEMPLATE } from '@shared/defaultTemplate';
 import type { AppSettings, TemplateConfig } from '@shared/types';
 
 import { MockAdapter } from '../../../helpers/MockAdapter';
@@ -35,7 +36,7 @@ describe('useSettingsStore — initial + settings', () => {
     const state = store.getState();
     expect(state.settings).toBeDefined();
     expect(state.destinations).toEqual([]);
-    expect(state.templates).toEqual([]);
+    expect(state.templates).toEqual([DEFAULT_TEMPLATE]);
     expect(state.isLoading).toBe(false);
   });
 
