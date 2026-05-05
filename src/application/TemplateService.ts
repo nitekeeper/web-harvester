@@ -220,9 +220,14 @@ export class TemplateService implements ITemplateService {
    *      and the compiler's error list unchanged.
    */
   async render(id: string, variables: TemplateVariables): Promise<CompileResult> {
-    const template = await this.storage.get(id);
+    let template = await this.storage.get(id);
     if (!template) {
-      throw new TemplateNotFoundError(id);
+      if (id === DEFAULT_TEMPLATE.id) {
+        this.logger.debug('render: id matches built-in default — using DEFAULT_TEMPLATE');
+        template = DEFAULT_TEMPLATE;
+      } else {
+        throw new TemplateNotFoundError(id);
+      }
     }
 
     const source = combineTemplateSource(template);

@@ -151,7 +151,7 @@ describe('TemplateService — remove()', () => {
   });
 });
 
-describe('TemplateService — render()', () => {
+describe('TemplateService — render() — happy path', () => {
   it('calls compileTemplate() with the template body and variables', async () => {
     const t: TemplateConfig = {
       id: TMPL_ID,
@@ -164,7 +164,7 @@ describe('TemplateService — render()', () => {
     await service.render(TMPL_ID, testVariables);
     expect(mockCompileTemplate).toHaveBeenCalledWith(
       expect.any(String),
-      expect.objectContaining({ title: 'My Article' }),
+      expect.objectContaining({ title: testVariables.title }),
     );
   });
 
@@ -183,6 +183,18 @@ describe('TemplateService — render()', () => {
     expect(result.output).toBe('# Hook Modified Body');
   });
 
+  it('renders built-in default when its id is not in storage', async () => {
+    storage.get.mockResolvedValue(undefined);
+    const result = await service.render('default', testVariables);
+    expect(result.ok).toBe(true);
+    expect(mockCompileTemplate).toHaveBeenCalledWith(
+      expect.stringContaining(CONTENT_PLACEHOLDER),
+      expect.objectContaining({ title: testVariables.title }),
+    );
+  });
+});
+
+describe('TemplateService — render() — error cases', () => {
   it('throws when template id does not exist', async () => {
     storage.get.mockResolvedValue(undefined);
     await expect(service.render('ghost', testVariables)).rejects.toThrow(/not found/i);
