@@ -14,6 +14,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { ChromeAdapter } from '@infrastructure/adapters/chrome/ChromeAdapter';
+import { createDestinationStorage } from '@infrastructure/storage/destinations';
 import { createSaveHandler } from '@presentation/hooks/useSaveHandler';
 import '@presentation/styles/global.css';
 import { bootstrapStore } from '@presentation/stores/bootstrapStore';
@@ -37,6 +38,10 @@ async function init(): Promise<void> {
     }),
     bootstrapStore(adapter, 'popup-state', usePopupStore),
   ]);
+
+  const idbStorage = await createDestinationStorage();
+  const destinations = await idbStorage.getAll();
+  useSettingsStore.setState({ destinations });
 
   const handleSave = createSaveHandler(adapter);
 
