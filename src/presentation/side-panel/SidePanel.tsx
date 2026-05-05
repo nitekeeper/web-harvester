@@ -86,10 +86,13 @@ function TabBar({
 }) {
   const fmt = useFormatMessage();
   return (
-    <div className="flex border-b border-border px-2 shrink-0">
+    <div role="tablist" className="flex border-b border-border px-2 shrink-0">
       {TABS.map((t) => (
         <button
           key={t.id}
+          role="tab"
+          aria-selected={activeTab === t.id}
+          data-testid={`sidepanel-tab-${t.id}`}
           onClick={() => onTab(t.id)}
           className={`px-3 py-2.5 text-[12px] font-medium border-b-2 -mb-px transition-colors ${
             activeTab === t.id

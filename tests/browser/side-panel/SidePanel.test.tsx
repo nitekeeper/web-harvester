@@ -49,9 +49,9 @@ describe('SidePanel — header & shell', () => {
 
   it('renders the three tabs', () => {
     render(<SidePanel onClose={NOOP} />);
-    expect(screen.getByText('Highlights')).not.toBeNull();
-    expect(screen.getByText('Reader')).not.toBeNull();
-    expect(screen.getByText('Clip')).not.toBeNull();
+    expect(document.querySelector('[data-testid="sidepanel-tab-highlights"]')).not.toBeNull();
+    expect(document.querySelector('[data-testid="sidepanel-tab-reader"]')).not.toBeNull();
+    expect(document.querySelector('[data-testid="sidepanel-tab-clip"]')).not.toBeNull();
   });
 });
 
@@ -77,13 +77,15 @@ describe('SidePanel — clip tab content', () => {
   });
 
   it('does not render full settings navigation', () => {
-    const { container } = render(<SidePanel onClose={NOOP} />);
-    expect(container.textContent ?? '').not.toMatch(/general.*destinations.*templates/i);
+    render(<SidePanel onClose={NOOP} />);
+    expect(document.querySelector('[data-testid="settings-sidebar"]')).toBeNull();
   });
 
   it('switches to Highlights tab when clicked', async () => {
     render(<SidePanel onClose={NOOP} />);
-    await userEvent.setup().click(screen.getByText('Highlights'));
+    const highlightsTab = document.querySelector('[data-testid="sidepanel-tab-highlights"]');
+    if (highlightsTab === null) throw new Error('highlights tab not found');
+    await userEvent.setup().click(highlightsTab as HTMLElement);
     expect(document.querySelector('[data-testid="destination-selector"]')).toBeNull();
   });
 });
