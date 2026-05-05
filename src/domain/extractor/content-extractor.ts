@@ -162,6 +162,18 @@ function collectAncestors(workingDoc: Document, matchedElements: readonly Elemen
   return ancestors;
 }
 
+/**
+ * Returns a `DOMParser` instance that works in both browser window and Chrome
+ * MV3 service worker contexts. The bare identifier `DOMParser` may not resolve
+ * in the bundled service worker output even though the API is available on
+ * `self` (ServiceWorkerGlobalScope). Accessing it explicitly via `self` avoids
+ * the `ReferenceError: DOMParser is not defined` thrown by Vite's bundle.
+ */
+function getParser(): DOMParser {
+  const Ctor = (self as unknown as { DOMParser: typeof DOMParser }).DOMParser;
+  return new Ctor();
+}
+
 /** Constructs a TurndownService configured for GFM output (atx headings, fenced code, dashes for `<hr>`). */
 function buildTurndown(): TurndownService {
   const td = new TurndownService({
@@ -210,7 +222,7 @@ function extractByline(doc: Document): string | undefined {
  * `document` global directly.
  */
 export function turndownHtml(html: string): string {
-  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const doc = getParser().parseFromString(html, 'text/html');
   return buildTurndown().turndown(doc.body).trim();
 }
 
@@ -232,7 +244,7 @@ export function extractArticleMarkdown(html: string, url: string): string {
     `[debug] extractArticleMarkdown: html type=${typeof html}, length=${html ? html.length : 'N/A'}, truthy=${Boolean(html)}`,
   );
   if (!html) return '';
-  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const doc = getParser().parseFromString(html, 'text/html');
   const defuddled = new Defuddle(doc, { url }).parse();
   logger.info(
     `[debug] defuddled.content type=${typeof defuddled.content}, length=${defuddled.content ? defuddled.content.length : 'null/undefined'}`,

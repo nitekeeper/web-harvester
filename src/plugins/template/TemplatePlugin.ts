@@ -10,8 +10,9 @@ import type { ClipContent, ILogger, IPlugin, IPluginContext, IPluginManifest } f
  */
 async function extractWithDebugLog(content: ClipContent, logger: ILogger): Promise<string> {
   logger.info(`[debug] beforeClip fields: ${Object.keys(content).join(', ')}`);
+  const raw = content as unknown as Record<string, unknown>;
   logger.info(
-    `[debug] content.body=${typeof (content as Record<string, unknown>)['body']}, content.html length=${String((content as Record<string, unknown>)['html']).length}`,
+    `[debug] content.body=${typeof raw['body']}, content.html length=${String(raw['html']).length}`,
   );
   try {
     const markdown = extractArticleMarkdown(content.body, content.url);
