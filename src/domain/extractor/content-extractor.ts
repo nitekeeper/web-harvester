@@ -1,3 +1,4 @@
+import Defuddle from 'defuddle';
 import TurndownService from 'turndown';
 import { gfm } from 'turndown-plugin-gfm';
 
@@ -208,4 +209,24 @@ function extractByline(doc: Document): string | undefined {
 export function turndownHtml(html: string): string {
   const doc = new DOMParser().parseFromString(html, 'text/html');
   return buildTurndown().turndown(doc.body).trim();
+}
+
+/**
+ * Extracts the main article content from a full-page HTML string using
+ * Defuddle (the same library used by Obsidian Clipper), then converts the
+ * extracted content to GFM Markdown via TurndownService.
+ *
+ * Unlike `turndownHtml`, which blindly converts the entire body, this
+ * function strips navigation, sidebars, ads, and other noise before
+ * conversion — producing clean article Markdown even for complex SPA pages
+ * (e.g. Korean news aggregators) where raw Turndown fails or returns empty.
+ *
+ * Safe to call from a Chrome MV3 background service worker: uses `DOMParser`
+ * (available in service workers) rather than the `document` global.
+ */
+export function extractArticleMarkdown(html: string, url: string): string {
+  if (!html) return '';
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const defuddled = new Defuddle(doc, { url }).parse();
+  return buildTurndown().turndown(defuddled.content).trim();
 }

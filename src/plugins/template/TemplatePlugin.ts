@@ -1,7 +1,7 @@
 // src/plugins/template/TemplatePlugin.ts
 import type { CompileResult, ITemplateService } from '@application/TemplateService';
 import { TYPES } from '@core/types';
-import { turndownHtml } from '@domain/extractor/content-extractor';
+import { extractArticleMarkdown } from '@domain/extractor/content-extractor';
 import type { ClipContent, IPlugin, IPluginContext, IPluginManifest } from '@domain/types';
 
 /**
@@ -38,7 +38,7 @@ export class TemplatePlugin implements IPlugin {
         const template = await templateService.getDefault();
         let markdownBody: string;
         try {
-          markdownBody = turndownHtml(content.body);
+          markdownBody = extractArticleMarkdown(content.body, content.url);
         } catch {
           markdownBody = '';
         }

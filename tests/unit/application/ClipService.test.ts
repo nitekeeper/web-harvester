@@ -203,6 +203,16 @@ describe('ClipService — html extraction via evaluateOnTab', () => {
     );
   });
 
+  it('extracts the full document HTML (outerHTML) so Defuddle receives head metadata', async () => {
+    await service.clip(defaultRequest);
+    const capturedFn = vi.mocked(tabAdapter.evaluateOnTab).mock.calls[0]?.[1] as () => string;
+    // Call the captured function in the jsdom environment to inspect what it returns.
+    // document.documentElement.outerHTML includes the <html> wrapper;
+    // document.body.innerHTML would not.
+    const html = capturedFn();
+    expect(html).toMatch(/<html/i);
+  });
+
   it('succeeds with empty html when evaluateOnTab rejects (e.g. content script unavailable)', async () => {
     tabAdapter.evaluateOnTab.mockRejectedValue(
       new Error('Could not establish connection. Receiving end does not exist.'),

@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { TYPES } from '@core/types';
-import { turndownHtml } from '@domain/extractor/content-extractor';
+import { extractArticleMarkdown } from '@domain/extractor/content-extractor';
 import type { ClipContent, IPluginContext } from '@domain/types';
 import { TemplatePlugin } from '@plugins/template/TemplatePlugin';
 
@@ -10,7 +10,10 @@ import { createMockContext } from '../../helpers/createMockContext';
 
 vi.mock('@domain/extractor/content-extractor', async (importActual) => {
   const actual = await importActual<typeof import('@domain/extractor/content-extractor')>();
-  return { ...actual, turndownHtml: vi.fn().mockImplementation(actual.turndownHtml) };
+  return {
+    ...actual,
+    extractArticleMarkdown: vi.fn().mockImplementation(actual.extractArticleMarkdown),
+  };
 });
 
 /** Shared URL fixture used by `beforeClip` test cases. */
@@ -165,7 +168,7 @@ describe('TemplatePlugin — activate() hook taps', () => {
   });
 });
 
-describe('TemplatePlugin — beforeClip render() variables', () => {
+describe('TemplatePlugin — beforeClip service calls', () => {
   let harness: TemplateTestHarness;
 
   beforeEach(() => {
@@ -190,14 +193,33 @@ describe('TemplatePlugin — beforeClip render() variables', () => {
     });
   });
 
-  it('passes Turndown-converted markdown as the `content` variable to render()', async () => {
+  it('calls extractArticleMarkdown with the content body and URL', async () => {
+    await harness.plugin.activate(harness.ctx);
+    await harness.ctx.hooks.beforeClip.call(baseContent);
+
+    expect(extractArticleMarkdown).toHaveBeenCalledWith(baseContent.body, baseContent.url);
+  });
+});
+
+describe('TemplatePlugin — beforeClip render() variables', () => {
+  let harness: TemplateTestHarness;
+
+  beforeEach(() => {
+    harness = setupHarness();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('passes Defuddle-extracted markdown as the `content` variable to render()', async () => {
     await harness.plugin.activate(harness.ctx);
     await harness.ctx.hooks.beforeClip.call(baseContent);
 
     const renderArgs = harness.templateService.render.mock.calls[0];
     expect(renderArgs).toBeDefined();
     const variables = renderArgs?.[1] as { content: string };
-    // Turndown converts `<p>raw</p>` to `raw` (paragraph wrapper stripped, trimmed).
+    // extractArticleMarkdown converts `<p>raw</p>` to `raw` (paragraph wrapper stripped, trimmed).
     expect(variables.content).toBe('raw');
   });
 
@@ -249,8 +271,8 @@ describe('TemplatePlugin — beforeClip handler result mapping', () => {
     expect(result.url).toBe(baseContent.url);
   });
 
-  it('returns rendered template (not raw HTML) when turndownHtml throws', async () => {
-    vi.mocked(turndownHtml).mockImplementationOnce(() => {
+  it('returns rendered template (not raw HTML) when extractArticleMarkdown throws', async () => {
+    vi.mocked(extractArticleMarkdown).mockImplementationOnce(() => {
       throw new Error('Maximum call stack size exceeded');
     });
 

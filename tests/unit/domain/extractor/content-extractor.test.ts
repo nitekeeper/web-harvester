@@ -2,7 +2,11 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-import { extractContent, turndownHtml } from '@domain/extractor/content-extractor';
+import {
+  extractArticleMarkdown,
+  extractContent,
+  turndownHtml,
+} from '@domain/extractor/content-extractor';
 
 const BASE = 'https://example.com/';
 
@@ -210,6 +214,46 @@ describe('turndownHtml', () => {
     const result = turndownHtml(PARAGRAPH_HTML);
     expect(result).toBe('raw');
     expect(parseSpy).toHaveBeenCalledWith(PARAGRAPH_HTML, 'text/html');
+    parseSpy.mockRestore();
+  });
+});
+
+const ARTICLE_URL = 'https://example.com';
+
+describe('extractArticleMarkdown', () => {
+  it('returns an empty string when given empty HTML', () => {
+    expect(extractArticleMarkdown('', ARTICLE_URL)).toBe('');
+  });
+
+  it('extracts and converts article text from a full document with surrounding noise', () => {
+    const html = `<!DOCTYPE html>
+<html>
+  <head><title>Test Article</title></head>
+  <body>
+    <nav><a href="/">Home</a><a href="/about">About</a></nav>
+    <article>
+      <h1>The Real Article</h1>
+      <p>This is the main article content that should be extracted.</p>
+    </article>
+    <aside><p>Related links sidebar</p></aside>
+    <footer><p>Copyright 2026</p></footer>
+  </body>
+</html>`;
+    const result = extractArticleMarkdown(html, `${ARTICLE_URL}/article`);
+    expect(result).toContain('The Real Article');
+    expect(result).toContain('main article content');
+  });
+
+  it('converts simple paragraph HTML to markdown text', () => {
+    const html = '<html><body><p>hello world</p></body></html>';
+    const result = extractArticleMarkdown(html, ARTICLE_URL);
+    expect(result).toContain('hello world');
+  });
+
+  it('uses DOMParser so it is compatible with MV3 service workers', () => {
+    const parseSpy = vi.spyOn(DOMParser.prototype, 'parseFromString');
+    extractArticleMarkdown('<html><body><p>test</p></body></html>', ARTICLE_URL);
+    expect(parseSpy).toHaveBeenCalledWith(expect.any(String), 'text/html');
     parseSpy.mockRestore();
   });
 });
