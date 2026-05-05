@@ -1,1 +1,0 @@
-import{e as r,f as n,r as t}from"./button.js";function a(o){const e=document.getElementById("root");if(!e)throw new Error("Root element not found");r().catch(()=>{}).then(()=>{n.createRoot(e).render(t.createElement(t.StrictMode,null,t.createElement(o)))}).catch(()=>{})}export{a as m};
