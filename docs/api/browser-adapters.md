@@ -109,6 +109,32 @@ Opens the extension's options page.
 Registers a listener that fires on install or update. The handler receives the install `reason`
 (`'install' | 'update' | 'chrome_update' | 'shared_module_update'`).
 
+### Cross-context IPC pattern
+
+Use `sendMessage` / `onMessage` to invoke background service worker logic from popup or
+side-panel pages. The typed message contract lives in `src/shared/messages.ts` — import
+`ClipPageMessage`, `ClipPageResponse`, and `isClipPageMessage` from there.
+
+**Popup → background (send side):**
+
+```ts
+// composition root (popup/index.tsx, side-panel.ts)
+const response = (await adapter.sendMessage({ type: MSG_CLIP, destinationId })) as ClipPageResponse;
+```
+
+**Background (receive side):**
+
+```ts
+// wiring.ts
+adapter.onMessage((msg, sendResponse) => {
+  if (!isClipPageMessage(msg)) return;
+  // ... call service, then sendResponse({ ok: true, ... })
+});
+```
+
+`ChromeAdapter.onMessage` returns `true` to the Chrome API so the channel stays open for
+async `sendResponse` calls. Non-clip messages are ignored by the `isClipPageMessage` guard.
+
 ---
 
 ## `INotificationAdapter`
