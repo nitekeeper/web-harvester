@@ -9,6 +9,7 @@
 
 import type { ReactNode } from 'react';
 
+import { SpinIcon } from '@presentation/components/icons';
 import { IconSvg } from '@presentation/components/IconSvg';
 import { Button } from '@presentation/components/ui/button';
 import { useFormatMessage, type FormatMessageFn } from '@presentation/hooks/useFormatMessage';
@@ -39,15 +40,6 @@ export interface ActionFooterProps {
   readonly saveStatus: SaveStatus;
   /** Label of the destination last saved to, forwarded to the status bar. */
   readonly saveDestinationLabel: string | null;
-}
-
-/** Inline spinner glyph — 14 × 14 px, reused from the StatusBar visual vocabulary. */
-function SpinIcon() {
-  return (
-    <IconSvg strokeWidth={2.5} style={{ animation: 'spin 0.9s linear infinite' }}>
-      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-    </IconSvg>
-  );
 }
 
 /** Section-picker glyph — crosshair-style square with centre dot. */
@@ -164,6 +156,32 @@ function ModeToggleRow({
   );
 }
 
+/** Props for the internal {@link ClipButton} helper. */
+interface ClipButtonProps {
+  readonly isSaving: boolean;
+  readonly isDisabled: boolean;
+  readonly onSave: () => void;
+  readonly fmt: FormatMessageFn;
+}
+
+/** Renders the primary "Clip Page" save action with optional saving spinner. */
+function ClipButton({ isSaving, isDisabled, onSave, fmt }: ClipButtonProps) {
+  const clipLabel = isSaving
+    ? fmt({ id: 'popup.saving', defaultMessage: 'Saving…' })
+    : fmt({ id: 'popup.clip', defaultMessage: 'Clip Page' });
+  return (
+    <Button
+      data-testid="save-button"
+      className="flex-1"
+      disabled={isDisabled || isSaving}
+      onClick={onSave}
+    >
+      {isSaving ? <SpinIcon /> : null}
+      <span>{clipLabel}</span>
+    </Button>
+  );
+}
+
 /**
  * Footer bar for the popup. Combines the primary "Clip Page" action,
  * three icon-only mode toggles (section picker, highlight, reader), and the
@@ -173,24 +191,33 @@ function ModeToggleRow({
  */
 export function ActionFooter(props: ActionFooterProps) {
   const fmt = useFormatMessage();
-  const { isSaving, isDisabled, onSave, saveStatus, saveDestinationLabel } = props;
-  const clipLabel = isSaving
-    ? fmt({ id: 'popup.saving', defaultMessage: 'Saving…' })
-    : fmt({ id: 'popup.clip', defaultMessage: 'Clip Page' });
+  const {
+    isSaving,
+    isDisabled,
+    onSave,
+    saveStatus,
+    saveDestinationLabel,
+    isPickerActive,
+    isHighlightActive,
+    isReaderActive,
+    onPickerToggle,
+    onHighlightToggle,
+    onReaderToggle,
+  } = props;
 
   return (
     <div className="flex flex-col gap-1.5 px-2.5 py-2 border-t border-border bg-card">
       <div className="flex items-center gap-1.5">
-        <Button
-          data-testid="save-button"
-          className="flex-1"
-          disabled={isDisabled || isSaving}
-          onClick={onSave}
-        >
-          {isSaving ? <SpinIcon /> : null}
-          <span>{clipLabel}</span>
-        </Button>
-        <ModeToggleRow {...props} fmt={fmt} />
+        <ClipButton isSaving={isSaving} isDisabled={isDisabled} onSave={onSave} fmt={fmt} />
+        <ModeToggleRow
+          isPickerActive={isPickerActive}
+          isHighlightActive={isHighlightActive}
+          isReaderActive={isReaderActive}
+          onPickerToggle={onPickerToggle}
+          onHighlightToggle={onHighlightToggle}
+          onReaderToggle={onReaderToggle}
+          fmt={fmt}
+        />
       </div>
       <StatusBar status={saveStatus} destinationLabel={saveDestinationLabel} />
     </div>
