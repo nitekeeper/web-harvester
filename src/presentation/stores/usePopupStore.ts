@@ -2,6 +2,8 @@
 
 import { create, createStore, type StoreApi } from 'zustand';
 
+import type { SaveStatus } from '@presentation/popup/components/StatusBar';
+
 import { type IStorageSyncPort, withStorageSync } from './storageSyncMiddleware';
 
 /**
@@ -50,6 +52,10 @@ export interface PopupStoreState {
   isSaving: boolean;
   /** Last error message to surface in the UI, or `null` when clean. */
   error: string | null;
+  /** Current save-flow status shown by the StatusBar. */
+  saveStatus: SaveStatus;
+  /** Label of the destination last written to; used by the StatusBar success message. */
+  saveDestinationLabel: string | null;
 
   /** Sets the active tab descriptor. */
   setActiveTab: (tab: PopupTab | null) => void;
@@ -69,6 +75,8 @@ export interface PopupStoreState {
   setError: (error: string | null) => void;
   /** Clears any UI-visible error message. */
   clearError: () => void;
+  /** Sets the save-flow status and optionally the destination label. */
+  setSaveStatus: (status: SaveStatus, destinationLabel?: string) => void;
 }
 
 function makeSlice(set: StoreApi<PopupStoreState>['setState']): PopupStoreState {
@@ -81,6 +89,8 @@ function makeSlice(set: StoreApi<PopupStoreState>['setState']): PopupStoreState 
     previewMarkdown: '',
     isSaving: false,
     error: null,
+    saveStatus: 'idle' as SaveStatus,
+    saveDestinationLabel: null,
 
     setActiveTab: (activeTab): void => set({ activeTab }),
     setSelectedDestinationId: (selectedDestinationId): void => set({ selectedDestinationId }),
@@ -91,6 +101,8 @@ function makeSlice(set: StoreApi<PopupStoreState>['setState']): PopupStoreState 
     setSaving: (isSaving): void => set({ isSaving }),
     setError: (error): void => set({ error }),
     clearError: (): void => set({ error: null }),
+    setSaveStatus: (status, destinationLabel): void =>
+      set({ saveStatus: status, saveDestinationLabel: destinationLabel ?? null }),
   };
 }
 
