@@ -23,32 +23,32 @@ afterEach(() => {
 
 describe('Popup — structure', () => {
   it('renders the toolbar slot', () => {
-    render(<Popup />);
+    render(<Popup onSave={() => undefined} onSettings={() => undefined} />);
     expect(document.querySelector('[data-testid="toolbar-slot"]')).not.toBeNull();
   });
 
   it('renders the destination selector', () => {
-    render(<Popup />);
+    render(<Popup onSave={() => undefined} onSettings={() => undefined} />);
     expect(document.querySelector('[data-testid="destination-selector"]')).not.toBeNull();
   });
 
   it('renders the template selector', () => {
-    render(<Popup />);
+    render(<Popup onSave={() => undefined} onSettings={() => undefined} />);
     expect(document.querySelector('[data-testid="template-selector"]')).not.toBeNull();
   });
 
   it('renders the popup header', () => {
-    render(<Popup />);
+    render(<Popup onSave={() => undefined} onSettings={() => undefined} />);
     expect(document.querySelector('[data-testid="popup-header"]')).not.toBeNull();
   });
 
   it('renders the action footer clip button', () => {
-    render(<Popup />);
+    render(<Popup onSave={() => undefined} onSettings={() => undefined} />);
     expect(document.querySelector('[data-testid="save-button"]')).not.toBeNull();
   });
 
   it('renders the status bar', () => {
-    render(<Popup />);
+    render(<Popup onSave={() => undefined} onSettings={() => undefined} />);
     expect(document.querySelector('[data-testid="status-bar"]')).not.toBeNull();
   });
 });
@@ -66,7 +66,7 @@ describe('Popup — interactions', () => {
         },
       ],
     });
-    render(<Popup />);
+    render(<Popup onSave={() => undefined} onSettings={() => undefined} />);
     await userEvent.setup().click(screen.getByTestId('template-selector'));
     expect(screen.getByText('Article')).not.toBeNull();
   });

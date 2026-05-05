@@ -12,7 +12,15 @@ import { PopupHeader } from './components/PopupHeader';
 import { TemplateSelector } from './components/TemplateSelector';
 import { ToolbarSlot } from './components/ToolbarSlot';
 
-const NOOP = (): void => undefined;
+const NOOP_TOGGLE = (): void => undefined;
+
+/** Props for the {@link Popup} root component. */
+export interface PopupProps {
+  /** Called when the user clicks the Clip Page button. */
+  readonly onSave: () => void;
+  /** Called when the user clicks the settings gear icon. */
+  readonly onSettings: () => void;
+}
 
 /** Reads the slice of {@link useSettingsStore} that the popup root cares about. */
 function useSettingsBindings() {
@@ -41,21 +49,21 @@ function usePopupBindings() {
  * Root component for the browser-action popup. Renders the header (logo +
  * theme toggle + settings), the body (toolbar slot, destination / template
  * selectors, markdown preview), and the action footer (Clip Page button +
- * mode toggles + status bar). The `onSave` action is wired by the composition
- * root in `popup/index.tsx` — the button is disabled when no destination is
- * selected.
+ * mode toggles + status bar).
  *
- * The `onSettings` callback opens the extension options page; passing `NOOP`
- * here because the composition root (index.tsx) must supply
- * `chrome.runtime.openOptionsPage` — see ADR-022 for the rationale.
+ * The `onSave` and `onSettings` callbacks are supplied by the composition
+ * root in `popup/index.tsx`; `onSave` triggers the IPC clip workflow and the
+ * Clip Page button is disabled when no destination is selected, and
+ * `onSettings` opens the extension options page via the chrome adapter — see
+ * ADR-022 for the rationale.
  */
-export function Popup() {
+export function Popup({ onSave, onSettings }: PopupProps) {
   const { destinations, templates, theme, handleTheme } = useSettingsBindings();
   const { popup, handlePickerToggle } = usePopupBindings();
 
   return (
     <div className="w-80 min-h-48 bg-background text-foreground flex flex-col">
-      <PopupHeader theme={theme} onTheme={handleTheme} onSettings={NOOP} />
+      <PopupHeader theme={theme} onTheme={handleTheme} onSettings={onSettings} />
       <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-3">
         <ToolbarSlot />
         <DestinationSelector
@@ -73,13 +81,13 @@ export function Popup() {
       <ActionFooter
         isSaving={popup.isSaving}
         isDisabled={popup.selectedDestinationId === null}
-        onSave={NOOP}
+        onSave={onSave}
         isPickerActive={popup.isPickerActive}
         isHighlightActive={false}
         isReaderActive={false}
         onPickerToggle={handlePickerToggle}
-        onHighlightToggle={NOOP}
-        onReaderToggle={NOOP}
+        onHighlightToggle={NOOP_TOGGLE}
+        onReaderToggle={NOOP_TOGGLE}
         saveStatus={popup.saveStatus}
         saveDestinationLabel={popup.saveDestinationLabel}
       />

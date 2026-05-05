@@ -14,6 +14,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { ChromeAdapter } from '@infrastructure/adapters/chrome/ChromeAdapter';
+import { createSaveHandler } from '@presentation/hooks/useSaveHandler';
 import '@presentation/styles/global.css';
 import { bootstrapStore } from '@presentation/stores/bootstrapStore';
 import { usePopupStore } from '@presentation/stores/usePopupStore';
@@ -37,12 +38,19 @@ async function init(): Promise<void> {
     bootstrapStore(adapter, 'popup-state', usePopupStore),
   ]);
 
+  const handleSave = createSaveHandler(adapter);
+
   bootstrapTheme().catch((err: unknown) => {
     logger.error('theme bootstrap failed', err);
   });
   createRoot(rootEl).render(
     <StrictMode>
-      <Popup />
+      <Popup
+        onSave={handleSave}
+        onSettings={() => {
+          adapter.openOptionsPage();
+        }}
+      />
     </StrictMode>,
   );
 }
