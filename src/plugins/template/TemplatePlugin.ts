@@ -1,10 +1,7 @@
 // src/plugins/template/TemplatePlugin.ts
-import type {
-  CompileResult,
-  ITemplateService,
-  TemplateVariables,
-} from '@application/TemplateService';
+import type { CompileResult, ITemplateService } from '@application/TemplateService';
 import { TYPES } from '@core/types';
+import { turndownHtml } from '@domain/extractor/content-extractor';
 import type { ClipContent, IPlugin, IPluginContext, IPluginManifest } from '@domain/types';
 
 /**
@@ -39,10 +36,14 @@ export class TemplatePlugin implements IPlugin {
     this.beforeClipUnsubscribe = hooks.beforeClip.tapAsync(
       async (content: ClipContent): Promise<ClipContent | undefined> => {
         const template = await templateService.getDefault();
-        const result: CompileResult = await templateService.render(
-          template.id,
-          content as unknown as TemplateVariables,
-        );
+        const variables = {
+          content: turndownHtml(content.body),
+          title: content.title,
+          url: content.url,
+          date: new Date().toISOString().slice(0, 10),
+          selectedText: content.selectedText,
+        };
+        const result: CompileResult = await templateService.render(template.id, variables);
         if (result.ok) {
           return { ...content, body: result.output };
         }

@@ -43,8 +43,13 @@ export async function compileTemplateForService(
     template,
     stringified as Parameters<typeof compileTemplate>[1],
   );
+  // The domain `splitFrontmatter` strips the surrounding `---` fences from
+  // `result.frontmatter`. Restore them here so consumers (Obsidian) can parse
+  // the YAML block as properties.
   const output =
-    result.frontmatter.length > 0 ? `${result.frontmatter}\n\n${result.body}` : result.body;
+    result.frontmatter.length > 0
+      ? `---\n${result.frontmatter}\n---\n\n${result.body}`
+      : result.body;
   return { ok: result.errors.length === 0, output, errors: result.errors };
 }
 

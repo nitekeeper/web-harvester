@@ -2,10 +2,14 @@
 
 ## Overview
 
-`content-extractor.ts` provides a single public function, `extractContent`, that converts a live
-browser `Document` into a GFM Markdown string. It clones the body to avoid mutating the page,
-applies XPath-based include/exclude filters, absolutizes relative URLs, and delegates HTML-to-
-Markdown conversion to TurndownService with the GFM plugin.
+`content-extractor.ts` exposes two public functions:
+
+- `extractContent` — converts a live browser `Document` into a GFM Markdown string. It clones the
+  body to avoid mutating the page, applies XPath-based include/exclude filters, absolutizes
+  relative URLs, and delegates HTML-to-Markdown conversion to TurndownService with the GFM plugin.
+- `turndownHtml` — converts a raw HTML string to Markdown using the same TurndownService config.
+  Safe to call from any execution context (e.g. background service worker) because it does not
+  require a live `Document`.
 
 ## Interface
 
@@ -61,11 +65,22 @@ interface ExtractionResult {
 | `title`    | Document title (`document.title`), falling back to the first `<h1>` text content.         |
 | `byline`   | Author from `<meta name="author">` or `<meta property="article:author">`, or `undefined`. |
 
+### `turndownHtml(html: string): string`
+
+Converts an HTML string to Markdown using the same `TurndownService` configuration as
+`extractContent` (ATX headings, dash bullets, fenced code blocks, GFM plugin). The result is
+trimmed.
+
+Use this in contexts where only the post-extraction body HTML is available (e.g. the
+`TemplatePlugin.beforeClip` handler in the background service worker, where there is no live
+`Document`).
+
 ## Usage Example
 
 ```typescript
-import { extractContent } from '@domain/extractor/content-extractor';
+import { extractContent, turndownHtml } from '@domain/extractor/content-extractor';
 
+// Full pipeline against a live document.
 const result = extractContent(document, {
   baseUrl: 'https://example.com/article',
   excludedXPaths: ['/html/body/div[@id="sidebar"]'],
@@ -75,4 +90,8 @@ const result = extractContent(document, {
 console.log(result.title); // "My Article Title"
 console.log(result.byline); // "Jane Smith" | undefined
 console.log(result.markdown); // "# My Article Title\n\nContent…"
+
+// HTML-string-only conversion (no Document required).
+const md = turndownHtml('<h1>Hello</h1><p>World</p>');
+console.log(md); // "# Hello\n\nWorld"
 ```

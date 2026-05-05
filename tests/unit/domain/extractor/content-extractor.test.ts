@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 
-import { extractContent } from '@domain/extractor/content-extractor';
+import { extractContent, turndownHtml } from '@domain/extractor/content-extractor';
 
 const BASE = 'https://example.com/';
 
@@ -172,5 +172,31 @@ describe('extractContent — title fallback', () => {
     document.body.innerHTML = '<p>just a paragraph</p>';
     const result = extractContent(document, { baseUrl: BASE });
     expect(result.title).toBe('');
+  });
+});
+
+describe('turndownHtml', () => {
+  it('converts a simple paragraph HTML string to markdown', () => {
+    expect(turndownHtml('<p>raw</p>')).toBe('raw');
+  });
+
+  it('converts a heading HTML string to atx-style markdown', () => {
+    expect(turndownHtml('<h1>Hello</h1>')).toBe('# Hello');
+  });
+
+  it('converts an anchor HTML string to markdown link syntax', () => {
+    expect(turndownHtml('<a href="https://example.com">Example</a>')).toBe(
+      '[Example](https://example.com)',
+    );
+  });
+
+  it('returns an empty string when given empty HTML', () => {
+    expect(turndownHtml('')).toBe('');
+  });
+
+  it('trims surrounding whitespace from converted output', () => {
+    const result = turndownHtml('<p>  spaced  </p>');
+    expect(result.startsWith(' ')).toBe(false);
+    expect(result.endsWith(' ')).toBe(false);
   });
 });

@@ -7,6 +7,17 @@ import { TemplatePlugin } from '@plugins/template/TemplatePlugin';
 
 import { createMockContext } from '../../helpers/createMockContext';
 
+/** Shared URL fixture used by `beforeClip` test cases. */
+const EXAMPLE_URL = 'https://example.com';
+
+/** Shared `ClipContent` fixture used by `beforeClip` test cases. */
+const baseContent: ClipContent = {
+  title: 'Hello',
+  url: EXAMPLE_URL,
+  body: '<p>raw</p>',
+  selectedText: '',
+};
+
 /** Bundle of objects produced by `setupHarness` and shared by each test. */
 interface TemplateTestHarness {
   plugin: TemplatePlugin;
@@ -148,14 +159,8 @@ describe('TemplatePlugin — activate() hook taps', () => {
   });
 });
 
-describe('TemplatePlugin — beforeClip handler behavior', () => {
+describe('TemplatePlugin — beforeClip render() variables', () => {
   let harness: TemplateTestHarness;
-  const baseContent: ClipContent = {
-    title: 'Hello',
-    url: 'https://example.com',
-    body: '<p>raw</p>',
-    selectedText: '',
-  };
 
   beforeEach(() => {
     harness = setupHarness();
@@ -165,12 +170,51 @@ describe('TemplatePlugin — beforeClip handler behavior', () => {
     vi.clearAllMocks();
   });
 
-  it('calls templateService.getDefault() then render(template.id, content)', async () => {
+  it('calls templateService.getDefault() then render(template.id, explicit variables)', async () => {
     await harness.plugin.activate(harness.ctx);
     await harness.ctx.hooks.beforeClip.call(baseContent);
 
     expect(harness.templateService.getDefault).toHaveBeenCalledTimes(1);
-    expect(harness.templateService.render).toHaveBeenCalledWith('default', baseContent);
+    expect(harness.templateService.render).toHaveBeenCalledWith('default', {
+      content: expect.any(String),
+      title: 'Hello',
+      url: EXAMPLE_URL,
+      date: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+      selectedText: '',
+    });
+  });
+
+  it('passes Turndown-converted markdown as the `content` variable to render()', async () => {
+    await harness.plugin.activate(harness.ctx);
+    await harness.ctx.hooks.beforeClip.call(baseContent);
+
+    const renderArgs = harness.templateService.render.mock.calls[0];
+    expect(renderArgs).toBeDefined();
+    const variables = renderArgs?.[1] as { content: string };
+    // Turndown converts `<p>raw</p>` to `raw` (paragraph wrapper stripped, trimmed).
+    expect(variables.content).toBe('raw');
+  });
+
+  it("passes today's ISO date (YYYY-MM-DD) as the `date` variable to render()", async () => {
+    await harness.plugin.activate(harness.ctx);
+    await harness.ctx.hooks.beforeClip.call(baseContent);
+
+    const renderArgs = harness.templateService.render.mock.calls[0];
+    const variables = renderArgs?.[1] as { date: string };
+    const expected = new Date().toISOString().slice(0, 10);
+    expect(variables.date).toBe(expected);
+  });
+});
+
+describe('TemplatePlugin — beforeClip handler result mapping', () => {
+  let harness: TemplateTestHarness;
+
+  beforeEach(() => {
+    harness = setupHarness();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
   });
 
   it('returns content with body replaced by render output when result.ok is true', async () => {

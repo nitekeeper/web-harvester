@@ -195,3 +195,14 @@ function extractByline(doc: Document): string | undefined {
     doc.querySelector('meta[property="article:author"]');
   return authorMeta?.getAttribute('content') ?? undefined;
 }
+
+/**
+ * Converts an HTML string to Markdown using TurndownService configured for
+ * GFM output. Unlike `extractContent`, this function operates on a raw HTML
+ * string and does not require a `Document` — safe to call from any execution
+ * context (background service worker, popup, settings page, …) where only
+ * the post-extraction body HTML is available.
+ */
+export function turndownHtml(html: string): string {
+  return buildTurndown().turndown(html).trim();
+}
