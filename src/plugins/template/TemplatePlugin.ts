@@ -36,8 +36,14 @@ export class TemplatePlugin implements IPlugin {
     this.beforeClipUnsubscribe = hooks.beforeClip.tapAsync(
       async (content: ClipContent): Promise<ClipContent | undefined> => {
         const template = await templateService.getDefault();
+        let markdownBody: string;
+        try {
+          markdownBody = turndownHtml(content.body);
+        } catch {
+          markdownBody = '';
+        }
         const variables = {
-          content: turndownHtml(content.body),
+          content: markdownBody,
           title: content.title,
           url: content.url,
           date: new Date().toISOString().slice(0, 10),
@@ -47,7 +53,7 @@ export class TemplatePlugin implements IPlugin {
         if (result.ok) {
           return { ...content, body: result.output };
         }
-        return content;
+        return { ...content, body: markdownBody };
       },
     );
 

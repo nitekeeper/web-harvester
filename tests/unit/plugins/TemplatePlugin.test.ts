@@ -2,10 +2,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { TYPES } from '@core/types';
+import { turndownHtml } from '@domain/extractor/content-extractor';
 import type { ClipContent, IPluginContext } from '@domain/types';
 import { TemplatePlugin } from '@plugins/template/TemplatePlugin';
 
 import { createMockContext } from '../../helpers/createMockContext';
+
+vi.mock('@domain/extractor/content-extractor', async (importActual) => {
+  const actual = await importActual<typeof import('@domain/extractor/content-extractor')>();
+  return { ...actual, turndownHtml: vi.fn().mockImplementation(actual.turndownHtml) };
+});
 
 /** Shared URL fixture used by `beforeClip` test cases. */
 const EXAMPLE_URL = 'https://example.com';
@@ -226,7 +232,7 @@ describe('TemplatePlugin — beforeClip handler result mapping', () => {
     expect(result.url).toBe(baseContent.url);
   });
 
-  it('returns content unchanged when result.ok is false', async () => {
+  it('returns markdown body (not raw HTML) when result.ok is false', async () => {
     harness.templateService.render.mockResolvedValueOnce({
       ok: false,
       output: 'failed',
@@ -236,7 +242,24 @@ describe('TemplatePlugin — beforeClip handler result mapping', () => {
     await harness.plugin.activate(harness.ctx);
     const result = await harness.ctx.hooks.beforeClip.call(baseContent);
 
-    expect(result).toEqual(baseContent);
+    // body must be the Turndown-converted markdown, never the raw HTML input
+    expect(result.body).toBe('raw');
+    expect(result.body).not.toBe(baseContent.body);
+    expect(result.title).toBe(baseContent.title);
+    expect(result.url).toBe(baseContent.url);
+  });
+
+  it('returns rendered template (not raw HTML) when turndownHtml throws', async () => {
+    vi.mocked(turndownHtml).mockImplementationOnce(() => {
+      throw new Error('Maximum call stack size exceeded');
+    });
+
+    await harness.plugin.activate(harness.ctx);
+    const result = await harness.ctx.hooks.beforeClip.call(baseContent);
+
+    // body must never be the raw HTML — render should still be called and succeed
+    expect(result.body).not.toBe(baseContent.body);
+    expect(result.body).not.toContain('<p>');
   });
 });
 

@@ -316,7 +316,7 @@ export class ClipService implements IClipService {
    */
   private async extractHtml(tabId: number): Promise<string> {
     try {
-      return await this.tabAdapter.evaluateOnTab(tabId, () => document.documentElement.outerHTML);
+      return await this.tabAdapter.evaluateOnTab(tabId, () => document.body.innerHTML);
     } catch (err: unknown) {
       this.logger.warn('Page not scriptable — using empty string', err);
       return '';
