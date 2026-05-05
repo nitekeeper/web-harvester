@@ -167,7 +167,7 @@ interface ClipButtonProps {
 /** Renders the primary "Clip Page" save action with optional saving spinner. */
 function ClipButton({ isSaving, isDisabled, onSave, fmt }: ClipButtonProps) {
   const clipLabel = isSaving
-    ? fmt({ id: 'popup.saving', defaultMessage: 'Saving…' })
+    ? fmt({ id: 'popup.clip.saving', defaultMessage: 'Saving…' })
     : fmt({ id: 'popup.clip', defaultMessage: 'Clip Page' });
   return (
     <Button

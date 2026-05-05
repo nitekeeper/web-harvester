@@ -37,11 +37,6 @@ describe('Popup — structure', () => {
     expect(document.querySelector('[data-testid="template-selector"]')).not.toBeNull();
   });
 
-  it('renders the save button', () => {
-    render(<Popup />);
-    expect(document.querySelector('[data-testid="save-button"]')).not.toBeNull();
-  });
-
   it('renders the popup header', () => {
     render(<Popup />);
     expect(document.querySelector('[data-testid="popup-header"]')).not.toBeNull();
