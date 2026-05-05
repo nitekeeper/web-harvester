@@ -1,7 +1,95 @@
 {
   "save-button": {
     "message": "Save",
-    "description": "The save button label"
+    "description": "The save button label (legacy key — kept for compatibility)"
+  },
+  "popup.clip": {
+    "message": "Clip Page",
+    "description": "Primary clip action button label"
+  },
+  "popup.clip.saving": {
+    "message": "Saving…",
+    "description": "Clip button label while save is in flight"
+  },
+  "popup.status.ready": {
+    "message": "Ready",
+    "description": "Status bar idle state"
+  },
+  "popup.status.saving": {
+    "message": "Saving…",
+    "description": "Status bar while save is in flight"
+  },
+  "popup.status.saved": {
+    "message": "Saved to {folder}",
+    "description": "Status bar success — {folder} is the destination label"
+  },
+  "popup.status.saved.simple": {
+    "message": "Saved",
+    "description": "Status bar success when no destination label is available"
+  },
+  "popup.status.error": {
+    "message": "Save failed",
+    "description": "Status bar generic error fallback"
+  },
+  "popup.header.title": {
+    "message": "Web Harvester",
+    "description": "App name shown in popup header"
+  },
+  "popup.header.theme.light": {
+    "message": "Light",
+    "description": "Theme menu option"
+  },
+  "popup.header.theme.dark": {
+    "message": "Dark",
+    "description": "Theme menu option"
+  },
+  "popup.header.theme.system": {
+    "message": "System",
+    "description": "Theme menu option — follows OS setting"
+  },
+  "popup.header.settings": {
+    "message": "Settings",
+    "description": "Settings icon button aria-label"
+  },
+  "popup.toggle.picker": {
+    "message": "Section picker",
+    "description": "Section picker icon button aria-label"
+  },
+  "popup.toggle.highlight": {
+    "message": "Highlight mode",
+    "description": "Highlight mode icon button aria-label"
+  },
+  "popup.toggle.reader": {
+    "message": "Reader mode",
+    "description": "Reader mode icon button aria-label"
+  },
+  "settings.header.title": {
+    "message": "Web Harvester",
+    "description": "App name shown in settings sidebar"
+  },
+  "settings.header.subtitle": {
+    "message": "Settings",
+    "description": "Subtitle shown below app name in settings sidebar"
+  },
+  "sidepanel.header.title": {
+    "message": "Web Harvester",
+    "description": "App name shown in side panel header"
+  },
+  "sidepanel.header.close": {
+    "message": "Close panel",
+    "description": "Close button aria-label in side panel header"
+  },
+  "sidepanel.tab.highlights": {
+    "message": "Highlights",
+    "description": "Side panel highlights tab label"
+  },
+  "sidepanel.tab.reader": {
+    "message": "Reader",
+    "description": "Side panel reader tab label"
+  },
+  "sidepanel.tab.clip": {
+    "message": "Clip",
+    "description": "Side panel clip tab label"
   },
   "clip-success": {
     "message": "Clipped to {destination}",

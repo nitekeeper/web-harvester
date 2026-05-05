@@ -1,7 +1,95 @@
 {
   "save-button": {
     "message": "حفظ",
-    "description": "The save button label"
+    "description": "The save button label (legacy)"
+  },
+  "popup.clip": {
+    "message": "حفظ الصفحة",
+    "description": "Primary clip action button label"
+  },
+  "popup.clip.saving": {
+    "message": "جارٍ الحفظ…",
+    "description": "Clip button label while save is in flight"
+  },
+  "popup.status.ready": {
+    "message": "جاهز",
+    "description": "Status bar idle state"
+  },
+  "popup.status.saving": {
+    "message": "جارٍ الحفظ…",
+    "description": "Status bar while save is in flight"
+  },
+  "popup.status.saved": {
+    "message": "تم الحفظ في {folder}",
+    "description": "Status bar success"
+  },
+  "popup.status.saved.simple": {
+    "message": "تم الحفظ",
+    "description": "Status bar success when no destination label is available"
+  },
+  "popup.status.error": {
+    "message": "فشل الحفظ",
+    "description": "Status bar generic error fallback"
+  },
+  "popup.header.title": {
+    "message": "Web Harvester",
+    "description": "App name shown in popup header"
+  },
+  "popup.header.theme.light": {
+    "message": "فاتح",
+    "description": "Theme menu option"
+  },
+  "popup.header.theme.dark": {
+    "message": "داكن",
+    "description": "Theme menu option"
+  },
+  "popup.header.theme.system": {
+    "message": "النظام",
+    "description": "Theme menu option"
+  },
+  "popup.header.settings": {
+    "message": "الإعدادات",
+    "description": "Settings icon button aria-label"
+  },
+  "popup.toggle.picker": {
+    "message": "منتقي الأقسام",
+    "description": "Section picker icon button aria-label"
+  },
+  "popup.toggle.highlight": {
+    "message": "وضع التظليل",
+    "description": "Highlight mode icon button aria-label"
+  },
+  "popup.toggle.reader": {
+    "message": "وضع القارئ",
+    "description": "Reader mode icon button aria-label"
+  },
+  "settings.header.title": {
+    "message": "Web Harvester",
+    "description": "App name shown in settings sidebar"
+  },
+  "settings.header.subtitle": {
+    "message": "الإعدادات",
+    "description": "Subtitle below app name in settings sidebar"
+  },
+  "sidepanel.header.title": {
+    "message": "Web Harvester",
+    "description": "App name shown in side panel header"
+  },
+  "sidepanel.header.close": {
+    "message": "إغلاق اللوحة",
+    "description": "Close button aria-label"
+  },
+  "sidepanel.tab.highlights": {
+    "message": "التظليلات",
+    "description": "Side panel highlights tab label"
+  },
+  "sidepanel.tab.reader": {
+    "message": "القارئ",
+    "description": "Side panel reader tab label"
+  },
+  "sidepanel.tab.clip": {
+    "message": "حفظ",
+    "description": "Side panel clip tab label"
   },
   "clip-success": {
     "message": "تم الحفظ في {destination}",
