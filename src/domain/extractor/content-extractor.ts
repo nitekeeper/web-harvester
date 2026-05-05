@@ -246,9 +246,6 @@ export function extractArticleMarkdown(html: string, url: string): string {
   if (!html) return '';
   const doc = getParser().parseFromString(html, 'text/html');
   const defuddled = new Defuddle(doc, { url }).parse();
-  logger.info(
-    `[debug] defuddled.content type=${typeof defuddled.content}, length=${defuddled.content ? defuddled.content.length : 'null/undefined'}`,
-  );
   const result = buildTurndown().turndown(defuddled.content).trim();
   logger.info(`[debug] turndown result length=${result.length}`);
   return result;

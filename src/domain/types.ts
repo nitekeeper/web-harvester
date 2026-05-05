@@ -72,7 +72,10 @@ export interface IHookSystem {
   readonly beforeClip: IWaterfallHook<ClipContent>;
   readonly onClip: IEventHook<ClipContent>;
   readonly onHighlight: IEventHook<HighlightEvent>;
+  /** Fired after settings are persisted — notification only, do not re-persist in response. */
   readonly onSettingsChanged: IEventHook<Settings>;
+  /** Fired when an external caller requests that settings be written to storage. */
+  readonly onSaveSettings: IEventHook<Settings>;
   readonly onThemeChanged: ISyncEventHook<ThemePreset>;
   readonly onTemplateRender: IWaterfallHook<string>;
 }

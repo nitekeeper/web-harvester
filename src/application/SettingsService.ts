@@ -73,7 +73,9 @@ export interface ISettingsService {
   get(): Promise<AppSettings>;
   /** Updates a single setting key, persists, and notifies listeners + hook. */
   set<K extends keyof AppSettings>(key: K, value: AppSettings[K]): Promise<void>;
-  /** Registers a listener invoked with the full settings object after each set(). */
+  /** Replaces the full settings object, persists, and notifies listeners + hook. */
+  setAll(settings: AppSettings): Promise<void>;
+  /** Registers a listener invoked with the full settings object after each write. */
   onChange(handler: (settings: AppSettings) => void): void;
 }
 
@@ -132,9 +134,26 @@ export class SettingsService implements ISettingsService {
   }
 
   /**
+   * Replaces the entire settings object and persists it. After persisting,
+   * all `onChange` subscribers are invoked synchronously with the new
+   * settings, then the `onSettingsChanged` hook is awaited.
+   *
+   * Intended as the handler for the `onSaveSettings` hook: an external caller
+   * fires `onSaveSettings` to request persistence; this method writes to
+   * storage and then fires `onSettingsChanged` as a notification to other
+   * listeners. It does NOT fire `onSaveSettings` itself to prevent recursion.
+   */
+  async setAll(settings: AppSettings): Promise<void> {
+    await this.storage.set(STORAGE_KEY, settings);
+    this.logger.debug('All settings replaced');
+    this.changeHandlers.forEach((h) => h(settings));
+    await this.hooks.onSettingsChanged.call(settings);
+  }
+
+  /**
    * Registers a listener that receives the full settings object after each
-   * successful `set()`. Multiple listeners are supported and invoked in
-   * registration order.
+   * successful `set()` or `setAll()`. Multiple listeners are supported and
+   * invoked in registration order.
    */
   onChange(handler: (settings: AppSettings) => void): void {
     this.changeHandlers.push(handler);

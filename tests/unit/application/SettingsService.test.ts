@@ -96,6 +96,34 @@ describe('SettingsService — set()', () => {
   });
 });
 
+const FULL_SETTINGS = {
+  version: 1,
+  theme: 'dark' as const,
+  locale: 'fr',
+  conflictStrategy: 'overwrite' as const,
+  customThemeTokens: {},
+  customThemes: [],
+};
+
+describe('SettingsService — setAll()', () => {
+  it('persists the full settings object to storage', async () => {
+    await service.setAll(FULL_SETTINGS);
+    expect(storage.set).toHaveBeenCalledWith(expect.any(String), FULL_SETTINGS);
+  });
+
+  it('fires hooks.onSettingsChanged after persisting', async () => {
+    await service.setAll(FULL_SETTINGS);
+    expect(hooks.onSettingsChanged.call).toHaveBeenCalledWith(FULL_SETTINGS);
+  });
+
+  it('notifies onChange handlers after persisting', async () => {
+    const handler = vi.fn();
+    service.onChange(handler);
+    await service.setAll(FULL_SETTINGS);
+    expect(handler).toHaveBeenCalledWith(FULL_SETTINGS);
+  });
+});
+
 describe('SettingsService — onChange()', () => {
   it('calls the handler when settings change via set()', async () => {
     storage.get.mockResolvedValue({});

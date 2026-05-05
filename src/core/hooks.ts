@@ -384,7 +384,10 @@ export interface CoreHookSystem extends IHookSystem {
   readonly afterSave: AsyncEventHook<SaveResult>;
   readonly onTemplateRender: AsyncWaterfallHook<string>;
   readonly onHighlight: AsyncEventHook<HighlightEvent>;
+  /** Fired after settings are persisted — notification only, do not re-persist in response. */
   readonly onSettingsChanged: AsyncEventHook<Settings>;
+  /** Fired when an external caller requests that settings be written to storage. */
+  readonly onSaveSettings: AsyncEventHook<Settings>;
   readonly onThemeChanged: SyncEventHook<ThemePreset>;
   readonly onPopupOpen: SyncEventHook<undefined>;
   readonly onPluginActivate: AsyncEventHook<string>;
@@ -402,6 +405,7 @@ export function createHookSystem(): CoreHookSystem {
     onTemplateRender: createAsyncWaterfallHook<string>(),
     onHighlight: createAsyncEventHook<HighlightEvent>(),
     onSettingsChanged: createAsyncEventHook<Settings>(),
+    onSaveSettings: createAsyncEventHook<Settings>(),
     onThemeChanged: createSyncEventHook<ThemePreset>(),
     onPopupOpen: createSyncEventHook<undefined>(),
     onPluginActivate: createAsyncEventHook<string>(),

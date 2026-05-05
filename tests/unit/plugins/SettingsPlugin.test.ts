@@ -12,7 +12,7 @@ interface SettingsTestHarness {
   plugin: SettingsPlugin;
   ctx: IPluginContext;
   mockSettingsService: {
-    set: ReturnType<typeof vi.fn>;
+    setAll: ReturnType<typeof vi.fn>;
     get: ReturnType<typeof vi.fn>;
     onChange: ReturnType<typeof vi.fn>;
   };
@@ -28,7 +28,7 @@ function setupHarness(): SettingsTestHarness {
   const ctx = createMockContext();
 
   const mockSettingsService = {
-    set: vi.fn().mockResolvedValue(undefined),
+    setAll: vi.fn().mockResolvedValue(undefined),
     get: vi.fn().mockResolvedValue({}),
     onChange: vi.fn(),
   };
@@ -139,7 +139,7 @@ describe('SettingsPlugin — activate() UI registration', () => {
   });
 });
 
-describe('SettingsPlugin — onSettingsChanged hook', () => {
+describe('SettingsPlugin — onSaveSettings hook', () => {
   let harness: SettingsTestHarness;
 
   beforeEach(() => {
@@ -150,13 +150,21 @@ describe('SettingsPlugin — onSettingsChanged hook', () => {
     vi.clearAllMocks();
   });
 
-  it('persists new settings via settingsService.set when onSettingsChanged fires', async () => {
+  it('persists new settings via settingsService.setAll when onSaveSettings fires', async () => {
     await harness.plugin.activate(harness.ctx);
 
     const newSettings: Settings = { theme: 'dark', locale: 'en' };
-    await harness.ctx.hooks.onSettingsChanged.call(newSettings);
+    await harness.ctx.hooks.onSaveSettings.call(newSettings);
 
-    expect(harness.mockSettingsService.set).toHaveBeenCalledWith(newSettings);
+    expect(harness.mockSettingsService.setAll).toHaveBeenCalledWith(newSettings);
+  });
+
+  it('does not persist when onSettingsChanged fires (notification only, not a save request)', async () => {
+    await harness.plugin.activate(harness.ctx);
+
+    await harness.ctx.hooks.onSettingsChanged.call({ theme: 'dark' });
+
+    expect(harness.mockSettingsService.setAll).not.toHaveBeenCalled();
   });
 });
 
@@ -181,14 +189,14 @@ describe('SettingsPlugin — deactivate()', () => {
     await expect(harness.plugin.deactivate()).resolves.toBeUndefined();
   });
 
-  it('unsubscribes the onSettingsChanged tap on deactivate', async () => {
+  it('unsubscribes the onSaveSettings tap on deactivate', async () => {
     await harness.plugin.activate(harness.ctx);
     await harness.plugin.deactivate();
 
-    harness.mockSettingsService.set.mockClear();
+    harness.mockSettingsService.setAll.mockClear();
 
-    await harness.ctx.hooks.onSettingsChanged.call({ theme: 'dark' });
+    await harness.ctx.hooks.onSaveSettings.call({ theme: 'dark' });
 
-    expect(harness.mockSettingsService.set).not.toHaveBeenCalled();
+    expect(harness.mockSettingsService.setAll).not.toHaveBeenCalled();
   });
 });

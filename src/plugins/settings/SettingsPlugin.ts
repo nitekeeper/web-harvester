@@ -4,15 +4,13 @@ import { TYPES } from '@core/types';
 import type { IPlugin, IPluginContext, IPluginManifest, Settings } from '@domain/types';
 
 /**
- * Minimal port for the settings service. The plugin treats `set()` as a
- * full-object writer because the `onSettingsChanged` hook payload is the
- * complete `Settings` record. Defining the port locally avoids a cross-layer
- * dependency on the concrete `ISettingsService` interface (which exposes a
- * key/value `set<K extends keyof AppSettings>` signature) — see ADR-005 for
- * the rationale behind plugin-local ports.
+ * Minimal port for the settings service used by this plugin. Exposes only
+ * `setAll` — the full-object writer called when `onSaveSettings` fires.
+ * Defined locally to avoid a cross-layer dependency on the concrete
+ * `ISettingsService` interface — see ADR-005 for the rationale.
  */
 interface ISettingsServicePort {
-  set(settings: Settings): Promise<void>;
+  setAll(settings: Settings): Promise<void>;
 }
 
 /**
@@ -28,12 +26,17 @@ export class SettingsPlugin implements IPlugin {
     version: '1.0.0',
   };
 
-  private settingsChangedUnsubscribe: (() => void) | null = null;
+  private onSaveSettingsUnsubscribe: (() => void) | null = null;
 
   /**
    * Resolves required services, registers the general settings nav and panel
-   * (plus a debug panel ordered last), and taps `onSettingsChanged` to
-   * persist incoming settings via `ISettingsService.set`.
+   * (plus a debug panel ordered last), and taps `onSaveSettings` to persist
+   * incoming settings via `ISettingsService.setAll`.
+   *
+   * Uses `onSaveSettings` (not `onSettingsChanged`) intentionally: tapping
+   * `onSettingsChanged` would create an infinite loop because `setAll` fires
+   * `onSettingsChanged` after persisting. `onSaveSettings` is a one-way write
+   * request; `onSettingsChanged` is a post-write notification.
    */
   async activate(context: IPluginContext): Promise<void> {
     const { container, hooks, ui, logger } = context;
@@ -45,18 +48,18 @@ export class SettingsPlugin implements IPlugin {
     ui.addToSlot('settings-section', { component: 'GeneralSettingsPanel', order: 0 });
     ui.addToSlot('settings-section', { component: 'DebugPanel', order: 9999 });
 
-    this.settingsChangedUnsubscribe = hooks.onSettingsChanged.tapAsync(
+    this.onSaveSettingsUnsubscribe = hooks.onSaveSettings.tapAsync(
       async (settings: Settings): Promise<void> => {
-        await settingsService.set(settings);
+        await settingsService.setAll(settings);
       },
     );
 
     logger.info('SettingsPlugin activated');
   }
 
-  /** Unsubscribes the `onSettingsChanged` tap registered during activation. */
+  /** Unsubscribes the `onSaveSettings` tap registered during activation. */
   async deactivate(): Promise<void> {
-    this.settingsChangedUnsubscribe?.();
-    this.settingsChangedUnsubscribe = null;
+    this.onSaveSettingsUnsubscribe?.();
+    this.onSaveSettingsUnsubscribe = null;
   }
 }
