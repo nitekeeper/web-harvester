@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 import { extractContent, turndownHtml } from '@domain/extractor/content-extractor';
 
@@ -175,9 +175,11 @@ describe('extractContent — title fallback', () => {
   });
 });
 
+const PARAGRAPH_HTML = '<p>raw</p>';
+
 describe('turndownHtml', () => {
   it('converts a simple paragraph HTML string to markdown', () => {
-    expect(turndownHtml('<p>raw</p>')).toBe('raw');
+    expect(turndownHtml(PARAGRAPH_HTML)).toBe('raw');
   });
 
   it('converts a heading HTML string to atx-style markdown', () => {
@@ -198,5 +200,16 @@ describe('turndownHtml', () => {
     const result = turndownHtml('<p>  spaced  </p>');
     expect(result.startsWith(' ')).toBe(false);
     expect(result.endsWith(' ')).toBe(false);
+  });
+
+  it('parses HTML via DOMParser so it is compatible with MV3 service workers where document is absent', () => {
+    // In Chrome MV3 background service workers `document` does not exist, but
+    // `DOMParser` does. We verify turndownHtml uses DOMParser so it works in
+    // that environment without relying on `document.implementation.createHTMLDocument`.
+    const parseSpy = vi.spyOn(DOMParser.prototype, 'parseFromString');
+    const result = turndownHtml(PARAGRAPH_HTML);
+    expect(result).toBe('raw');
+    expect(parseSpy).toHaveBeenCalledWith(PARAGRAPH_HTML, 'text/html');
+    parseSpy.mockRestore();
   });
 });

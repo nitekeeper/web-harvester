@@ -199,10 +199,13 @@ function extractByline(doc: Document): string | undefined {
 /**
  * Converts an HTML string to Markdown using TurndownService configured for
  * GFM output. Unlike `extractContent`, this function operates on a raw HTML
- * string and does not require a `Document` — safe to call from any execution
- * context (background service worker, popup, settings page, …) where only
- * the post-extraction body HTML is available.
+ * string and is safe to call from a Chrome MV3 background service worker
+ * where `document` is not defined. It parses the HTML via `DOMParser` (which
+ * IS available in service workers) and passes the resulting DOM node to
+ * TurndownService, bypassing any internal code path that would access the
+ * `document` global directly.
  */
 export function turndownHtml(html: string): string {
-  return buildTurndown().turndown(html).trim();
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  return buildTurndown().turndown(doc.body).trim();
 }
