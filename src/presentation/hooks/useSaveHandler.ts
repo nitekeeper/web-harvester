@@ -25,8 +25,16 @@ export interface ISendMessagePort {
  * Returns an `onSave` callback that sends a {@link ClipPageMessage} to the
  * background service worker and updates the popup store with the result.
  * Intended to be called once from a composition root and passed as a prop.
+ *
+ * @param adapter - Port used to send the IPC message to the background.
+ * @param preFlight - Optional async check run before the clip message is sent
+ *   (e.g. FSA permission request in a user-gesture context). Returning `false`
+ *   or rejecting cancels the clip and sets saveStatus to `'error'`.
  */
-export function createSaveHandler(adapter: ISendMessagePort): () => void {
+export function createSaveHandler(
+  adapter: ISendMessagePort,
+  preFlight?: (destinationId: string) => Promise<boolean>,
+): () => void {
   return (): void => {
     const store = usePopupStore.getState();
     const { selectedDestinationId } = store;
@@ -36,8 +44,12 @@ export function createSaveHandler(adapter: ISendMessagePort): () => void {
     }
     store.setSaving(true);
     store.setSaveStatus('saving');
-    adapter
-      .sendMessage({ type: MSG_CLIP, destinationId: selectedDestinationId })
+    const preFlightPromise = preFlight ? preFlight(selectedDestinationId) : Promise.resolve(true);
+    preFlightPromise
+      .then((granted) => {
+        if (!granted) throw new Error('FSA permission denied');
+        return adapter.sendMessage({ type: MSG_CLIP, destinationId: selectedDestinationId });
+      })
       .then((raw) => {
         const response = raw as ClipPageResponse;
         if (response.ok) {

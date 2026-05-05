@@ -14,6 +14,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { ChromeAdapter } from '@infrastructure/adapters/chrome/ChromeAdapter';
+import { ensureWritable } from '@infrastructure/fsa/fsa';
 import { createDestinationStorage } from '@infrastructure/storage/destinations';
 import { createSaveHandler } from '@presentation/hooks/useSaveHandler';
 import '@presentation/styles/global.css';
@@ -43,7 +44,11 @@ async function init(): Promise<void> {
   const destinations = await idbStorage.getAll();
   useSettingsStore.setState({ destinations });
 
-  const handleSave = createSaveHandler(adapter);
+  const handleSave = createSaveHandler(adapter, async (destinationId) => {
+    const dest = await idbStorage.getById(destinationId);
+    if (!dest) return false;
+    return ensureWritable(dest.dirHandle);
+  });
 
   bootstrapTheme().catch((err: unknown) => {
     logger.error('theme bootstrap failed', err);

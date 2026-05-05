@@ -119,3 +119,70 @@ describe('createSaveHandler — error paths', () => {
     expect(usePopupStore.getState().isSaving).toBe(false);
   });
 });
+
+describe('createSaveHandler — pre-flight dispatch', () => {
+  it('calls preFlight with the selected destinationId before sending', async () => {
+    const preFlight = vi.fn().mockResolvedValue(true);
+    const adapter = {
+      sendMessage: vi
+        .fn()
+        .mockResolvedValue({ ok: true, fileName: 'note.md', destination: 'Inbox' }),
+    };
+    const handleSave = createSaveHandler(adapter, preFlight);
+
+    handleSave();
+
+    await vi.waitFor(() => {
+      expect(preFlight).toHaveBeenCalledWith('dest-1');
+      expect(adapter.sendMessage).toHaveBeenCalled();
+    });
+  });
+
+  it('sends the message normally when no preFlight is provided', async () => {
+    const adapter = {
+      sendMessage: vi
+        .fn()
+        .mockResolvedValue({ ok: true, fileName: 'note.md', destination: 'Inbox' }),
+    };
+    const handleSave = createSaveHandler(adapter);
+
+    handleSave();
+
+    await vi.waitFor(() => {
+      expect(adapter.sendMessage).toHaveBeenCalledWith({
+        type: MSG_CLIP,
+        destinationId: 'dest-1',
+      });
+    });
+  });
+});
+
+describe('createSaveHandler — pre-flight failure', () => {
+  it('sets saveStatus to error and skips sendMessage when preFlight returns false', async () => {
+    const preFlight = vi.fn().mockResolvedValue(false);
+    const adapter = { sendMessage: vi.fn() };
+    const handleSave = createSaveHandler(adapter, preFlight);
+
+    handleSave();
+
+    await vi.waitFor(() => {
+      expect(usePopupStore.getState().saveStatus).toBe('error');
+    });
+    expect(adapter.sendMessage).not.toHaveBeenCalled();
+    expect(usePopupStore.getState().isSaving).toBe(false);
+  });
+
+  it('sets saveStatus to error and skips sendMessage when preFlight rejects', async () => {
+    const preFlight = vi.fn().mockRejectedValue(new Error('Permission denied'));
+    const adapter = { sendMessage: vi.fn() };
+    const handleSave = createSaveHandler(adapter, preFlight);
+
+    handleSave();
+
+    await vi.waitFor(() => {
+      expect(usePopupStore.getState().saveStatus).toBe('error');
+    });
+    expect(adapter.sendMessage).not.toHaveBeenCalled();
+    expect(usePopupStore.getState().isSaving).toBe(false);
+  });
+});

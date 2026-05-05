@@ -16,7 +16,8 @@ const logger = createLogger('content');
 /** Inbound message envelope sent from the background service worker. */
 type IncomingMessage =
   | { type: 'START_PICKER'; mode: 'exclude' | 'include' }
-  | { type: 'STOP_PICKER' };
+  | { type: 'STOP_PICKER' }
+  | { type: 'getHtml' };
 
 let activePicker: (() => void) | null = null;
 
@@ -59,7 +60,14 @@ chrome.runtime.onMessage.addListener((msg: unknown, _sender, sendResponse): bool
   if (message.type === 'STOP_PICKER') {
     stopActivePicker();
     sendResponse({ type: 'PICKER_STOPPED' });
+    return false;
   }
+
+  if (message.type === 'getHtml') {
+    sendResponse({ html: document.documentElement.outerHTML });
+    return false;
+  }
+
   return false;
 });
 
