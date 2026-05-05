@@ -1,43 +1,89 @@
 // tests/browser/side-panel/SidePanel.test.tsx
-//
-// Browser-mode smoke tests for the side panel root component. The side panel
-// reuses popup primitives (destination selector, save button, markdown
-// preview) but omits the full settings navigation surface. Run via
-// @vitest/browser against real Chromium so Radix portals and computed layout
-// values behave the same way they do in the production extension.
-
-import { render, cleanup } from '@testing-library/react';
+import { render, cleanup, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, it, expect, afterEach } from 'vitest';
 
 import { SidePanel } from '@presentation/side-panel/SidePanel';
 
-describe('SidePanel', () => {
+const NOOP = (): void => undefined;
+
+/** Returns the close button in the side panel header, asserting it exists. */
+function getCloseButton(): HTMLElement {
+  const btn = document.querySelector('[data-testid="sidepanel-close-btn"]');
+  if (btn === null) throw new Error('close button not found');
+  return btn as HTMLElement;
+}
+
+describe('SidePanel — header & shell', () => {
   afterEach(() => {
     cleanup();
   });
 
   it('renders without crashing', () => {
-    const { container } = render(<SidePanel />);
+    const { container } = render(<SidePanel onClose={NOOP} />);
     expect(container.firstChild).not.toBeNull();
   });
 
-  it('renders the destination selector', () => {
-    render(<SidePanel />);
+  it('renders the app title in the header', () => {
+    render(<SidePanel onClose={NOOP} />);
+    expect(screen.getByText('Web Harvester')).not.toBeNull();
+  });
+
+  it('renders the WHLogo svg in the header', () => {
+    render(<SidePanel onClose={NOOP} />);
+    expect(document.querySelector('[data-testid="sidepanel-header"] svg')).not.toBeNull();
+  });
+
+  it('calls onClose when the close button is clicked', async () => {
+    let closed = false;
+    render(
+      <SidePanel
+        onClose={() => {
+          closed = true;
+        }}
+      />,
+    );
+    await userEvent.setup().click(getCloseButton());
+    expect(closed).toBe(true);
+  });
+
+  it('renders the three tabs', () => {
+    render(<SidePanel onClose={NOOP} />);
+    expect(screen.getByText('Highlights')).not.toBeNull();
+    expect(screen.getByText('Reader')).not.toBeNull();
+    expect(screen.getByText('Clip')).not.toBeNull();
+  });
+});
+
+describe('SidePanel — clip tab content', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  it('renders the destination selector on the Clip tab by default', () => {
+    render(<SidePanel onClose={NOOP} />);
+    // Clip tab is default
     expect(document.querySelector('[data-testid="destination-selector"]')).not.toBeNull();
   });
 
-  it('renders the save button', () => {
-    render(<SidePanel />);
+  it('renders the save button on the Clip tab by default', () => {
+    render(<SidePanel onClose={NOOP} />);
     expect(document.querySelector('[data-testid="save-button"]')).not.toBeNull();
   });
 
-  it('renders the markdown preview area', () => {
-    render(<SidePanel />);
+  it('renders the markdown preview area on the Clip tab', () => {
+    render(<SidePanel onClose={NOOP} />);
     expect(document.querySelector('[data-testid="markdown-preview"]')).not.toBeNull();
   });
 
   it('does not render full settings navigation', () => {
-    const { container } = render(<SidePanel />);
-    expect(container.textContent ?? '').not.toMatch(/settings/i);
+    const { container } = render(<SidePanel onClose={NOOP} />);
+    expect(container.textContent ?? '').not.toMatch(/general.*destinations.*templates/i);
+  });
+
+  it('switches to Highlights tab when clicked', async () => {
+    render(<SidePanel onClose={NOOP} />);
+    await userEvent.setup().click(screen.getByText('Highlights'));
+    expect(document.querySelector('[data-testid="destination-selector"]')).toBeNull();
   });
 });
