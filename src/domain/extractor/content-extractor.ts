@@ -238,15 +238,17 @@ export function turndownHtml(html: string): string {
  *
  * Safe to call from a Chrome MV3 background service worker: uses `DOMParser`
  * (available in service workers) rather than the `document` global.
+ *
+ * Falls back to full-body Turndown conversion if Defuddle fails to initialize
+ * (e.g. UMD→ESM interop failure in the extension service worker build).
  */
 export function extractArticleMarkdown(html: string, url: string): string {
-  logger.info(
-    `[debug] extractArticleMarkdown: html type=${typeof html}, length=${html ? html.length : 'N/A'}, truthy=${Boolean(html)}`,
-  );
   if (!html) return '';
   const doc = getParser().parseFromString(html, 'text/html');
+  if (typeof Defuddle !== 'function') {
+    logger.warn('Defuddle module did not initialize — falling back to full-body conversion');
+    return buildTurndown().turndown(doc.body).trim();
+  }
   const defuddled = new Defuddle(doc, { url }).parse();
-  const result = buildTurndown().turndown(defuddled.content).trim();
-  logger.info(`[debug] turndown result length=${result.length}`);
-  return result;
+  return buildTurndown().turndown(defuddled.content).trim();
 }

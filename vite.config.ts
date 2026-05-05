@@ -21,6 +21,19 @@ export default defineConfig(({ mode }) => {
       webExtension({
         manifest: `src/manifest.${browser}.json`,
         browser,
+        // Ensure UMD packages (e.g. defuddle) are correctly transformed to ESM
+        // when building background service workers and content scripts.
+        // vite-plugin-web-extension builds each entry point in a separate Vite
+        // pipeline that does not inherit the top-level build.commonjsOptions,
+        // so we must supply CJS transform settings here explicitly.
+        scriptViteConfig: {
+          build: {
+            commonjsOptions: {
+              transformMixedEsModules: true,
+              requireReturnsDefault: 'auto',
+            },
+          },
+        },
       }),
     ],
     resolve: {

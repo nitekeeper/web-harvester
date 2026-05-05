@@ -5,21 +5,14 @@ import { extractArticleMarkdown } from '@domain/extractor/content-extractor';
 import type { ClipContent, ILogger, IPlugin, IPluginContext, IPluginManifest } from '@domain/types';
 
 /**
- * Logs debug information about the content object received by `beforeClip` and
- * returns the extracted markdown body (empty string on failure).
+ * Extracts the article body from clip content, returning an empty string on
+ * failure so a single extractor error never aborts the clip.
  */
-async function extractWithDebugLog(content: ClipContent, logger: ILogger): Promise<string> {
-  logger.info(`[debug] beforeClip fields: ${Object.keys(content).join(', ')}`);
-  const raw = content as unknown as Record<string, unknown>;
-  logger.info(
-    `[debug] content.body=${typeof raw['body']}, content.html length=${String(raw['html']).length}`,
-  );
+async function extractBody(content: ClipContent, logger: ILogger): Promise<string> {
   try {
-    const markdown = extractArticleMarkdown(content.body, content.url);
-    logger.info(`[debug] extractArticleMarkdown returned length=${markdown.length}`);
-    return markdown;
+    return extractArticleMarkdown(content.body, content.url);
   } catch (err) {
-    logger.info(`[debug] extractArticleMarkdown threw: ${String(err)}`);
+    logger.error('article extraction failed', err);
     return '';
   }
 }
@@ -56,7 +49,7 @@ export class TemplatePlugin implements IPlugin {
     this.beforeClipUnsubscribe = hooks.beforeClip.tapAsync(
       async (content: ClipContent): Promise<ClipContent | undefined> => {
         const template = await templateService.getDefault();
-        const markdownBody = await extractWithDebugLog(content, logger);
+        const markdownBody = await extractBody(content, logger);
         const variables = {
           content: markdownBody,
           title: content.title,
