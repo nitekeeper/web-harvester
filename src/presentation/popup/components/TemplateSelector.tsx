@@ -29,7 +29,7 @@ export function TemplateSelector({ templates, selectedId, onSelect }: TemplateSe
   const fmt = useFormatMessage();
 
   return (
-    <Select value={selectedId ?? undefined} onValueChange={onSelect}>
+    <Select value={selectedId ?? ''} onValueChange={onSelect}>
       <SelectTrigger data-testid="template-selector" className="w-full">
         <SelectValue
           placeholder={fmt({ id: 'popup.selectTemplate', defaultMessage: 'Select template…' })}

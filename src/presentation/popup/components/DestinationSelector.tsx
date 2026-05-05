@@ -40,7 +40,7 @@ export function DestinationSelector({
   }
 
   return (
-    <Select value={selectedId ?? undefined} onValueChange={onSelect}>
+    <Select value={selectedId ?? ''} onValueChange={onSelect}>
       <SelectTrigger data-testid="destination-selector" className="w-full">
         <SelectValue
           placeholder={fmt({
