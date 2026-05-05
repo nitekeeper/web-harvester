@@ -44,7 +44,7 @@ import {
   buildTemplateService,
   saveToWithStringStrategy,
 } from './bridges';
-import { wireCommands, wireContextMenus, wireOnInstalled } from './wiring';
+import { wireCommands, wireContextMenus, wireMessageListener, wireOnInstalled } from './wiring';
 
 const logger = createLogger('background');
 
@@ -196,6 +196,7 @@ export async function bootstrap(): Promise<BackgroundContext> {
   wireOnInstalled(adapter, settingsStorage);
   wireContextMenus(adapter, services.clipService);
   wireCommands(adapter, services.clipService);
+  wireMessageListener(adapter, services.clipService);
   broadcastInitialSettings(services.settingsService, hooks);
 
   logger.info('Background service worker bootstrapped');
