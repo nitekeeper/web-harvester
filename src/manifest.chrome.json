@@ -10,7 +10,8 @@
     "contextMenus",
     "commands",
     "sidePanel",
-    "clipboardWrite"
+    "clipboardWrite",
+    "notifications"
   ],
   "host_permissions": ["<all_urls>"],
   "background": {

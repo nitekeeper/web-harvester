@@ -286,14 +286,23 @@ export class ClipService implements IClipService {
     const result: ClipResult = { fileName: savedName, destination: destination.label };
     await this.hooks.afterClip.call(result);
     await this.hooks.afterSave.call({ filePath: `${destination.label}/${savedName}` });
-    await this.notifications.showNotification({
-      type: 'success',
-      title: 'Clip saved',
-      message: `Saved "${savedName}" to ${destination.label}`,
-    });
+    this.notifySuccess(savedName, destination.label);
 
     this.logger.info(`Clip saved: ${savedName} → ${destination.label}`);
     return result;
+  }
+
+  /** Fire-and-forget success notification — failure must not surface as a clip error. */
+  private notifySuccess(fileName: string, destinationLabel: string): void {
+    this.notifications
+      .showNotification({
+        type: 'success',
+        title: 'Clip saved',
+        message: `Saved "${fileName}" to ${destinationLabel}`,
+      })
+      .catch((err: unknown) => {
+        this.logger.error('notification failed', err);
+      });
   }
 
   /**
