@@ -1,8 +1,4 @@
 // tests/browser/popup/SaveButton.test.tsx
-//
-// Browser-mode tests for the save button. Asserts English labels in idle and
-// in-progress states.
-
 import { render, cleanup, screen } from '@testing-library/react';
 import { describe, it, expect, afterEach } from 'vitest';
 
@@ -15,9 +11,9 @@ describe('SaveButton', () => {
     cleanup();
   });
 
-  it('shows "Save" label when not saving', () => {
+  it('shows "Clip Page" label when not saving', () => {
     render(<SaveButton isSaving={false} isDisabled={false} onSave={NOOP} />);
-    expect(screen.getByText('Save')).not.toBeNull();
+    expect(screen.getByText('Clip Page')).not.toBeNull();
   });
 
   it('shows "Saving…" label when a save is in flight', () => {

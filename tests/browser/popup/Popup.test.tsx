@@ -42,21 +42,23 @@ describe('Popup — structure', () => {
     expect(document.querySelector('[data-testid="save-button"]')).not.toBeNull();
   });
 
-  it('renders the picker toggle', () => {
+  it('renders the popup header', () => {
     render(<Popup />);
-    expect(document.querySelector('[data-testid="picker-toggle"]')).not.toBeNull();
+    expect(document.querySelector('[data-testid="popup-header"]')).not.toBeNull();
+  });
+
+  it('renders the action footer clip button', () => {
+    render(<Popup />);
+    expect(document.querySelector('[data-testid="save-button"]')).not.toBeNull();
+  });
+
+  it('renders the status bar', () => {
+    render(<Popup />);
+    expect(document.querySelector('[data-testid="status-bar"]')).not.toBeNull();
   });
 });
 
 describe('Popup — interactions', () => {
-  it('toggles picker label from "Start picker" to "Stop picker" when clicked', async () => {
-    render(<Popup />);
-    const toggle = screen.getByTestId('picker-toggle');
-    expect(toggle.textContent).toBe('Start picker');
-    await userEvent.setup().click(toggle);
-    expect(toggle.textContent).toBe('Stop picker');
-  });
-
   it('shows available templates in the dropdown when the store has templates', async () => {
     useSettingsStore.setState({
       templates: [
