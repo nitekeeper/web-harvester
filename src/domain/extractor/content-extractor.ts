@@ -3,6 +3,9 @@ import TurndownService from 'turndown';
 import { gfm } from 'turndown-plugin-gfm';
 
 import { absolutizeUrls, getElementByXPath } from '@domain/extractor/dom-utils';
+import { createLogger } from '@shared/logger';
+
+const logger = createLogger('content-extractor');
 
 /**
  * Options accepted by `extractContent`.
@@ -225,8 +228,16 @@ export function turndownHtml(html: string): string {
  * (available in service workers) rather than the `document` global.
  */
 export function extractArticleMarkdown(html: string, url: string): string {
+  logger.info(
+    `[debug] extractArticleMarkdown: html type=${typeof html}, length=${html ? html.length : 'N/A'}, truthy=${Boolean(html)}`,
+  );
   if (!html) return '';
   const doc = new DOMParser().parseFromString(html, 'text/html');
   const defuddled = new Defuddle(doc, { url }).parse();
-  return buildTurndown().turndown(defuddled.content).trim();
+  logger.info(
+    `[debug] defuddled.content type=${typeof defuddled.content}, length=${defuddled.content ? defuddled.content.length : 'null/undefined'}`,
+  );
+  const result = buildTurndown().turndown(defuddled.content).trim();
+  logger.info(`[debug] turndown result length=${result.length}`);
+  return result;
 }

@@ -2,7 +2,26 @@
 import type { CompileResult, ITemplateService } from '@application/TemplateService';
 import { TYPES } from '@core/types';
 import { extractArticleMarkdown } from '@domain/extractor/content-extractor';
-import type { ClipContent, IPlugin, IPluginContext, IPluginManifest } from '@domain/types';
+import type { ClipContent, ILogger, IPlugin, IPluginContext, IPluginManifest } from '@domain/types';
+
+/**
+ * Logs debug information about the content object received by `beforeClip` and
+ * returns the extracted markdown body (empty string on failure).
+ */
+async function extractWithDebugLog(content: ClipContent, logger: ILogger): Promise<string> {
+  logger.info(`[debug] beforeClip fields: ${Object.keys(content).join(', ')}`);
+  logger.info(
+    `[debug] content.body=${typeof (content as Record<string, unknown>)['body']}, content.html length=${String((content as Record<string, unknown>)['html']).length}`,
+  );
+  try {
+    const markdown = extractArticleMarkdown(content.body, content.url);
+    logger.info(`[debug] extractArticleMarkdown returned length=${markdown.length}`);
+    return markdown;
+  } catch (err) {
+    logger.info(`[debug] extractArticleMarkdown threw: ${String(err)}`);
+    return '';
+  }
+}
 
 /**
  * Plugin that wires the user's active clip template into the `beforeClip`
@@ -36,12 +55,7 @@ export class TemplatePlugin implements IPlugin {
     this.beforeClipUnsubscribe = hooks.beforeClip.tapAsync(
       async (content: ClipContent): Promise<ClipContent | undefined> => {
         const template = await templateService.getDefault();
-        let markdownBody: string;
-        try {
-          markdownBody = extractArticleMarkdown(content.body, content.url);
-        } catch {
-          markdownBody = '';
-        }
+        const markdownBody = await extractWithDebugLog(content, logger);
         const variables = {
           content: markdownBody,
           title: content.title,

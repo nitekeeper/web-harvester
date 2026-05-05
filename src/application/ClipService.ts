@@ -256,8 +256,15 @@ export class ClipService implements IClipService {
     const tab = await this.tabAdapter.getActiveTab();
     const html = await this.extractHtml(tab.id);
 
+    this.logger.info(
+      `[debug] extractHtml result: length=${html.length}, empty=${html.length === 0}`,
+    );
+
     const initialContent: ClipContent = { url: tab.url, html, title: tab.title };
+    this.logger.info(`[debug] initialContent fields: ${Object.keys(initialContent).join(', ')}`);
+
     const content = await this.hooks.beforeClip.call(initialContent);
+    this.logger.info(`[debug] post-beforeClip fields: ${Object.keys(content).join(', ')}`);
 
     const destination = await this.destinationStorage.getById(request.destinationId);
     if (!destination) {
