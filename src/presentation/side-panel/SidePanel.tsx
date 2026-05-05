@@ -17,6 +17,8 @@ type SidePanelTab = 'highlights' | 'reader' | 'clip';
 export interface SidePanelProps {
   /** Called when the user clicks the close button. Defaults to `window.close`. */
   readonly onClose?: () => void;
+  /** Called when the user clicks the Clip Page / Save button. */
+  readonly onSave: () => void;
 }
 
 /** Close (×) icon 14 × 14 px. */
@@ -107,10 +109,8 @@ function TabBar({
   );
 }
 
-const NOOP = (): void => undefined;
-
 /** Content shown on the Clip tab — the existing save workflow UI. */
-function ClipTab() {
+function ClipTab({ onSave }: { readonly onSave: () => void }) {
   const destinations = useSettingsStore((s) => s.destinations);
   const selectedDestinationId = usePopupStore((s) => s.selectedDestinationId);
   const previewMarkdown = usePopupStore((s) => s.previewMarkdown);
@@ -125,7 +125,7 @@ function ClipTab() {
         onSelect={setSelectedDestinationId}
       />
       <MarkdownPreview markdown={previewMarkdown} />
-      <SaveButton isSaving={isSaving} isDisabled={selectedDestinationId === null} onSave={NOOP} />
+      <SaveButton isSaving={isSaving} isDisabled={selectedDestinationId === null} onSave={onSave} />
     </div>
   );
 }
@@ -152,11 +152,10 @@ function PlaceholderTab({
  * and tab content. The Clip tab hosts the existing clipping workflow;
  * Highlights and Reader are placeholders for future features.
  *
- * The `onSave` action on the Clip tab is wired by the side-panel composition
- * root in a later task — passing `NOOP` here because `chrome.runtime` IPC is
- * confined to `ChromeAdapter.ts` per CLAUDE.md and ADR-022.
+ * The `onSave` callback is supplied by the side-panel composition root, which
+ * owns the `chrome.runtime` IPC wiring per CLAUDE.md and ADR-022.
  */
-export function SidePanel({ onClose = () => window.close() }: SidePanelProps) {
+export function SidePanel({ onClose = () => window.close(), onSave }: SidePanelProps) {
   const [activeTab, setActiveTab] = useState<SidePanelTab>('clip');
 
   return (
@@ -176,7 +175,7 @@ export function SidePanel({ onClose = () => window.close() }: SidePanelProps) {
             defaultMessage="Reader mode controls will appear here."
           />
         )}
-        {activeTab === 'clip' && <ClipTab />}
+        {activeTab === 'clip' && <ClipTab onSave={onSave} />}
       </div>
     </div>
   );

@@ -20,17 +20,17 @@ describe('SidePanel — header & shell', () => {
   });
 
   it('renders without crashing', () => {
-    const { container } = render(<SidePanel onClose={NOOP} />);
+    const { container } = render(<SidePanel onClose={NOOP} onSave={NOOP} />);
     expect(container.firstChild).not.toBeNull();
   });
 
   it('renders the app title in the header', () => {
-    render(<SidePanel onClose={NOOP} />);
+    render(<SidePanel onClose={NOOP} onSave={NOOP} />);
     expect(screen.getByText('Web Harvester')).not.toBeNull();
   });
 
   it('renders the WHLogo svg in the header', () => {
-    render(<SidePanel onClose={NOOP} />);
+    render(<SidePanel onClose={NOOP} onSave={NOOP} />);
     expect(document.querySelector('[data-testid="sidepanel-header"] svg')).not.toBeNull();
   });
 
@@ -41,6 +41,7 @@ describe('SidePanel — header & shell', () => {
         onClose={() => {
           closed = true;
         }}
+        onSave={NOOP}
       />,
     );
     await userEvent.setup().click(getCloseButton());
@@ -48,7 +49,7 @@ describe('SidePanel — header & shell', () => {
   });
 
   it('renders the three tabs', () => {
-    render(<SidePanel onClose={NOOP} />);
+    render(<SidePanel onClose={NOOP} onSave={NOOP} />);
     expect(document.querySelector('[data-testid="sidepanel-tab-highlights"]')).not.toBeNull();
     expect(document.querySelector('[data-testid="sidepanel-tab-reader"]')).not.toBeNull();
     expect(document.querySelector('[data-testid="sidepanel-tab-clip"]')).not.toBeNull();
@@ -61,28 +62,28 @@ describe('SidePanel — clip tab content', () => {
   });
 
   it('renders the destination selector on the Clip tab by default', () => {
-    render(<SidePanel onClose={NOOP} />);
+    render(<SidePanel onClose={NOOP} onSave={NOOP} />);
     // Clip tab is default
     expect(document.querySelector('[data-testid="destination-selector"]')).not.toBeNull();
   });
 
   it('renders the save button on the Clip tab by default', () => {
-    render(<SidePanel onClose={NOOP} />);
+    render(<SidePanel onClose={NOOP} onSave={NOOP} />);
     expect(document.querySelector('[data-testid="save-button"]')).not.toBeNull();
   });
 
   it('renders the markdown preview area on the Clip tab', () => {
-    render(<SidePanel onClose={NOOP} />);
+    render(<SidePanel onClose={NOOP} onSave={NOOP} />);
     expect(document.querySelector('[data-testid="markdown-preview"]')).not.toBeNull();
   });
 
   it('does not render full settings navigation', () => {
-    render(<SidePanel onClose={NOOP} />);
+    render(<SidePanel onClose={NOOP} onSave={NOOP} />);
     expect(document.querySelector('[data-testid="settings-sidebar"]')).toBeNull();
   });
 
   it('switches to Highlights tab when clicked', async () => {
-    render(<SidePanel onClose={NOOP} />);
+    render(<SidePanel onClose={NOOP} onSave={NOOP} />);
     const highlightsTab = document.querySelector('[data-testid="sidepanel-tab-highlights"]');
     if (highlightsTab === null) throw new Error('highlights tab not found');
     await userEvent.setup().click(highlightsTab as HTMLElement);
