@@ -12,9 +12,11 @@ import type {
   ContextMenuInfo,
   IContextMenuAdapter,
 } from '@infrastructure/adapters/interfaces/IContextMenuAdapter';
+import type { IRuntimeAdapter } from '@infrastructure/adapters/interfaces/IRuntimeAdapter';
 import type { ITabAdapter } from '@infrastructure/adapters/interfaces/ITabAdapter';
 import { createSettingsStorage } from '@infrastructure/storage/settings';
 import { createLogger } from '@shared/logger';
+import { isClipPageMessage, type ClipPageMessage } from '@shared/messages';
 
 const logger = createLogger('background');
 
@@ -103,4 +105,47 @@ export async function runClipForActiveTab(
 ): Promise<void> {
   const tab = await adapter.getActiveTab();
   await clipService.clip({ tabId: tab.id, destinationId: 'default' });
+}
+
+/**
+ * Dispatches a validated {@link ClipPageMessage} to the clip service, resolving
+ * the active tab id and calling `sendResponse` with the outcome. Exported for
+ * direct unit-testing.
+ */
+export async function handleClipMessage(
+  msg: ClipPageMessage,
+  adapter: Pick<ITabAdapter, 'getActiveTab'>,
+  clipService: IClipService,
+  sendResponse: (response?: unknown) => void,
+): Promise<void> {
+  const tab = await adapter.getActiveTab();
+  let result: Awaited<ReturnType<IClipService['clip']>>;
+  try {
+    result = await clipService.clip({ tabId: tab.id, destinationId: msg.destinationId });
+  } catch (err: unknown) {
+    sendResponse({ ok: false, error: String(err) });
+    return;
+  }
+  if ('aborted' in result) {
+    sendResponse({ ok: false, error: result.reason });
+  } else {
+    sendResponse({ ok: true, fileName: result.fileName, destination: result.destination });
+  }
+}
+
+/**
+ * Registers a `chrome.runtime.onMessage` listener that handles
+ * {@link ClipPageMessage} requests from the popup and side-panel. Non-clip
+ * messages are ignored so the existing content-script exchange is unaffected.
+ */
+export function wireMessageListener(
+  adapter: Pick<IRuntimeAdapter, 'onMessage'> & Pick<ITabAdapter, 'getActiveTab'>,
+  clipService: IClipService,
+): void {
+  adapter.onMessage((msg, sendResponse) => {
+    if (!isClipPageMessage(msg)) return;
+    handleClipMessage(msg, adapter, clipService, sendResponse).catch((err: unknown) => {
+      logger.error('clip message handler failed', err);
+    });
+  });
 }
