@@ -1,5 +1,6 @@
 // src/presentation/popup/components/TemplateSelector.tsx
 
+import { FileIcon } from '@presentation/components/icons';
 import {
   Select,
   SelectContent,
@@ -31,6 +32,7 @@ export function TemplateSelector({ templates, selectedId, onSelect }: TemplateSe
   return (
     <Select value={selectedId ?? ''} onValueChange={onSelect}>
       <SelectTrigger data-testid="template-selector" className="w-full">
+        <FileIcon />
         <SelectValue
           placeholder={fmt({ id: 'popup.selectTemplate', defaultMessage: 'Select template…' })}
         />

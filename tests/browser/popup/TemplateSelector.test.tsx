@@ -36,4 +36,10 @@ describe('TemplateSelector', () => {
     render(<TemplateSelector templates={sampleTemplates} selectedId="t1" onSelect={NOOP} />);
     expect(screen.getByText('Default')).not.toBeNull();
   });
+
+  it('renders an SVG icon inside the trigger', () => {
+    render(<TemplateSelector templates={[]} selectedId={null} onSelect={NOOP} />);
+    const trigger = document.querySelector('[data-testid="template-selector"]');
+    expect(trigger?.querySelector('svg')).not.toBeNull();
+  });
 });
