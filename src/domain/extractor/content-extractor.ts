@@ -1,11 +1,8 @@
-import Defuddle from 'defuddle';
+import { Defuddle } from 'defuddle/node';
 import TurndownService from 'turndown';
 import { gfm } from 'turndown-plugin-gfm';
 
 import { absolutizeUrls, getElementByXPath } from '@domain/extractor/dom-utils';
-import { createLogger } from '@shared/logger';
-
-const logger = createLogger('content-extractor');
 
 /**
  * Options accepted by `extractContent`.
@@ -242,13 +239,9 @@ export function turndownHtml(html: string): string {
  * Falls back to full-body Turndown conversion if Defuddle fails to initialize
  * (e.g. UMD→ESM interop failure in the extension service worker build).
  */
-export function extractArticleMarkdown(html: string, url: string): string {
+export async function extractArticleMarkdown(html: string, url: string): Promise<string> {
   if (!html) return '';
   const doc = getParser().parseFromString(html, 'text/html');
-  if (typeof Defuddle !== 'function') {
-    logger.warn('Defuddle module did not initialize — falling back to full-body conversion');
-    return buildTurndown().turndown(doc.body).trim();
-  }
-  const defuddled = new Defuddle(doc, { url }).parse();
-  return buildTurndown().turndown(defuddled.content).trim();
+  const result = await Defuddle(doc, url);
+  return buildTurndown().turndown(result.content).trim();
 }

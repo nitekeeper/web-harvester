@@ -221,11 +221,11 @@ describe('turndownHtml', () => {
 const ARTICLE_URL = 'https://example.com';
 
 describe('extractArticleMarkdown', () => {
-  it('returns an empty string when given empty HTML', () => {
-    expect(extractArticleMarkdown('', ARTICLE_URL)).toBe('');
+  it('returns an empty string when given empty HTML', async () => {
+    expect(await extractArticleMarkdown('', ARTICLE_URL)).toBe('');
   });
 
-  it('extracts and converts article text from a full document with surrounding noise', () => {
+  it('extracts and converts article text from a full document with surrounding noise', async () => {
     const html = `<!DOCTYPE html>
 <html>
   <head><title>Test Article</title></head>
@@ -239,20 +239,20 @@ describe('extractArticleMarkdown', () => {
     <footer><p>Copyright 2026</p></footer>
   </body>
 </html>`;
-    const result = extractArticleMarkdown(html, `${ARTICLE_URL}/article`);
+    const result = await extractArticleMarkdown(html, `${ARTICLE_URL}/article`);
     expect(result).toContain('The Real Article');
     expect(result).toContain('main article content');
   });
 
-  it('converts simple paragraph HTML to markdown text', () => {
+  it('converts simple paragraph HTML to markdown text', async () => {
     const html = '<html><body><p>hello world</p></body></html>';
-    const result = extractArticleMarkdown(html, ARTICLE_URL);
+    const result = await extractArticleMarkdown(html, ARTICLE_URL);
     expect(result).toContain('hello world');
   });
 
-  it('uses DOMParser so it is compatible with MV3 service workers', () => {
+  it('uses DOMParser so it is compatible with MV3 service workers', async () => {
     const parseSpy = vi.spyOn(DOMParser.prototype, 'parseFromString');
-    extractArticleMarkdown('<html><body><p>test</p></body></html>', ARTICLE_URL);
+    await extractArticleMarkdown('<html><body><p>test</p></body></html>', ARTICLE_URL);
     expect(parseSpy).toHaveBeenCalledWith(expect.any(String), 'text/html');
     parseSpy.mockRestore();
   });

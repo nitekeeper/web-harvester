@@ -10,7 +10,7 @@ import type { ClipContent, ILogger, IPlugin, IPluginContext, IPluginManifest } f
  */
 async function extractBody(content: ClipContent, logger: ILogger): Promise<string> {
   try {
-    return extractArticleMarkdown(content.body, content.url);
+    return await extractArticleMarkdown(content.body, content.url);
   } catch (err) {
     logger.error('article extraction failed', err);
     return '';

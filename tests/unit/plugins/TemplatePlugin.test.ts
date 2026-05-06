@@ -12,7 +12,11 @@ vi.mock('@domain/extractor/content-extractor', async (importActual) => {
   const actual = await importActual<typeof import('@domain/extractor/content-extractor')>();
   return {
     ...actual,
-    extractArticleMarkdown: vi.fn().mockImplementation(actual.extractArticleMarkdown),
+    extractArticleMarkdown: vi
+      .fn()
+      .mockImplementation((...args: Parameters<typeof actual.extractArticleMarkdown>) =>
+        actual.extractArticleMarkdown(...args),
+      ),
   };
 });
 
@@ -272,9 +276,9 @@ describe('TemplatePlugin — beforeClip handler result mapping', () => {
   });
 
   it('returns rendered template (not raw HTML) when extractArticleMarkdown throws', async () => {
-    vi.mocked(extractArticleMarkdown).mockImplementationOnce(() => {
-      throw new Error('Maximum call stack size exceeded');
-    });
+    vi.mocked(extractArticleMarkdown).mockRejectedValueOnce(
+      new Error('Maximum call stack size exceeded'),
+    );
 
     await harness.plugin.activate(harness.ctx);
     const result = await harness.ctx.hooks.beforeClip.call(baseContent);
