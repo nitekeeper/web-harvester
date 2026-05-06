@@ -93,7 +93,7 @@ function ToggleIconButton({ testId, active, onClick, ariaLabel, children }: Togg
   return (
     <Button
       data-testid={testId}
-      variant={active ? 'secondary' : 'outline'}
+      variant={active ? 'default' : 'outline'}
       size="icon-sm"
       aria-label={ariaLabel}
       aria-pressed={active}
