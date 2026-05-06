@@ -68,6 +68,19 @@ describe('Popup — structure', () => {
   });
 });
 
+describe('Popup — accessibility', () => {
+  it('field groups expose aria-labelledby pointing to their label span', () => {
+    render(<Popup onSave={() => undefined} onSettings={() => undefined} />);
+    for (const labelText of ['DESTINATION', 'TEMPLATE', 'PREVIEW']) {
+      const span = screen.getByText(labelText);
+      expect(span.id).toBeTruthy();
+      const group = span.closest('[role="group"]');
+      expect(group).not.toBeNull();
+      expect(group?.getAttribute('aria-labelledby')).toBe(span.id);
+    }
+  });
+});
+
 describe('Popup — interactions', () => {
   it('shows available templates in the dropdown when the store has templates', async () => {
     useSettingsStore.setState({

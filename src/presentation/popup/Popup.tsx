@@ -28,14 +28,13 @@ export interface PopupProps {
 
 /** Reads the slice of {@link useSettingsStore} that the popup root cares about. */
 function useSettingsBindings() {
-  const { destinations, templates } = useSettingsStore();
   const theme = useSettingsStore((s) => s.settings.theme);
   const updateSettings = useSettingsStore((s) => s.updateSettings);
   const handleTheme = useCallback(
     (next: 'light' | 'dark' | 'system') => updateSettings({ theme: next }),
     [updateSettings],
   );
-  return { destinations, templates, theme, handleTheme };
+  return { theme, handleTheme };
 }
 
 /** Reads the slice of {@link usePopupStore} that the popup root cares about. */
@@ -62,8 +61,8 @@ function PopupScrollBody() {
   return (
     <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-3">
       <ToolbarSlot />
-      <div className="flex flex-col gap-1">
-        <span className={LABEL_CLASS}>
+      <div className="flex flex-col gap-1" role="group" aria-labelledby="popup-destination-label">
+        <span id="popup-destination-label" className={LABEL_CLASS}>
           {fmt({ id: 'popup.destinationLabel', defaultMessage: 'DESTINATION' })}
         </span>
         <DestinationSelector
@@ -72,8 +71,8 @@ function PopupScrollBody() {
           onSelect={popup.setSelectedDestinationId}
         />
       </div>
-      <div className="flex flex-col gap-1">
-        <span className={LABEL_CLASS}>
+      <div className="flex flex-col gap-1" role="group" aria-labelledby="popup-template-label">
+        <span id="popup-template-label" className={LABEL_CLASS}>
           {fmt({ id: 'popup.templateLabel', defaultMessage: 'TEMPLATE' })}
         </span>
         <TemplateSelector
@@ -82,8 +81,8 @@ function PopupScrollBody() {
           onSelect={popup.setSelectedTemplateId}
         />
       </div>
-      <div className="flex flex-col gap-1">
-        <span className={LABEL_CLASS}>
+      <div className="flex flex-col gap-1" role="group" aria-labelledby="popup-preview-label">
+        <span id="popup-preview-label" className={LABEL_CLASS}>
           {fmt({ id: 'popup.previewLabel', defaultMessage: 'PREVIEW' })}
         </span>
         <MarkdownPreview markdown={popup.previewMarkdown} />
