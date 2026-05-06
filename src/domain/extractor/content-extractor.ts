@@ -167,6 +167,15 @@ function collectAncestors(workingDoc: Document, matchedElements: readonly Elemen
  * the `ReferenceError: DOMParser is not defined` thrown by Vite's bundle.
  */
 function getParser(): DOMParser {
+  // eslint-disable-next-line no-restricted-syntax
+  console.warn(
+    '[debug] typeof DOMParser:',
+    typeof DOMParser,
+    '| self.DOMParser:',
+    (self as unknown as Record<string, unknown>).DOMParser,
+    '| globalThis.DOMParser:',
+    (globalThis as unknown as Record<string, unknown>).DOMParser,
+  );
   const Ctor = (self as unknown as { DOMParser: typeof DOMParser }).DOMParser;
   return new Ctor();
 }
