@@ -1,7 +1,14 @@
 // src/presentation/settings/Settings.tsx
 
-import { useState } from 'react';
+import { type ReactNode, useState } from 'react';
 
+import {
+  FolderIcon,
+  FileIcon,
+  MetadataIcon,
+  AppearanceIcon,
+  AboutIcon,
+} from '@presentation/components/icons';
 import { Tabs, TabsContent } from '@presentation/components/ui/tabs';
 import { WHLogo } from '@presentation/components/WHLogo';
 import { useFormatMessage } from '@presentation/hooks/useFormatMessage';
@@ -15,15 +22,51 @@ import { ThemeSection } from './sections/ThemeSection';
 import { useDestinationHandlers } from './useDestinationHandlers';
 import { useTemplateHandlers } from './useTemplateHandlers';
 
-/** Names of the five tabs surfaced by the settings SPA. */
-type Tab = 'general' | 'destinations' | 'templates' | 'theme' | 'debug';
+/** Names of the six tabs surfaced by the settings SPA. */
+type Tab = 'destinations' | 'templates' | 'metadata' | 'appearance' | 'about' | 'debug';
 
-const TAB_DEFS: readonly { value: Tab; labelId: string; defaultLabel: string }[] = [
-  { value: 'general', labelId: 'settings.nav.general', defaultLabel: 'General' },
-  { value: 'destinations', labelId: 'settings.nav.destinations', defaultLabel: 'Destinations' },
-  { value: 'templates', labelId: 'settings.nav.templates', defaultLabel: 'Templates' },
-  { value: 'theme', labelId: 'settings.nav.theme', defaultLabel: 'Theme' },
-  { value: 'debug', labelId: 'settings.nav.debug', defaultLabel: 'Debug' },
+const TAB_DEFS: readonly {
+  value: Tab;
+  labelId: string;
+  defaultLabel: string;
+  icon: ReactNode;
+}[] = [
+  {
+    value: 'destinations',
+    labelId: 'settings.nav.destinations',
+    defaultLabel: 'Destinations',
+    icon: <FolderIcon />,
+  },
+  {
+    value: 'templates',
+    labelId: 'settings.nav.templates',
+    defaultLabel: 'Templates',
+    icon: <FileIcon />,
+  },
+  {
+    value: 'metadata',
+    labelId: 'settings.nav.metadata',
+    defaultLabel: 'Metadata',
+    icon: <MetadataIcon />,
+  },
+  {
+    value: 'appearance',
+    labelId: 'settings.nav.appearance',
+    defaultLabel: 'Appearance',
+    icon: <AppearanceIcon />,
+  },
+  {
+    value: 'about',
+    labelId: 'settings.nav.about',
+    defaultLabel: 'About',
+    icon: <AboutIcon />,
+  },
+  {
+    value: 'debug',
+    labelId: 'settings.nav.debug',
+    defaultLabel: 'Debug',
+    icon: null,
+  },
 ];
 
 /** Props for {@link SidebarNav}. */
@@ -45,7 +88,7 @@ function SidebarBranding() {
           {fmt({ id: 'settings.header.title', defaultMessage: 'Web Harvester' })}
         </div>
         <div className="text-[10.5px] text-muted-foreground">
-          {fmt({ id: 'settings.header.subtitle', defaultMessage: 'Settings' })}
+          {fmt({ id: 'settings.header.subtitle', defaultMessage: 'Settings · v0.1.0' })}
         </div>
       </div>
     </div>
@@ -62,19 +105,27 @@ function SidebarNav({ activeTab, onTab }: SidebarNavProps) {
     >
       <SidebarBranding />
       <nav className="flex flex-col gap-px p-3">
-        {TAB_DEFS.map((tab) => (
-          <button
-            key={tab.value}
-            onClick={() => onTab(tab.value)}
-            className={`w-full text-left px-3 py-2 rounded-md text-[12.5px] transition-colors ${
-              activeTab === tab.value
-                ? 'bg-muted text-foreground font-semibold'
-                : 'text-muted-foreground hover:bg-muted/50'
-            }`}
-          >
-            {fmt({ id: tab.labelId, defaultMessage: tab.defaultLabel })}
-          </button>
-        ))}
+        {TAB_DEFS.map((tab) => {
+          const isActive = activeTab === tab.value;
+          return (
+            <button
+              key={tab.value}
+              onClick={() => onTab(tab.value)}
+              className={`w-full text-left px-3 py-2 rounded-md text-[12.5px] transition-colors flex items-center gap-2 ${
+                isActive
+                  ? 'bg-muted text-foreground font-semibold'
+                  : 'text-muted-foreground hover:bg-muted/50'
+              }`}
+            >
+              {tab.icon !== null ? (
+                <span className={isActive ? 'text-primary' : 'text-muted-foreground'}>
+                  {tab.icon}
+                </span>
+              ) : null}
+              {fmt({ id: tab.labelId, defaultMessage: tab.defaultLabel })}
+            </button>
+          );
+        })}
       </nav>
     </div>
   );
@@ -108,16 +159,29 @@ function DataPanels() {
   );
 }
 
-/** Renders the five tab content panels. */
+/** Stub content for the About tab. */
+function AboutSection() {
+  const fmt = useFormatMessage();
+  return (
+    <div className="p-6 text-sm text-muted-foreground">
+      {fmt({ id: 'settings.about.version', defaultMessage: 'Web Harvester · v0.1.0' })}
+    </div>
+  );
+}
+
+/** Renders all six tab content panels. */
 function SectionPanels() {
   return (
     <>
-      <TabsContent value="general">
+      <DataPanels />
+      <TabsContent value="metadata">
         <GeneralSection />
       </TabsContent>
-      <DataPanels />
-      <TabsContent value="theme">
+      <TabsContent value="appearance">
         <ThemeSection />
+      </TabsContent>
+      <TabsContent value="about">
+        <AboutSection />
       </TabsContent>
       <TabsContent value="debug">
         <DebugSection />
@@ -136,7 +200,7 @@ function SectionPanels() {
  * composition root before the React tree mounts (see ADR-022).
  */
 export function Settings() {
-  const [activeTab, setActiveTab] = useState<Tab>('general');
+  const [activeTab, setActiveTab] = useState<Tab>('destinations');
 
   return (
     <div className="min-h-screen bg-background text-foreground flex">
