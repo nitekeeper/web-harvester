@@ -2,6 +2,7 @@
 
 import { useCallback } from 'react';
 
+import { useFormatMessage } from '@presentation/hooks/useFormatMessage';
 import { usePopupStore } from '@presentation/stores/usePopupStore';
 import { useSettingsStore } from '@presentation/stores/useSettingsStore';
 
@@ -13,6 +14,9 @@ import { TemplateSelector } from './components/TemplateSelector';
 import { ToolbarSlot } from './components/ToolbarSlot';
 
 const NOOP_TOGGLE = (): void => undefined;
+
+/** Shared classes for the small uppercase section labels in the popup body. */
+const LABEL_CLASS = 'text-[10.5px] font-semibold uppercase tracking-[0.04em] text-muted-foreground';
 
 /** Props for the {@link Popup} root component. */
 export interface PopupProps {
@@ -46,6 +50,49 @@ function usePopupBindings() {
 }
 
 /**
+ * Renders the scrollable body section of the popup: toolbar slot, destination
+ * selector, template selector, and markdown preview — each with a small
+ * uppercase label. Reads directly from the popup and settings stores.
+ */
+function PopupScrollBody() {
+  const fmt = useFormatMessage();
+  const { destinations, templates } = useSettingsStore();
+  const popup = usePopupStore();
+
+  return (
+    <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-3">
+      <ToolbarSlot />
+      <div className="flex flex-col gap-1">
+        <span className={LABEL_CLASS}>
+          {fmt({ id: 'popup.destinationLabel', defaultMessage: 'DESTINATION' })}
+        </span>
+        <DestinationSelector
+          destinations={destinations}
+          selectedId={popup.selectedDestinationId}
+          onSelect={popup.setSelectedDestinationId}
+        />
+      </div>
+      <div className="flex flex-col gap-1">
+        <span className={LABEL_CLASS}>
+          {fmt({ id: 'popup.templateLabel', defaultMessage: 'TEMPLATE' })}
+        </span>
+        <TemplateSelector
+          templates={templates}
+          selectedId={popup.selectedTemplateId}
+          onSelect={popup.setSelectedTemplateId}
+        />
+      </div>
+      <div className="flex flex-col gap-1">
+        <span className={LABEL_CLASS}>
+          {fmt({ id: 'popup.previewLabel', defaultMessage: 'PREVIEW' })}
+        </span>
+        <MarkdownPreview markdown={popup.previewMarkdown} />
+      </div>
+    </div>
+  );
+}
+
+/**
  * Root component for the browser-action popup. Renders the header (logo +
  * theme toggle + settings), the body (toolbar slot, destination / template
  * selectors, markdown preview), and the action footer (Clip Page button +
@@ -58,26 +105,13 @@ function usePopupBindings() {
  * ADR-022 for the rationale.
  */
 export function Popup({ onSave, onSettings }: PopupProps) {
-  const { destinations, templates, theme, handleTheme } = useSettingsBindings();
+  const { theme, handleTheme } = useSettingsBindings();
   const { popup, handlePickerToggle } = usePopupBindings();
 
   return (
     <div className="w-80 min-h-48 bg-background text-foreground flex flex-col">
       <PopupHeader theme={theme} onTheme={handleTheme} onSettings={onSettings} />
-      <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-3">
-        <ToolbarSlot />
-        <DestinationSelector
-          destinations={destinations}
-          selectedId={popup.selectedDestinationId}
-          onSelect={popup.setSelectedDestinationId}
-        />
-        <TemplateSelector
-          templates={templates}
-          selectedId={popup.selectedTemplateId}
-          onSelect={popup.setSelectedTemplateId}
-        />
-        <MarkdownPreview markdown={popup.previewMarkdown} />
-      </div>
+      <PopupScrollBody />
       <ActionFooter
         isSaving={popup.isSaving}
         isDisabled={popup.selectedDestinationId === null}

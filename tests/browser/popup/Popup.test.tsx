@@ -51,6 +51,21 @@ describe('Popup — structure', () => {
     render(<Popup onSave={() => undefined} onSettings={() => undefined} />);
     expect(document.querySelector('[data-testid="status-bar"]')).not.toBeNull();
   });
+
+  it('renders the DESTINATION field label', () => {
+    render(<Popup onSave={() => undefined} onSettings={() => undefined} />);
+    expect(screen.getByText('DESTINATION')).not.toBeNull();
+  });
+
+  it('renders the TEMPLATE field label', () => {
+    render(<Popup onSave={() => undefined} onSettings={() => undefined} />);
+    expect(screen.getByText('TEMPLATE')).not.toBeNull();
+  });
+
+  it('renders the PREVIEW field label', () => {
+    render(<Popup onSave={() => undefined} onSettings={() => undefined} />);
+    expect(screen.getByText('PREVIEW')).not.toBeNull();
+  });
 });
 
 describe('Popup — interactions', () => {
