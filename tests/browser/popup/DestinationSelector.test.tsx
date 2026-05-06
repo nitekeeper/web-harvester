@@ -15,7 +15,7 @@ const sampleDestinations: readonly DestinationView[] = [
   {
     id: 'd1',
     label: 'Notes',
-    dirHandle: {} as FileSystemDirectoryHandle,
+    dirHandle: { name: 'Obsidian Vault' } as FileSystemDirectoryHandle,
     fileNamePattern: '{title}.md',
     createdAt: 0,
   },
@@ -36,5 +36,19 @@ describe('DestinationSelector', () => {
       <DestinationSelector destinations={sampleDestinations} selectedId="d1" onSelect={NOOP} />,
     );
     expect(screen.getByText('Notes')).not.toBeNull();
+  });
+
+  it('shows the dirHandle.name hint when a destination is selected', () => {
+    render(
+      <DestinationSelector destinations={sampleDestinations} selectedId="d1" onSelect={NOOP} />,
+    );
+    expect(screen.getByText('Obsidian Vault')).not.toBeNull();
+  });
+
+  it('does not show a path hint when no destination is selected', () => {
+    render(
+      <DestinationSelector destinations={sampleDestinations} selectedId={null} onSelect={NOOP} />,
+    );
+    expect(document.querySelector('[data-testid="destination-path-hint"]')).toBeNull();
   });
 });
