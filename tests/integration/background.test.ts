@@ -135,11 +135,11 @@ describe('background bootstrap — plugin activation', () => {
     expect(harness.registry.getFailedPlugins()).toHaveLength(0);
   });
 
-  it('registers context menu items when wired into the adapter', () => {
+  it('registers context menu items when wired into the adapter', async () => {
     const mockClipService = {
       clip: vi.fn().mockResolvedValue({ fileName: 'test.md', destination: 'Inbox' }),
     };
-    wireContextMenus(harness.adapter, mockClipService);
+    await wireContextMenus(harness.adapter, mockClipService);
     expect(harness.adapter.createContextMenu).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'clip-page' }),
     );
@@ -155,5 +155,25 @@ describe('background bootstrap — plugin activation', () => {
     });
     await harness.adapter.triggerInstalled({ reason: 'install' });
     expect(runMigrationsSpy).toHaveBeenCalledWith([]);
+  });
+});
+
+describe('background bootstrap — wireContextMenus MV3 restart safety', () => {
+  let harness: Harness;
+
+  beforeEach(() => {
+    installMatchMediaShim();
+    harness = setupHarness();
+  });
+
+  it('clears all context menus before registering new ones', async () => {
+    const mockClipService = {
+      clip: vi.fn().mockResolvedValue({ fileName: 'test.md', destination: 'Inbox' }),
+    };
+    await wireContextMenus(harness.adapter, mockClipService);
+    const removeAllOrder = harness.adapter.removeAllContextMenus.mock.invocationCallOrder[0] ?? 0;
+    const createOrder = harness.adapter.createContextMenu.mock.invocationCallOrder[0] ?? 0;
+    expect(removeAllOrder).toBeGreaterThan(0);
+    expect(removeAllOrder).toBeLessThan(createOrder);
   });
 });

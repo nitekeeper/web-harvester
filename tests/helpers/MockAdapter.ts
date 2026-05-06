@@ -112,6 +112,7 @@ export class MockAdapter
 
   createContextMenu = vi.fn();
   removeContextMenu = vi.fn();
+  removeAllContextMenus = vi.fn().mockResolvedValue(undefined);
   onContextMenuClick = vi.fn();
 
   // ── IActionAdapter ────────────────────────────────────────────────────────

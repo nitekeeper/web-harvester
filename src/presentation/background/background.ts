@@ -194,7 +194,7 @@ export async function bootstrap(): Promise<BackgroundContext> {
   await registry.activateAll();
 
   wireOnInstalled(adapter, settingsStorage);
-  wireContextMenus(adapter, services.clipService);
+  await wireContextMenus(adapter, services.clipService);
   wireCommands(adapter, services.clipService);
   wireMessageListener(adapter, services.clipService);
   broadcastInitialSettings(services.settingsService, hooks);

@@ -27,5 +27,7 @@ export interface ContextMenuInfo {
 export interface IContextMenuAdapter {
   createContextMenu(options: ContextMenuOptions): void;
   removeContextMenu(id: string): void;
+  /** Removes all context-menu items. Used before re-registering items on service-worker restart. */
+  removeAllContextMenus(): Promise<void>;
   onContextMenuClick(handler: (info: ContextMenuInfo) => void): void;
 }

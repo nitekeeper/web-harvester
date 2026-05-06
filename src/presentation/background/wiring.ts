@@ -46,10 +46,11 @@ export function wireOnInstalled(
  * bans `chrome.i18n.getMessage` outside `ChromeAdapter.ts`; once `formatjs`
  * lands these will move to message catalogs.
  */
-export function wireContextMenus(
+export async function wireContextMenus(
   adapter: IContextMenuAdapter & ITabAdapter,
   clipService: IClipService,
-): void {
+): Promise<void> {
+  await adapter.removeAllContextMenus();
   adapter.createContextMenu({ id: 'clip-page', title: 'Clip page', contexts: ['page'] });
   adapter.createContextMenu({
     id: 'clip-selection',

@@ -202,6 +202,11 @@ export class ChromeAdapter
     });
   }
 
+  /** Removes all context-menu items so they can be re-registered on service-worker restart. */
+  async removeAllContextMenus(): Promise<void> {
+    await chrome.contextMenus.removeAll();
+  }
+
   onContextMenuClick(handler: (info: ContextMenuInfo) => void): void {
     chrome.contextMenus.onClicked.addListener((info) => {
       handler({
