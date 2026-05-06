@@ -5,10 +5,12 @@ import { extractArticleMarkdown } from '@domain/extractor/content-extractor';
 import type { ClipContent, ILogger, IPlugin, IPluginContext, IPluginManifest } from '@domain/types';
 
 /**
- * Extracts the article body from clip content, returning an empty string on
- * failure so a single extractor error never aborts the clip.
+ * Returns the article body as markdown. Uses `content.markdown` when the
+ * content script has already extracted it (avoids DOMParser in the service
+ * worker). Falls back to `extractArticleMarkdown` for backward compatibility.
  */
 async function extractBody(content: ClipContent, logger: ILogger): Promise<string> {
+  if (content.markdown) return content.markdown;
   try {
     return await extractArticleMarkdown(content.body, content.url);
   } catch (err) {

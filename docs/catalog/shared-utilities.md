@@ -68,6 +68,16 @@ Shared data shapes used across domain, application, and presentation layers. No 
 
 ---
 
+## `src/shared/turndown.ts`
+
+GFM-configured TurndownService factory shared between the domain extractor and the content script.
+
+| Name              | Kind     | Description                                                                                                                                                 |
+| ----------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `buildTurndown()` | Function | Returns a `TurndownService` configured for GFM: `atx` headings, fenced code, `-` bullets, `---` HR, `**` strong, `*` em. Applies the `gfm` Turndown plugin. |
+
+---
+
 ## `src/shared/sanitize.ts`
 
 HTML sanitisation choke-point — the single sanctioned consumer of DOMPurify.

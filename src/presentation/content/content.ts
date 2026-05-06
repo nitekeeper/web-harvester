@@ -7,7 +7,10 @@
 
 /* eslint-disable no-restricted-syntax */
 
+import Defuddle from 'defuddle';
+
 import { createLogger } from '@shared/logger';
+import { buildTurndown } from '@shared/turndown';
 
 import { startPicker } from './picker';
 
@@ -50,6 +53,26 @@ function handleStartPicker(
   return true;
 }
 
+/**
+ * Extracts article markdown from the live document using Defuddle (browser
+ * bundle) + TurndownService, then calls `sendResponse` with `{ html, markdown
+ * }`. Runs in the page context where native DOM APIs are always available.
+ */
+async function extractPageContent(sendResponse: (r: unknown) => void): Promise<void> {
+  const html = document.documentElement.outerHTML;
+  let markdown = '';
+  try {
+    const defuddle = new Defuddle(document, { url: window.location.href });
+    const result = defuddle.parse();
+    markdown = buildTurndown()
+      .turndown(result.content ?? '')
+      .trim();
+  } catch (err: unknown) {
+    logger.error('Defuddle extraction failed', err);
+  }
+  sendResponse({ html, markdown });
+}
+
 chrome.runtime.onMessage.addListener((msg: unknown, _sender, sendResponse): boolean => {
   const message = msg as IncomingMessage;
 
@@ -64,8 +87,11 @@ chrome.runtime.onMessage.addListener((msg: unknown, _sender, sendResponse): bool
   }
 
   if (message.type === 'getHtml') {
-    sendResponse({ html: document.documentElement.outerHTML });
-    return false;
+    extractPageContent(sendResponse).catch((err: unknown) => {
+      logger.error('getHtml handler failed', err);
+      sendResponse({ html: document.documentElement.outerHTML, markdown: '' });
+    });
+    return true;
   }
 
   return false;

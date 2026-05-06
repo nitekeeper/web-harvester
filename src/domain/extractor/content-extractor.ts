@@ -1,8 +1,7 @@
 import { Defuddle } from 'defuddle/node';
-import TurndownService from 'turndown';
-import { gfm } from 'turndown-plugin-gfm';
 
 import { absolutizeUrls, getElementByXPath } from '@domain/extractor/dom-utils';
+import { buildTurndown } from '@shared/turndown';
 
 /**
  * Options accepted by `extractContent`.
@@ -160,39 +159,15 @@ function collectAncestors(workingDoc: Document, matchedElements: readonly Elemen
 }
 
 /**
- * Returns a `DOMParser` instance that works in both browser window and Chrome
- * MV3 service worker contexts. The bare identifier `DOMParser` may not resolve
- * in the bundled service worker output even though the API is available on
- * `self` (ServiceWorkerGlobalScope). Accessing it explicitly via `self` avoids
- * the `ReferenceError: DOMParser is not defined` thrown by Vite's bundle.
+ * Returns a `DOMParser` instance. Accesses it via `self` rather than the bare
+ * identifier so the Vite bundle does not hoist it into a context where it may
+ * be undefined (e.g. Chrome MV3 service workers on older Chrome versions).
+ * Note: `DOMParser` is not available in service workers — this path is only
+ * reachable from browser-page contexts or unit tests (jsdom).
  */
 function getParser(): DOMParser {
-  // eslint-disable-next-line no-restricted-syntax
-  console.warn(
-    '[debug] typeof DOMParser:',
-    typeof DOMParser,
-    '| self.DOMParser:',
-    (self as unknown as Record<string, unknown>).DOMParser,
-    '| globalThis.DOMParser:',
-    (globalThis as unknown as Record<string, unknown>).DOMParser,
-  );
   const Ctor = (self as unknown as { DOMParser: typeof DOMParser }).DOMParser;
   return new Ctor();
-}
-
-/** Constructs a TurndownService configured for GFM output (atx headings, fenced code, dashes for `<hr>`). */
-function buildTurndown(): TurndownService {
-  const td = new TurndownService({
-    headingStyle: 'atx',
-    bulletListMarker: '-',
-    codeBlockStyle: 'fenced',
-    fence: '```',
-    hr: '---',
-    strongDelimiter: '**',
-    emDelimiter: '*',
-  });
-  td.use(gfm);
-  return td;
 }
 
 /**

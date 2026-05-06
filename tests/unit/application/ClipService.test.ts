@@ -20,7 +20,7 @@ function createMockTabAdapter() {
     }),
     executeScript: vi.fn().mockResolvedValue(undefined),
     insertCSS: vi.fn().mockResolvedValue(undefined),
-    evaluateOnTab: vi.fn().mockResolvedValue('<p>Hello</p>'),
+    sendMessageToTab: vi.fn().mockResolvedValue({ html: '<p>Hello</p>', markdown: '' }),
     onTabActivated: vi.fn(),
     onTabUpdated: vi.fn(),
   };
@@ -189,32 +189,32 @@ describe('ClipService — notifications + result', () => {
   });
 });
 
-describe('ClipService — html extraction via evaluateOnTab', () => {
-  it('calls evaluateOnTab to extract page HTML', async () => {
+const ARTICLE_HTML = '<article>content</article>';
+
+describe('ClipService — page content extraction via sendMessageToTab', () => {
+  it('sends a getHtml message to the content script to retrieve page content', async () => {
     await service.clip(defaultRequest);
-    expect(tabAdapter.evaluateOnTab).toHaveBeenCalledWith(1, expect.any(Function));
+    expect(tabAdapter.sendMessageToTab).toHaveBeenCalledWith(1, { type: 'getHtml' });
   });
 
   it('passes extracted html to beforeClip hook', async () => {
-    tabAdapter.evaluateOnTab.mockResolvedValue('<article>content</article>');
+    tabAdapter.sendMessageToTab.mockResolvedValue({ html: ARTICLE_HTML, markdown: '' });
     await service.clip(defaultRequest);
     expect(hooks.beforeClip.call).toHaveBeenCalledWith(
-      expect.objectContaining({ html: '<article>content</article>' }),
+      expect.objectContaining({ html: ARTICLE_HTML }),
     );
   });
 
-  it('extracts the full document HTML (outerHTML) so Defuddle receives head metadata', async () => {
+  it('passes pre-extracted markdown to beforeClip hook', async () => {
+    tabAdapter.sendMessageToTab.mockResolvedValue({ html: ARTICLE_HTML, markdown: 'article body' });
     await service.clip(defaultRequest);
-    const capturedFn = vi.mocked(tabAdapter.evaluateOnTab).mock.calls[0]?.[1] as () => string;
-    // Call the captured function in the jsdom environment to inspect what it returns.
-    // document.documentElement.outerHTML includes the <html> wrapper;
-    // document.body.innerHTML would not.
-    const html = capturedFn();
-    expect(html).toMatch(/<html/i);
+    expect(hooks.beforeClip.call).toHaveBeenCalledWith(
+      expect.objectContaining({ markdown: 'article body' }),
+    );
   });
 
-  it('succeeds with empty html when evaluateOnTab rejects (e.g. content script unavailable)', async () => {
-    tabAdapter.evaluateOnTab.mockRejectedValue(
+  it('succeeds with empty content when sendMessageToTab rejects (e.g. content script unavailable)', async () => {
+    tabAdapter.sendMessageToTab.mockRejectedValue(
       new Error('Could not establish connection. Receiving end does not exist.'),
     );
     const result = await service.clip(defaultRequest);

@@ -26,6 +26,8 @@ export interface ClipContent {
   readonly url: string;
   readonly html: string;
   readonly title: string;
+  /** Pre-extracted article markdown returned by the content script alongside the raw HTML. */
+  readonly markdown?: string;
 }
 
 /**
@@ -103,8 +105,8 @@ export interface NotificationPayload {
  */
 export interface ITabAdapterPort {
   getActiveTab(): Promise<Tab>;
-  /** Runs {@link fn} in the context of the given tab and returns its return value. */
-  evaluateOnTab<T>(tabId: number, fn: () => T): Promise<T>;
+  /** Sends a message to the content script running in the given tab. */
+  sendMessageToTab(tabId: number, msg: unknown): Promise<unknown>;
 }
 
 /**
@@ -254,8 +256,8 @@ export class ClipService implements IClipService {
    */
   async clip(request: ClipRequest): Promise<ClipResult | ClipAborted> {
     const tab = await this.tabAdapter.getActiveTab();
-    const html = await this.extractHtml(tab.id);
-    const initialContent: ClipContent = { url: tab.url, html, title: tab.title };
+    const { html, markdown } = await this.extractPageContent(tab.id);
+    const initialContent: ClipContent = { url: tab.url, html, title: tab.title, markdown };
     const content = await this.hooks.beforeClip.call(initialContent);
 
     const destination = await this.destinationStorage.getById(request.destinationId);
@@ -306,19 +308,22 @@ export class ClipService implements IClipService {
   }
 
   /**
-   * Extracts the full outer HTML of the active tab by evaluating a function
-   * directly in the tab's context via `chrome.scripting.executeScript`. Falls
-   * back to an empty string if the tab is not scriptable (e.g. `chrome://`
-   * pages or tabs opened before the extension was installed) so the rest of
-   * the clip flow can still proceed — `beforeClip` hooks may substitute
-   * richer content.
+   * Asks the content script for the page's outer HTML and pre-extracted article
+   * markdown by sending a `getHtml` message. Falls back to empty strings when
+   * the page is not scriptable (e.g. `chrome://` pages) so the rest of the
+   * clip flow can still proceed — `beforeClip` hooks may substitute richer
+   * content.
    */
-  private async extractHtml(tabId: number): Promise<string> {
+  private async extractPageContent(tabId: number): Promise<{ html: string; markdown: string }> {
     try {
-      return await this.tabAdapter.evaluateOnTab(tabId, () => document.documentElement.outerHTML);
+      const response = (await this.tabAdapter.sendMessageToTab(tabId, { type: 'getHtml' })) as
+        | { html?: string; markdown?: string }
+        | null
+        | undefined;
+      return { html: response?.html ?? '', markdown: response?.markdown ?? '' };
     } catch (err: unknown) {
-      this.logger.warn('Page not scriptable — using empty string', err);
-      return '';
+      this.logger.warn('Page not scriptable — using empty content', err);
+      return { html: '', markdown: '' };
     }
   }
 }

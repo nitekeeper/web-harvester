@@ -197,11 +197,25 @@ describe('TemplatePlugin — beforeClip service calls', () => {
     });
   });
 
-  it('calls extractArticleMarkdown with the content body and URL', async () => {
+  it('calls extractArticleMarkdown with the content body and URL when markdown is not pre-extracted', async () => {
     await harness.plugin.activate(harness.ctx);
     await harness.ctx.hooks.beforeClip.call(baseContent);
 
     expect(extractArticleMarkdown).toHaveBeenCalledWith(baseContent.body, baseContent.url);
+  });
+
+  it('skips extractArticleMarkdown and uses content.markdown directly when pre-extracted', async () => {
+    await harness.plugin.activate(harness.ctx);
+    const contentWithMarkdown: ClipContent = {
+      ...baseContent,
+      markdown: 'pre-extracted article markdown',
+    };
+    await harness.ctx.hooks.beforeClip.call(contentWithMarkdown);
+
+    expect(extractArticleMarkdown).not.toHaveBeenCalled();
+    const renderArgs = harness.templateService.render.mock.calls[0];
+    const variables = renderArgs?.[1] as { content: string };
+    expect(variables.content).toBe('pre-extracted article markdown');
   });
 });
 

@@ -91,8 +91,14 @@ export function buildClipHooksPort(hooks: CoreHookSystem): IClipHooksPort {
           url: value.url,
           body: value.html,
           selectedText: '',
+          markdown: value.markdown,
         });
-        return { url: transformed.url, html: transformed.body, title: transformed.title };
+        return {
+          url: transformed.url,
+          html: transformed.body,
+          title: transformed.title,
+          markdown: transformed.markdown,
+        };
       },
     },
     afterClip: hooks.afterClip,

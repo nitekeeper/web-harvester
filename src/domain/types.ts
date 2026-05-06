@@ -14,6 +14,8 @@ export interface ClipContent {
   body: string;
   selectedText: string;
   highlights?: string;
+  /** Pre-extracted article markdown from the content script, avoiding service-worker DOMParser limits. */
+  markdown?: string;
 }
 
 /** Event emitted when the user creates or modifies a highlight. */
