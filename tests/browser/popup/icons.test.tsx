@@ -10,42 +10,46 @@ import {
   AboutIcon,
 } from '@presentation/components/icons';
 
-const ARIA_HIDDEN_TRUE = 'true';
-const SVG = 'svg';
-const ARIA_HIDDEN = 'aria-hidden';
+const SVG_SELECTOR = 'svg';
+const ARIA_HIDDEN_ATTR = 'aria-hidden';
 
-describe('new icons', () => {
+describe('Icon components', () => {
   afterEach(() => {
     cleanup();
   });
 
   it('FolderIcon renders an aria-hidden SVG', () => {
     render(<FolderIcon />);
-    const svg = document.querySelector(SVG);
-    expect(svg?.getAttribute(ARIA_HIDDEN)).toBe(ARIA_HIDDEN_TRUE);
+    const svg = document.querySelector(SVG_SELECTOR);
+    expect(svg).not.toBeNull();
+    expect(svg?.getAttribute(ARIA_HIDDEN_ATTR)).toBe('true');
   });
 
   it('FileIcon renders an aria-hidden SVG', () => {
     render(<FileIcon />);
-    const svg = document.querySelector(SVG);
-    expect(svg?.getAttribute(ARIA_HIDDEN)).toBe(ARIA_HIDDEN_TRUE);
+    const svg = document.querySelector(SVG_SELECTOR);
+    expect(svg).not.toBeNull();
+    expect(svg?.getAttribute(ARIA_HIDDEN_ATTR)).toBe('true');
   });
 
   it('MetadataIcon renders an aria-hidden SVG', () => {
     render(<MetadataIcon />);
-    const svg = document.querySelector(SVG);
-    expect(svg?.getAttribute(ARIA_HIDDEN)).toBe(ARIA_HIDDEN_TRUE);
+    const svg = document.querySelector(SVG_SELECTOR);
+    expect(svg).not.toBeNull();
+    expect(svg?.getAttribute(ARIA_HIDDEN_ATTR)).toBe('true');
   });
 
   it('AppearanceIcon renders an aria-hidden SVG', () => {
     render(<AppearanceIcon />);
-    const svg = document.querySelector(SVG);
-    expect(svg?.getAttribute(ARIA_HIDDEN)).toBe(ARIA_HIDDEN_TRUE);
+    const svg = document.querySelector(SVG_SELECTOR);
+    expect(svg).not.toBeNull();
+    expect(svg?.getAttribute(ARIA_HIDDEN_ATTR)).toBe('true');
   });
 
   it('AboutIcon renders an aria-hidden SVG', () => {
     render(<AboutIcon />);
-    const svg = document.querySelector(SVG);
-    expect(svg?.getAttribute(ARIA_HIDDEN)).toBe(ARIA_HIDDEN_TRUE);
+    const svg = document.querySelector(SVG_SELECTOR);
+    expect(svg).not.toBeNull();
+    expect(svg?.getAttribute(ARIA_HIDDEN_ATTR)).toBe('true');
   });
 });
