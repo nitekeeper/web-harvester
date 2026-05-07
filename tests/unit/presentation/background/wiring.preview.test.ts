@@ -59,7 +59,7 @@ describe('handlePreviewMessage', () => {
     const clipService = makeClipService();
     const sendResponse = vi.fn();
 
-    await handlePreviewMessage(clipService, sendResponse);
+    await handlePreviewMessage(PREVIEW_MSG, clipService, sendResponse);
 
     expect(clipService.preview).toHaveBeenCalledTimes(1);
   });
@@ -70,7 +70,7 @@ describe('handlePreviewMessage', () => {
     });
     const sendResponse = vi.fn();
 
-    await handlePreviewMessage(clipService, sendResponse);
+    await handlePreviewMessage(PREVIEW_MSG, clipService, sendResponse);
 
     expect(sendResponse).toHaveBeenCalledWith({ ok: true, previewMarkdown: '## Live Preview' });
   });
@@ -81,7 +81,7 @@ describe('handlePreviewMessage', () => {
     });
     const sendResponse = vi.fn();
 
-    await handlePreviewMessage(clipService, sendResponse);
+    await handlePreviewMessage(PREVIEW_MSG, clipService, sendResponse);
 
     expect(sendResponse).toHaveBeenCalledWith({ ok: false, error: 'extraction failed' });
   });
@@ -92,7 +92,7 @@ describe('handlePreviewMessage', () => {
     });
     const sendResponse = vi.fn();
 
-    await handlePreviewMessage(clipService, sendResponse);
+    await handlePreviewMessage(PREVIEW_MSG, clipService, sendResponse);
 
     expect(sendResponse).toHaveBeenCalledWith({ ok: false, error: 'something broke' });
   });
@@ -147,7 +147,7 @@ describe('wireMessageListener MSG_PREVIEW routing', () => {
     capturedHandler?.(PREVIEW_MSG, vi.fn());
 
     // Give the async handler a chance to run
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await Promise.resolve();
 
     expect(clipService.preview).toHaveBeenCalledTimes(1);
   });
@@ -165,7 +165,7 @@ describe('wireMessageListener MSG_PREVIEW routing', () => {
     wireMessageListener(adapter, clipService, makeReaderService());
     capturedHandler?.(PREVIEW_MSG, vi.fn());
 
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await Promise.resolve();
 
     expect(clipService.clip).not.toHaveBeenCalled();
   });

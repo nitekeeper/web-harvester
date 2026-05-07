@@ -22,8 +22,10 @@ import {
   isPreviewPageMessage,
   isToggleReaderMessage,
   type ClipPageMessage,
+  type PreviewPageMessage,
   type PreviewPageResponse,
 } from '@shared/messages';
+import { normalizeError } from '@shared/normalizeError';
 
 const logger = createLogger('background');
 
@@ -120,14 +122,17 @@ export async function runClipForActiveTab(
  * returning the compiled markdown to the popup via `sendResponse`.
  */
 export async function handlePreviewMessage(
+  msg: PreviewPageMessage,
   clipService: IClipService,
   sendResponse: (r: PreviewPageResponse) => void,
 ): Promise<void> {
+  // msg.templateId is intentionally not forwarded — TemplatePlugin reads
+  // selectedTemplateId directly from the popup store via the beforeClip hook.
   try {
     const previewMarkdown = await clipService.preview();
     sendResponse({ ok: true, previewMarkdown });
   } catch (err: unknown) {
-    const error = err instanceof Error ? err.message : String(err);
+    const error = normalizeError(err);
     sendResponse({ ok: false, error });
   }
 }
@@ -152,7 +157,7 @@ export async function handleClipMessage(
       previewMarkdown: msg.previewMarkdown,
     });
   } catch (err: unknown) {
-    sendResponse({ ok: false, error: String(err) });
+    sendResponse({ ok: false, error: normalizeError(err) });
     return;
   }
   if ('aborted' in result) {
@@ -182,8 +187,8 @@ export async function handleToggleReaderMessage(
 
 /**
  * Registers a `chrome.runtime.onMessage` listener that handles
- * {@link ClipPageMessage} and {@link ToggleReaderMessage} requests from the
- * popup and side-panel.
+ * {@link PreviewPageMessage}, {@link ClipPageMessage}, and
+ * {@link ToggleReaderMessage} requests from the popup and side-panel.
  */
 export function wireMessageListener(
   adapter: Pick<IRuntimeAdapter, 'onMessage'> & Pick<ITabAdapter, 'getActiveTab'>,
@@ -192,11 +197,13 @@ export function wireMessageListener(
 ): void {
   adapter.onMessage((msg, sendResponse) => {
     if (isPreviewPageMessage(msg)) {
-      handlePreviewMessage(clipService, sendResponse as (r: PreviewPageResponse) => void).catch(
-        (err: unknown) => {
-          logger.error('preview message handler failed', err);
-        },
-      );
+      handlePreviewMessage(
+        msg,
+        clipService,
+        sendResponse as (r: PreviewPageResponse) => void,
+      ).catch((err: unknown) => {
+        logger.error('preview message handler failed', err);
+      });
       return;
     }
     if (isClipPageMessage(msg)) {

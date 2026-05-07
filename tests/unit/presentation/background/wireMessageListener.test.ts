@@ -90,7 +90,7 @@ describe('handleClipMessage failure paths', () => {
 
     expect(sendResponse).toHaveBeenCalledWith({
       ok: false,
-      error: 'Error: destination not found',
+      error: 'destination not found',
     });
   });
 });
