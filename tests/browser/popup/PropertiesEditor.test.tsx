@@ -27,11 +27,10 @@ describe('PropertiesEditor', () => {
     cleanup();
   });
 
-  it('renders nothing when markdown has no frontmatter', () => {
-    const { container } = render(
-      <PropertiesEditor markdown={WITHOUT_FM} onMarkdownChange={vi.fn()} />,
-    );
-    expect(container.firstChild).toBeNull();
+  it('renders an empty-state placeholder when markdown has no frontmatter', () => {
+    render(<PropertiesEditor markdown={WITHOUT_FM} onMarkdownChange={vi.fn()} />);
+    expect(document.querySelector('[data-testid="properties-editor"]')).not.toBeNull();
+    expect(document.querySelector('[data-testid="properties-empty"]')).not.toBeNull();
   });
 
   it('renders an input for each frontmatter field', () => {

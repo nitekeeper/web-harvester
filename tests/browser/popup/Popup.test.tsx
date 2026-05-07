@@ -71,7 +71,7 @@ describe('Popup — structure', () => {
 describe('Popup — accessibility', () => {
   it('field groups expose aria-labelledby pointing to their label span', () => {
     render(<Popup onSave={() => undefined} onSettings={() => undefined} />);
-    for (const labelText of ['DESTINATION', 'TEMPLATE', 'PREVIEW']) {
+    for (const labelText of ['DESTINATION', 'TEMPLATE', 'PROPERTIES', 'PREVIEW']) {
       const span = screen.getByText(labelText);
       expect(span.id).toBeTruthy();
       const group = span.closest('[role="group"]');
@@ -106,6 +106,12 @@ describe('Popup — properties section', () => {
     usePopupStore.setState({ previewMarkdown: '' });
   });
 
+  it('renders the PROPERTIES label even when previewMarkdown is empty', () => {
+    usePopupStore.setState({ previewMarkdown: '' });
+    render(<Popup onSave={() => undefined} onSettings={() => undefined} />);
+    expect(screen.getByText('PROPERTIES')).not.toBeNull();
+  });
+
   it('renders the properties editor when previewMarkdown has frontmatter', () => {
     usePopupStore.setState({
       previewMarkdown: '---\ntitle: My Page\nauthor: Jane\n---\n\n# Body',
@@ -114,9 +120,10 @@ describe('Popup — properties section', () => {
     expect(document.querySelector('[data-testid="properties-editor"]')).not.toBeNull();
   });
 
-  it('does not render the properties editor when previewMarkdown has no frontmatter', () => {
+  it('renders the properties empty state when previewMarkdown has no frontmatter', () => {
     usePopupStore.setState({ previewMarkdown: '# No frontmatter\n\nBody.' });
     render(<Popup onSave={() => undefined} onSettings={() => undefined} />);
-    expect(document.querySelector('[data-testid="properties-editor"]')).toBeNull();
+    expect(document.querySelector('[data-testid="properties-editor"]')).not.toBeNull();
+    expect(document.querySelector('[data-testid="properties-empty"]')).not.toBeNull();
   });
 });

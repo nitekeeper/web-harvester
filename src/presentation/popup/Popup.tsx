@@ -123,18 +123,14 @@ function usePopupBindings() {
 function PopupScrollBody() {
   const fmt = useFormatMessage();
   const popup = usePopupStore();
-  const hasProperties = popup.previewMarkdown.startsWith('---\n');
-
   return (
     <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-3">
       <ToolbarSlot />
       <DestinationTemplateGroups popup={popup} />
-      {hasProperties && (
-        <PropertiesSection
-          markdown={popup.previewMarkdown}
-          onMarkdownChange={popup.setPreviewMarkdown}
-        />
-      )}
+      <PropertiesSection
+        markdown={popup.previewMarkdown}
+        onMarkdownChange={popup.setPreviewMarkdown}
+      />
       <div className="flex flex-col gap-1" role="group" aria-labelledby="popup-preview-label">
         <span id="popup-preview-label" className={LABEL_CLASS}>
           {fmt({ id: 'popup.previewLabel', defaultMessage: 'PREVIEW' })}

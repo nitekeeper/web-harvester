@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { useFormatMessage } from '@presentation/hooks/useFormatMessage';
 import {
   parseFrontmatterFields,
   rebuildMarkdownWithFields,
@@ -50,9 +51,24 @@ function FieldItem({ index, field: { key, value }, onFieldChange }: FieldItemPro
   );
 }
 
+/** Shown in place of the field list when no frontmatter has been clipped yet. */
+function PropertiesEmptyState() {
+  const fmt = useFormatMessage();
+  return (
+    <div data-testid="properties-editor">
+      <span data-testid="properties-empty" className="text-[11px] italic text-muted-foreground">
+        {fmt({
+          id: 'popup.propertiesEmpty',
+          defaultMessage: 'Properties will appear after clipping',
+        })}
+      </span>
+    </div>
+  );
+}
+
 /**
  * Renders an editable text input for each YAML frontmatter key-value pair.
- * Returns `null` when the markdown contains no frontmatter block.
+ * Shows a placeholder when the markdown contains no frontmatter block.
  */
 export function PropertiesEditor({ markdown, onMarkdownChange }: PropertiesEditorProps) {
   const [fields, setFields] = useState<FrontmatterField[]>(() => parseFrontmatterFields(markdown));
@@ -78,7 +94,7 @@ export function PropertiesEditor({ markdown, onMarkdownChange }: PropertiesEdito
     [markdown, onMarkdownChange],
   );
 
-  if (fields.length === 0) return null;
+  if (fields.length === 0) return <PropertiesEmptyState />;
 
   return (
     <div data-testid="properties-editor" className="flex flex-col gap-1.5">
