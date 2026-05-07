@@ -45,4 +45,13 @@ describe('useReaderStore', () => {
     store.getState().setSettings({ showHighlights: false });
     expect(store.getState().settings.fontFamily).toBe(defaultReaderSettings().fontFamily);
   });
+
+  it('setSettings triggers adapter.setLocal with updated settings', async () => {
+    const adapter = createMockAdapter();
+    const testStore = createReaderStore(adapter);
+    testStore.getState().setSettings({ fontSize: 20 });
+    // Wait for async sync
+    await new Promise((r) => setTimeout(r, 0));
+    expect(adapter.setLocal).toHaveBeenCalled();
+  });
 });
