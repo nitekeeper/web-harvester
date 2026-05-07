@@ -53,6 +53,7 @@ function bindAdapters(adapter: MockAdapter) {
 function bindMockServices(container: ReturnType<typeof createRootContainer>): void {
   container.bind(TYPES.IClipService).toConstantValue({
     clip: vi.fn().mockResolvedValue({ fileName: 'test.md', destination: 'Inbox' }),
+    preview: vi.fn().mockResolvedValue(''),
   });
   container.bind(TYPES.ITemplateService).toConstantValue({
     getDefault: vi.fn().mockResolvedValue({ id: 't1', name: 'Default' }),
@@ -138,6 +139,7 @@ describe('background bootstrap — plugin activation', () => {
   it('registers context menu items when wired into the adapter', async () => {
     const mockClipService = {
       clip: vi.fn().mockResolvedValue({ fileName: 'test.md', destination: 'Inbox' }),
+      preview: vi.fn().mockResolvedValue(''),
     };
     await wireContextMenus(harness.adapter, mockClipService);
     expect(harness.adapter.createContextMenu).toHaveBeenCalledWith(
@@ -169,6 +171,7 @@ describe('background bootstrap — wireContextMenus MV3 restart safety', () => {
   it('clears all context menus before registering new ones', async () => {
     const mockClipService = {
       clip: vi.fn().mockResolvedValue({ fileName: 'test.md', destination: 'Inbox' }),
+      preview: vi.fn().mockResolvedValue(''),
     };
     await wireContextMenus(harness.adapter, mockClipService);
     const removeAllOrder = harness.adapter.removeAllContextMenus.mock.invocationCallOrder[0] ?? 0;

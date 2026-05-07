@@ -21,6 +21,7 @@ function makeClipService(overrides: Partial<IClipService> = {}): IClipService {
       fileName: 'note.md',
       destination: 'Inbox',
     } satisfies ClipResult),
+    preview: vi.fn().mockResolvedValue(''),
     ...overrides,
   };
 }

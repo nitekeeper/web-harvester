@@ -167,6 +167,8 @@ export interface ClipRequest {
   readonly excludedXPaths?: string[];
   /** Reserved for Task 33 (template selection) and XPath scoping; not yet consumed by clip(). */
   readonly includedXPaths?: string[];
+  /** When supplied (from live preview), skip extraction and beforeClip. */
+  readonly previewMarkdown?: string;
 }
 
 /**
@@ -182,6 +184,13 @@ export interface IClipService {
    * function, then fire `afterSave` and surface a user-facing notification.
    */
   clip(request: ClipRequest): Promise<ClipResult | ClipAborted>;
+
+  /**
+   * Extracts the current page and runs the `beforeClip` waterfall without
+   * persisting anything. Returns the compiled markdown string for display in
+   * the popup's PROPERTIES and PREVIEW sections.
+   */
+  preview(): Promise<string>;
 }
 
 // ── Errors ────────────────────────────────────────────────────────────────────
@@ -246,19 +255,26 @@ export class ClipService implements IClipService {
   /**
    * Executes the clip flow for the given request. Steps:
    *   1. Read the active tab (URL + title).
-   *   2. Ask the content script for the page HTML.
-   *   3. Run `beforeClip` so plugins can transform the content.
-   *   4. Resolve the destination — throws `DestinationNotFoundError` if missing.
-   *   5. Render the destination's filename pattern.
-   *   6. Run `beforeSave` — bails with a `ClipAborted` value if any tap returns false.
-   *   7. Persist via the injected `saveTo` function.
-   *   8. Fire `afterClip` and `afterSave`, then show a success notification.
+   *   2. If `previewMarkdown` is supplied, use it directly (skips extraction + beforeClip).
+   *      Otherwise: ask the content script for the page HTML, run `beforeClip`.
+   *   3. Resolve the destination — throws `DestinationNotFoundError` if missing.
+   *   4. Render the destination's filename pattern.
+   *   5. Run `beforeSave` — bails with a `ClipAborted` value if any tap returns false.
+   *   6. Persist via the injected `saveTo` function.
+   *   7. Fire `afterClip` and `afterSave`, then show a success notification.
    */
   async clip(request: ClipRequest): Promise<ClipResult | ClipAborted> {
     const tab = await this.tabAdapter.getActiveTab();
-    const { html, markdown } = await this.extractPageContent(tab.id);
-    const initialContent: ClipContent = { url: tab.url, html, title: tab.title, markdown };
-    const content = await this.hooks.beforeClip.call(initialContent);
+
+    let content: ClipContent;
+    if (request.previewMarkdown !== undefined && request.previewMarkdown !== '') {
+      // Use pre-compiled preview — skips extraction + beforeClip
+      content = { url: tab.url, html: request.previewMarkdown, title: tab.title };
+    } else {
+      const { html, markdown } = await this.extractPageContent(tab.id);
+      const initialContent: ClipContent = { url: tab.url, html, title: tab.title, markdown };
+      content = await this.hooks.beforeClip.call(initialContent);
+    }
 
     const destination = await this.destinationStorage.getById(request.destinationId);
     if (!destination) {
@@ -292,6 +308,24 @@ export class ClipService implements IClipService {
 
     this.logger.info(`Clip saved: ${savedName} → ${destination.label}`);
     return result;
+  }
+
+  /**
+   * Extracts the current page and runs the `beforeClip` waterfall without
+   * persisting anything. Returns the compiled markdown string for display in
+   * the popup's PROPERTIES and PREVIEW sections.
+   */
+  async preview(): Promise<string> {
+    try {
+      const tab = await this.tabAdapter.getActiveTab();
+      const { html, markdown } = await this.extractPageContent(tab.id);
+      const initialContent: ClipContent = { url: tab.url, html, title: tab.title, markdown };
+      const content = await this.hooks.beforeClip.call(initialContent);
+      return content.html;
+    } catch (err: unknown) {
+      this.logger.warn('preview failed — returning empty string', err);
+      return '';
+    }
   }
 
   /** Fire-and-forget success notification — failure must not surface as a clip error. */
