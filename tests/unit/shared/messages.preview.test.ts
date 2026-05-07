@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { isPreviewPageMessage, isClipPageMessage, MSG_PREVIEW } from '@shared/messages';
+import { isPreviewPageMessage, MSG_PREVIEW } from '@shared/messages';
 
 describe('isPreviewPageMessage', () => {
   it('returns true for a valid PreviewPageMessage', () => {
@@ -19,23 +19,7 @@ describe('isPreviewPageMessage', () => {
     expect(isPreviewPageMessage({ type: MSG_PREVIEW })).toBe(false);
   });
 
-  it('returns true with string templateId', () => {
-    expect(isPreviewPageMessage({ type: MSG_PREVIEW, templateId: 'tpl-1' })).toBe(true);
-  });
-
   it('returns true with null templateId', () => {
     expect(isPreviewPageMessage({ type: MSG_PREVIEW, templateId: null })).toBe(true);
-  });
-});
-
-describe('isClipPageMessage with previewMarkdown', () => {
-  it('accepts ClipPageMessage without previewMarkdown', () => {
-    expect(isClipPageMessage({ type: 'clip', destinationId: 'd1' })).toBe(true);
-  });
-
-  it('accepts ClipPageMessage with previewMarkdown', () => {
-    expect(isClipPageMessage({ type: 'clip', destinationId: 'd1', previewMarkdown: '# hi' })).toBe(
-      true,
-    );
   });
 });

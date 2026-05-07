@@ -30,4 +30,14 @@ describe('isClipPageMessage', () => {
   it('returns false when destinationId is not a string', () => {
     expect(isClipPageMessage({ type: MSG_CLIP, destinationId: 42 })).toBe(false);
   });
+
+  it('accepts ClipPageMessage without previewMarkdown', () => {
+    expect(isClipPageMessage({ type: 'clip', destinationId: 'd1' })).toBe(true);
+  });
+
+  it('accepts ClipPageMessage with previewMarkdown', () => {
+    expect(isClipPageMessage({ type: 'clip', destinationId: 'd1', previewMarkdown: '# hi' })).toBe(
+      true,
+    );
+  });
 });
