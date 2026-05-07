@@ -40,6 +40,7 @@ function FieldItem({ index, field: { key, value }, onFieldChange }: FieldItemPro
       </label>
       <input
         id={`prop-${key}`}
+        type="text"
         data-testid={`prop-input-${key}`}
         value={value}
         onChange={(e) => onFieldChange(index, e.target.value)}
@@ -66,13 +67,15 @@ export function PropertiesEditor({ markdown, onMarkdownChange }: PropertiesEdito
 
   const handleChange = useCallback(
     (index: number, newValue: string): void => {
-      const updated = fields.map((f, i) => (i === index ? { key: f.key, value: newValue } : f));
-      setFields(updated);
-      const newMarkdown = rebuildMarkdownWithFields(markdown, updated);
-      lastExternalRef.current = newMarkdown;
-      onMarkdownChange(newMarkdown);
+      setFields((prev) => {
+        const updated = prev.map((f, i) => (i === index ? { key: f.key, value: newValue } : f));
+        const newMarkdown = rebuildMarkdownWithFields(markdown, updated);
+        lastExternalRef.current = newMarkdown;
+        onMarkdownChange(newMarkdown);
+        return updated;
+      });
     },
-    [fields, markdown, onMarkdownChange],
+    [markdown, onMarkdownChange],
   );
 
   if (fields.length === 0) return null;

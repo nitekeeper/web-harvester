@@ -11,8 +11,9 @@ const TESTID_AUTHOR_INPUT = 'prop-input-author';
 
 async function editTitleField(newValue: string) {
   const input = document.querySelector(`[data-testid="${TESTID_TITLE_INPUT}"]`) as HTMLInputElement;
-  await userEvent.setup().clear(input);
-  await userEvent.setup().type(input, newValue);
+  const user = userEvent.setup();
+  await user.clear(input);
+  await user.type(input, newValue);
   return input;
 }
 
