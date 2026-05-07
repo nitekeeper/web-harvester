@@ -26,7 +26,9 @@ export function isPreviewPageMessage(msg: unknown): msg is PreviewPageMessage {
   return (
     typeof msg === 'object' &&
     msg !== null &&
-    (msg as Record<string, unknown>)['type'] === MSG_PREVIEW
+    (msg as Record<string, unknown>)['type'] === MSG_PREVIEW &&
+    ((msg as Record<string, unknown>)['templateId'] === null ||
+      typeof (msg as Record<string, unknown>)['templateId'] === 'string')
   );
 }
 
