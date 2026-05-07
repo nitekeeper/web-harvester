@@ -17,7 +17,13 @@ import type { IRuntimeAdapter } from '@infrastructure/adapters/interfaces/IRunti
 import type { ITabAdapter } from '@infrastructure/adapters/interfaces/ITabAdapter';
 import { createSettingsStorage } from '@infrastructure/storage/settings';
 import { createLogger } from '@shared/logger';
-import { isClipPageMessage, isToggleReaderMessage, type ClipPageMessage } from '@shared/messages';
+import {
+  isClipPageMessage,
+  isPreviewPageMessage,
+  isToggleReaderMessage,
+  type ClipPageMessage,
+  type PreviewPageResponse,
+} from '@shared/messages';
 
 const logger = createLogger('background');
 
@@ -110,6 +116,23 @@ export async function runClipForActiveTab(
 }
 
 /**
+ * Handles a {@link PreviewPageMessage} by calling `clipService.preview()` and
+ * returning the compiled markdown to the popup via `sendResponse`.
+ */
+export async function handlePreviewMessage(
+  clipService: IClipService,
+  sendResponse: (r: PreviewPageResponse) => void,
+): Promise<void> {
+  try {
+    const previewMarkdown = await clipService.preview();
+    sendResponse({ ok: true, previewMarkdown });
+  } catch (err: unknown) {
+    const error = err instanceof Error ? err.message : String(err);
+    sendResponse({ ok: false, error });
+  }
+}
+
+/**
  * Dispatches a validated {@link ClipPageMessage} to the clip service, resolving
  * the active tab id and calling `sendResponse` with the outcome. Exported for
  * direct unit-testing.
@@ -123,7 +146,11 @@ export async function handleClipMessage(
   const tab = await adapter.getActiveTab();
   let result: Awaited<ReturnType<IClipService['clip']>>;
   try {
-    result = await clipService.clip({ tabId: tab.id, destinationId: msg.destinationId });
+    result = await clipService.clip({
+      tabId: tab.id,
+      destinationId: msg.destinationId,
+      previewMarkdown: msg.previewMarkdown,
+    });
   } catch (err: unknown) {
     sendResponse({ ok: false, error: String(err) });
     return;
@@ -164,6 +191,14 @@ export function wireMessageListener(
   readerService: IReaderService,
 ): void {
   adapter.onMessage((msg, sendResponse) => {
+    if (isPreviewPageMessage(msg)) {
+      handlePreviewMessage(clipService, sendResponse as (r: PreviewPageResponse) => void).catch(
+        (err: unknown) => {
+          logger.error('preview message handler failed', err);
+        },
+      );
+      return;
+    }
     if (isClipPageMessage(msg)) {
       handleClipMessage(msg, adapter, clipService, sendResponse).catch((err: unknown) => {
         logger.error('clip message handler failed', err);

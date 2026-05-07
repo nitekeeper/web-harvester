@@ -38,7 +38,11 @@ describe('handleClipMessage success path', () => {
 
     await handleClipMessage(CLIP_MSG, adapter, clipService, sendResponse);
 
-    expect(clipService.clip).toHaveBeenCalledWith({ tabId: 7, destinationId: 'dest-1' });
+    expect(clipService.clip).toHaveBeenCalledWith({
+      tabId: 7,
+      destinationId: 'dest-1',
+      previewMarkdown: undefined,
+    });
   });
 
   it('calls sendResponse with ok:true and clip result on success', async () => {
