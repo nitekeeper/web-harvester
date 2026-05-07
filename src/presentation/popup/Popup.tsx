@@ -25,6 +25,8 @@ export interface PopupProps {
   readonly onSave: () => void;
   /** Called when the user clicks the settings gear icon. */
   readonly onSettings: () => void;
+  /** Called when the user clicks the reader-mode toggle; triggers IPC to background. Defaults to no-op. */
+  readonly onReaderToggle?: () => void;
 }
 
 /** Reads the slice of {@link useSettingsStore} that the popup root cares about. */
@@ -104,16 +106,12 @@ function DestinationTemplateGroups({ popup }: DestinationTemplateGroupsProps) {
 /** Reads the slice of {@link usePopupStore} that the popup root cares about. */
 function usePopupBindings() {
   const popup = usePopupStore();
-  const { isPickerActive, setPickerActive, isReaderActive, setReaderActive } = popup;
+  const { isPickerActive, setPickerActive } = popup;
   const handlePickerToggle = useCallback(
     () => setPickerActive(!isPickerActive),
     [isPickerActive, setPickerActive],
   );
-  const handleReaderToggle = useCallback(
-    () => setReaderActive(!isReaderActive),
-    [isReaderActive, setReaderActive],
-  );
-  return { popup, handlePickerToggle, handleReaderToggle };
+  return { popup, handlePickerToggle };
 }
 
 /**
@@ -153,15 +151,15 @@ function PopupScrollBody() {
  * selectors, markdown preview), and the action footer (Clip Page button +
  * mode toggles + status bar).
  *
- * The `onSave` and `onSettings` callbacks are supplied by the composition
- * root in `popup/index.tsx`; `onSave` triggers the IPC clip workflow and the
- * Clip Page button is disabled when no destination is selected, and
- * `onSettings` opens the extension options page via the chrome adapter — see
- * ADR-022 for the rationale.
+ * The `onSave`, `onSettings`, and `onReaderToggle` callbacks are supplied by
+ * the composition root in `popup/index.tsx`; `onSave` triggers the IPC clip
+ * workflow, `onSettings` opens the extension options page, and `onReaderToggle`
+ * sends an IPC toggle-reader message to the background service worker —
+ * see ADR-022 for the rationale.
  */
-export function Popup({ onSave, onSettings }: PopupProps) {
+export function Popup({ onSave, onSettings, onReaderToggle = NOOP_TOGGLE }: PopupProps) {
   const { theme, handleTheme } = useSettingsBindings();
-  const { popup, handlePickerToggle, handleReaderToggle } = usePopupBindings();
+  const { popup, handlePickerToggle } = usePopupBindings();
 
   return (
     <div className="w-80 min-h-48 bg-background text-foreground flex flex-col">
@@ -176,7 +174,7 @@ export function Popup({ onSave, onSettings }: PopupProps) {
         isReaderActive={popup.isReaderActive}
         onPickerToggle={handlePickerToggle}
         onHighlightToggle={NOOP_TOGGLE}
-        onReaderToggle={handleReaderToggle}
+        onReaderToggle={onReaderToggle}
         saveStatus={popup.saveStatus}
         saveDestinationLabel={popup.saveDestinationLabel}
       />

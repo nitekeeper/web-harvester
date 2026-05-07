@@ -22,16 +22,14 @@ import { useReaderStore } from '@presentation/stores/useReaderStore';
 import { useSettingsStore } from '@presentation/stores/useSettingsStore';
 import { bootstrapTheme } from '@presentation/theme/bootstrapTheme';
 import { createLogger } from '@shared/logger';
+import { MSG_TOGGLE_READER } from '@shared/messages';
 
 import { SidePanel } from './SidePanel';
 
 const logger = createLogger('side-panel');
 
-async function init(): Promise<void> {
-  const rootEl = document.getElementById('root');
-  if (!rootEl) throw new Error('Root element not found');
-
-  const adapter = new ChromeAdapter();
+/** Bootstraps all singleton stores from `chrome.storage`. */
+async function bootstrapAllStores(adapter: ChromeAdapter): Promise<void> {
   await Promise.all([
     bootstrapStore(adapter, 'settings-state', useSettingsStore, {
       serialize: (s) => ({ settings: s.settings, templates: s.templates }),
@@ -39,16 +37,27 @@ async function init(): Promise<void> {
     bootstrapStore(adapter, 'popup-state', usePopupStore),
     bootstrapStore(adapter, 'reader-settings', useReaderStore),
   ]);
+}
 
+/** Loads highlights for the active tab into the highlights store. */
+async function loadHighlights(adapter: ChromeAdapter): Promise<void> {
   const currentUrl = usePopupStore.getState().activeTab?.url;
-  if (currentUrl) {
-    useHighlightsStore.getState().setLoading(true);
-    const rawHighlights = await adapter.getLocal(`highlights:${currentUrl}`);
-    if (Array.isArray(rawHighlights)) {
-      useHighlightsStore.getState().setHighlights(rawHighlights as Highlight[]);
-    }
-    useHighlightsStore.getState().setLoading(false);
+  if (!currentUrl) return;
+  useHighlightsStore.getState().setLoading(true);
+  const rawHighlights = await adapter.getLocal(`highlights:${currentUrl}`);
+  if (Array.isArray(rawHighlights)) {
+    useHighlightsStore.getState().setHighlights(rawHighlights as Highlight[]);
   }
+  useHighlightsStore.getState().setLoading(false);
+}
+
+async function init(): Promise<void> {
+  const rootEl = document.getElementById('root');
+  if (!rootEl) throw new Error('Root element not found');
+
+  const adapter = new ChromeAdapter();
+  await bootstrapAllStores(adapter);
+  await loadHighlights(adapter);
 
   const idbStorage = await createDestinationStorage();
   const destinations = await idbStorage.getAll();
@@ -60,12 +69,24 @@ async function init(): Promise<void> {
     return ensureWritable(dest.dirHandle);
   });
 
+  const handleReaderToggle = (): void => {
+    const current = usePopupStore.getState().isReaderActive;
+    usePopupStore.getState().setReaderActive(!current);
+    adapter.sendMessage({ type: MSG_TOGGLE_READER }).catch((err: unknown) => {
+      logger.error('toggle-reader message failed', err);
+    });
+  };
+
   bootstrapTheme().catch((err: unknown) => {
     logger.error('theme bootstrap failed', err);
   });
 
   createRoot(rootEl).render(
-    createElement(StrictMode, null, createElement(SidePanel, { onSave: handleSave })),
+    createElement(
+      StrictMode,
+      null,
+      createElement(SidePanel, { onSave: handleSave, onReaderToggle: handleReaderToggle }),
+    ),
   );
 }
 

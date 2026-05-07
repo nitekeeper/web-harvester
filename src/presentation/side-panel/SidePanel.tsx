@@ -22,6 +22,8 @@ export interface SidePanelProps {
   readonly onClose?: () => void;
   /** Called when the user clicks the Clip Page / Save button. */
   readonly onSave: () => void;
+  /** Called when the user clicks the reader-mode toggle in the Reader tab. */
+  readonly onReaderToggle?: () => void;
 }
 
 /** Close (×) icon 14 × 14 px. */
@@ -139,10 +141,15 @@ function ClipTab({ onSave }: { readonly onSave: () => void }) {
  * and tab content. The Clip tab hosts the clipping workflow; the Highlights tab
  * lists saved highlights; the Reader tab controls reader-mode settings.
  *
- * The `onSave` callback is supplied by the side-panel composition root, which
- * owns the `chrome.runtime` IPC wiring per CLAUDE.md and ADR-022.
+ * The `onSave` and `onReaderToggle` callbacks are supplied by the side-panel
+ * composition root, which owns the `chrome.runtime` IPC wiring per CLAUDE.md
+ * and ADR-022.
  */
-export function SidePanel({ onClose = () => window.close(), onSave }: SidePanelProps) {
+export function SidePanel({
+  onClose = () => window.close(),
+  onSave,
+  onReaderToggle,
+}: SidePanelProps) {
   const [activeTab, setActiveTab] = useState<SidePanelTab>('clip');
 
   return (
@@ -151,7 +158,7 @@ export function SidePanel({ onClose = () => window.close(), onSave }: SidePanelP
       <TabBar activeTab={activeTab} onTab={setActiveTab} />
       <div className="flex-1 overflow-y-auto">
         {activeTab === 'highlights' && <HighlightsTab />}
-        {activeTab === 'reader' && <ReaderTab />}
+        {activeTab === 'reader' && <ReaderTab onReaderToggle={onReaderToggle} />}
         {activeTab === 'clip' && <ClipTab onSave={onSave} />}
       </div>
     </div>

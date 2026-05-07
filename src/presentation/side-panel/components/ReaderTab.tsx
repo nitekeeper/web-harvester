@@ -209,6 +209,12 @@ function ReaderToggle({ isActive, onToggle }: ReaderToggleProps) {
   );
 }
 
+/** Props for {@link ReaderTab}. */
+export interface ReaderTabProps {
+  /** Called when the user clicks the reader-mode toggle; triggers IPC to background. Defaults to store toggle. */
+  readonly onReaderToggle?: () => void;
+}
+
 /**
  * Content for the Reader tab in the side panel. Renders a toggle to enable or
  * disable reader mode (stored in {@link usePopupStore} so the popup footer
@@ -216,15 +222,17 @@ function ReaderToggle({ isActive, onToggle }: ReaderToggleProps) {
  * width, theme, font family, and highlight visibility — that is only shown
  * while reader mode is active. Settings are persisted via {@link useReaderStore}.
  */
-export function ReaderTab() {
+export function ReaderTab({ onReaderToggle }: ReaderTabProps = {}) {
   const isReaderActive = usePopupStore((s) => s.isReaderActive);
   const setReaderActive = usePopupStore((s) => s.setReaderActive);
   const settings = useReaderStore((s) => s.settings);
   const setSettings = useReaderStore((s) => s.setSettings);
 
+  const handleToggle = onReaderToggle ?? (() => setReaderActive(!isReaderActive));
+
   return (
     <div data-testid="reader-tab" className="flex flex-col gap-3 p-3">
-      <ReaderToggle isActive={isReaderActive} onToggle={() => setReaderActive(!isReaderActive)} />
+      <ReaderToggle isActive={isReaderActive} onToggle={handleToggle} />
       {isReaderActive && <ReaderSettingsPanel settings={settings} setSettings={setSettings} />}
     </div>
   );

@@ -7,6 +7,7 @@
 // for the rationale behind the cross-layer imports.
 
 import { type IClipService } from '@application/ClipService';
+import type { IReaderService } from '@application/ReaderService';
 import { ChromeAdapter } from '@infrastructure/adapters/chrome/ChromeAdapter';
 import type {
   ContextMenuInfo,
@@ -16,7 +17,7 @@ import type { IRuntimeAdapter } from '@infrastructure/adapters/interfaces/IRunti
 import type { ITabAdapter } from '@infrastructure/adapters/interfaces/ITabAdapter';
 import { createSettingsStorage } from '@infrastructure/storage/settings';
 import { createLogger } from '@shared/logger';
-import { isClipPageMessage, type ClipPageMessage } from '@shared/messages';
+import { isClipPageMessage, isToggleReaderMessage, type ClipPageMessage } from '@shared/messages';
 
 const logger = createLogger('background');
 
@@ -135,18 +136,44 @@ export async function handleClipMessage(
 }
 
 /**
+ * Handles a {@link ToggleReaderMessage} by resolving the active tab and calling
+ * `readerService.toggle(tabId)`. Exported for unit-testing.
+ */
+export async function handleToggleReaderMessage(
+  adapter: Pick<ITabAdapter, 'getActiveTab'>,
+  readerService: Pick<IReaderService, 'toggle'>,
+  sendResponse: (response?: unknown) => void,
+): Promise<void> {
+  const tab = await adapter.getActiveTab();
+  if (tab?.id === undefined) {
+    sendResponse({ ok: false });
+    return;
+  }
+  await readerService.toggle(tab.id);
+  sendResponse({ ok: true });
+}
+
+/**
  * Registers a `chrome.runtime.onMessage` listener that handles
- * {@link ClipPageMessage} requests from the popup and side-panel. Non-clip
- * messages are ignored so the existing content-script exchange is unaffected.
+ * {@link ClipPageMessage} and {@link ToggleReaderMessage} requests from the
+ * popup and side-panel.
  */
 export function wireMessageListener(
   adapter: Pick<IRuntimeAdapter, 'onMessage'> & Pick<ITabAdapter, 'getActiveTab'>,
   clipService: IClipService,
+  readerService: IReaderService,
 ): void {
   adapter.onMessage((msg, sendResponse) => {
-    if (!isClipPageMessage(msg)) return;
-    handleClipMessage(msg, adapter, clipService, sendResponse).catch((err: unknown) => {
-      logger.error('clip message handler failed', err);
-    });
+    if (isClipPageMessage(msg)) {
+      handleClipMessage(msg, adapter, clipService, sendResponse).catch((err: unknown) => {
+        logger.error('clip message handler failed', err);
+      });
+      return;
+    }
+    if (isToggleReaderMessage(msg)) {
+      handleToggleReaderMessage(adapter, readerService, sendResponse).catch((err: unknown) => {
+        logger.error('toggle-reader message handler failed', err);
+      });
+    }
   });
 }

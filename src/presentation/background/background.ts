@@ -196,7 +196,7 @@ export async function bootstrap(): Promise<BackgroundContext> {
   wireOnInstalled(adapter, settingsStorage);
   await wireContextMenus(adapter, services.clipService);
   wireCommands(adapter, services.clipService);
-  wireMessageListener(adapter, services.clipService);
+  wireMessageListener(adapter, services.clipService, services.readerService);
   broadcastInitialSettings(services.settingsService, hooks);
 
   logger.info('Background service worker bootstrapped');

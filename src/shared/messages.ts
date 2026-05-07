@@ -32,3 +32,25 @@ export function isClipPageMessage(msg: unknown): msg is ClipPageMessage {
     typeof (msg as Record<string, unknown>)['destinationId'] === 'string'
   );
 }
+
+/** Type discriminant for the toggle-reader IPC message. */
+export const MSG_TOGGLE_READER = 'toggle-reader' as const;
+
+/**
+ * Message sent from the popup or side-panel to the background service worker
+ * to toggle reader mode on the currently active tab.
+ */
+export interface ToggleReaderMessage {
+  readonly type: typeof MSG_TOGGLE_READER;
+}
+
+/**
+ * Type guard for {@link ToggleReaderMessage}.
+ */
+export function isToggleReaderMessage(msg: unknown): msg is ToggleReaderMessage {
+  return (
+    typeof msg === 'object' &&
+    msg !== null &&
+    (msg as Record<string, unknown>)['type'] === MSG_TOGGLE_READER
+  );
+}

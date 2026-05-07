@@ -23,6 +23,7 @@ import { usePopupStore } from '@presentation/stores/usePopupStore';
 import { useSettingsStore } from '@presentation/stores/useSettingsStore';
 import { bootstrapTheme } from '@presentation/theme/bootstrapTheme';
 import { createLogger } from '@shared/logger';
+import { MSG_TOGGLE_READER } from '@shared/messages';
 
 import { Popup } from './Popup';
 
@@ -50,6 +51,14 @@ async function init(): Promise<void> {
     return ensureWritable(dest.dirHandle);
   });
 
+  const handleReaderToggle = (): void => {
+    const current = usePopupStore.getState().isReaderActive;
+    usePopupStore.getState().setReaderActive(!current);
+    adapter.sendMessage({ type: MSG_TOGGLE_READER }).catch((err: unknown) => {
+      logger.error('toggle-reader message failed', err);
+    });
+  };
+
   bootstrapTheme().catch((err: unknown) => {
     logger.error('theme bootstrap failed', err);
   });
@@ -60,6 +69,7 @@ async function init(): Promise<void> {
         onSettings={() => {
           adapter.openOptionsPage();
         }}
+        onReaderToggle={handleReaderToggle}
       />
     </StrictMode>,
   );
