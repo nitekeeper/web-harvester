@@ -20,6 +20,25 @@ export interface Highlight {
   readonly createdAt: number;
 }
 
+/**
+ * Type guard that returns `true` when `obj` is a non-null object with all
+ * required {@link Highlight} string fields (`id`, `url`, `text`, `color`,
+ * `xpath`) and a numeric `createdAt`. Use this before casting raw storage data
+ * to `Highlight` to avoid propagating malformed records.
+ */
+export function isHighlight(obj: unknown): obj is Highlight {
+  if (typeof obj !== 'object' || obj === null) return false;
+  const record = obj as Record<string, unknown>;
+  return (
+    typeof record['id'] === 'string' &&
+    typeof record['url'] === 'string' &&
+    typeof record['text'] === 'string' &&
+    typeof record['color'] === 'string' &&
+    typeof record['xpath'] === 'string' &&
+    typeof record['createdAt'] === 'number'
+  );
+}
+
 // ── Port interfaces (subset used by this service) ────────────────────────────
 
 /**

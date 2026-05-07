@@ -9,7 +9,7 @@ import 'reflect-metadata';
 import { StrictMode, createElement } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import type { Highlight } from '@application/HighlightService';
+import { isHighlight } from '@application/HighlightService';
 import { ChromeAdapter } from '@infrastructure/adapters/chrome/ChromeAdapter';
 import { ensureWritable } from '@infrastructure/fsa/fsa';
 import { createDestinationStorage } from '@infrastructure/storage/destinations';
@@ -46,9 +46,38 @@ async function loadHighlights(adapter: ChromeAdapter): Promise<void> {
   useHighlightsStore.getState().setLoading(true);
   const rawHighlights = await adapter.getLocal(`highlights:${currentUrl}`);
   if (Array.isArray(rawHighlights)) {
-    useHighlightsStore.getState().setHighlights(rawHighlights as Highlight[]);
+    useHighlightsStore.getState().setHighlights(rawHighlights.filter(isHighlight));
   }
   useHighlightsStore.getState().setLoading(false);
+}
+
+const HIGHLIGHTS_PREFIX = 'highlights:';
+
+/**
+ * Subscribes to storage changes and popup URL changes so that highlights
+ * are reloaded whenever the active tab switches or storage is updated
+ * externally (e.g. the user adds a highlight while the panel is open).
+ */
+function subscribeHighlightReloads(adapter: ChromeAdapter): void {
+  adapter.onChanged((changes) => {
+    const currentUrl = usePopupStore.getState().activeTab?.url;
+    if (!currentUrl) return;
+    if (Object.prototype.hasOwnProperty.call(changes, `${HIGHLIGHTS_PREFIX}${currentUrl}`)) {
+      loadHighlights(adapter).catch((err: unknown) => {
+        logger.error('highlights reload on storage change failed', err);
+      });
+    }
+  });
+
+  usePopupStore.subscribe((state, prevState) => {
+    const url = state.activeTab?.url;
+    const prevUrl = prevState.activeTab?.url;
+    if (url !== undefined && url !== prevUrl) {
+      loadHighlights(adapter).catch((err: unknown) => {
+        logger.error('highlights reload on url change failed', err);
+      });
+    }
+  });
 }
 
 async function init(): Promise<void> {
@@ -58,6 +87,7 @@ async function init(): Promise<void> {
   const adapter = new ChromeAdapter();
   await bootstrapAllStores(adapter);
   await loadHighlights(adapter);
+  subscribeHighlightReloads(adapter);
 
   const idbStorage = await createDestinationStorage();
   const destinations = await idbStorage.getAll();
