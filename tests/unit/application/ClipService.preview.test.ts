@@ -146,7 +146,7 @@ describe('ClipService.preview() — no side effects', () => {
   });
 });
 
-describe('ClipService.clip() with previewMarkdown', () => {
+describe('ClipService.clip() with previewMarkdown provided', () => {
   const previewRequest: ClipRequest = {
     tabId: 1,
     destinationId: 'dest-1',
@@ -173,16 +173,6 @@ describe('ClipService.clip() with previewMarkdown', () => {
     expect(mockSaveTo).toHaveBeenCalled();
   });
 
-  it('still runs afterClip hook when previewMarkdown is provided', async () => {
-    await service.clip(previewRequest);
-    expect(hooks.afterClip.call).toHaveBeenCalled();
-  });
-
-  it('still runs afterSave hook when previewMarkdown is provided', async () => {
-    await service.clip(previewRequest);
-    expect(hooks.afterSave.call).toHaveBeenCalled();
-  });
-
   it('uses previewMarkdown as the content passed to saveTo', async () => {
     await service.clip(previewRequest);
     expect(mockSaveTo).toHaveBeenCalledWith(
@@ -191,5 +181,33 @@ describe('ClipService.clip() with previewMarkdown', () => {
       COMPILED_MARKDOWN,
       expect.any(String),
     );
+  });
+});
+
+describe('ClipService.clip() with previewMarkdown fallback', () => {
+  it('still runs afterClip hook when previewMarkdown is provided', async () => {
+    const previewRequest: ClipRequest = {
+      tabId: 1,
+      destinationId: 'dest-1',
+      previewMarkdown: COMPILED_MARKDOWN,
+    };
+    await service.clip(previewRequest);
+    expect(hooks.afterClip.call).toHaveBeenCalled();
+  });
+
+  it('still runs afterSave hook when previewMarkdown is provided', async () => {
+    const previewRequest: ClipRequest = {
+      tabId: 1,
+      destinationId: 'dest-1',
+      previewMarkdown: COMPILED_MARKDOWN,
+    };
+    await service.clip(previewRequest);
+    expect(hooks.afterSave.call).toHaveBeenCalled();
+  });
+
+  it('falls through to extraction when previewMarkdown is empty string', async () => {
+    await service.clip({ tabId: 1, destinationId: 'dest-1', previewMarkdown: '' });
+    expect(tabAdapter.sendMessageToTab).toHaveBeenCalled();
+    expect(hooks.beforeClip.call).toHaveBeenCalled();
   });
 });

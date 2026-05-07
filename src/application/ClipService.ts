@@ -313,7 +313,8 @@ export class ClipService implements IClipService {
   /**
    * Extracts the current page and runs the `beforeClip` waterfall without
    * persisting anything. Returns the compiled markdown string for display in
-   * the popup's PROPERTIES and PREVIEW sections.
+   * the popup's PROPERTIES and PREVIEW sections. (Note: the field is named 'html'
+   * for historical reasons — after beforeClip it holds the compiled markdown output.)
    */
   async preview(): Promise<string> {
     try {
