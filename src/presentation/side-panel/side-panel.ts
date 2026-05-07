@@ -18,6 +18,7 @@ import '@presentation/styles/global.css';
 import { bootstrapStore } from '@presentation/stores/bootstrapStore';
 import { useHighlightsStore } from '@presentation/stores/useHighlightsStore';
 import { usePopupStore } from '@presentation/stores/usePopupStore';
+import { useReaderStore } from '@presentation/stores/useReaderStore';
 import { useSettingsStore } from '@presentation/stores/useSettingsStore';
 import { bootstrapTheme } from '@presentation/theme/bootstrapTheme';
 import { createLogger } from '@shared/logger';
@@ -36,6 +37,7 @@ async function init(): Promise<void> {
       serialize: (s) => ({ settings: s.settings, templates: s.templates }),
     }),
     bootstrapStore(adapter, 'popup-state', usePopupStore),
+    bootstrapStore(adapter, 'reader-settings', useReaderStore),
   ]);
 
   const currentUrl = usePopupStore.getState().activeTab?.url;

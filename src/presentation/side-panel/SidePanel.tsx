@@ -11,6 +11,7 @@ import { usePopupStore } from '@presentation/stores/usePopupStore';
 import { useSettingsStore } from '@presentation/stores/useSettingsStore';
 
 import { HighlightsTab } from './components/HighlightsTab';
+import { ReaderTab } from './components/ReaderTab';
 
 /** Tabs available in the side panel. */
 type SidePanelTab = 'highlights' | 'reader' | 'clip';
@@ -132,22 +133,6 @@ function ClipTab({ onSave }: { readonly onSave: () => void }) {
   );
 }
 
-/** Placeholder body shown on the Highlights and Reader tabs. */
-function PlaceholderTab({
-  messageId,
-  defaultMessage,
-}: {
-  readonly messageId: string;
-  readonly defaultMessage: string;
-}) {
-  const fmt = useFormatMessage();
-  return (
-    <p className="p-4 text-sm text-muted-foreground italic">
-      {fmt({ id: messageId, defaultMessage })}
-    </p>
-  );
-}
-
 /**
  * Root component for the Chrome side panel. Renders a persistent header with
  * the WHLogo and a close button, a three-tab bar (Highlights / Reader / Clip),
@@ -166,12 +151,7 @@ export function SidePanel({ onClose = () => window.close(), onSave }: SidePanelP
       <TabBar activeTab={activeTab} onTab={setActiveTab} />
       <div className="flex-1 overflow-y-auto">
         {activeTab === 'highlights' && <HighlightsTab />}
-        {activeTab === 'reader' && (
-          <PlaceholderTab
-            messageId="sidepanel.tab.reader.placeholder"
-            defaultMessage="Reader mode controls will appear here."
-          />
-        )}
+        {activeTab === 'reader' && <ReaderTab />}
         {activeTab === 'clip' && <ClipTab onSave={onSave} />}
       </div>
     </div>

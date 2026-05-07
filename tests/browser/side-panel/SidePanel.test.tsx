@@ -5,6 +5,7 @@ import { describe, it, expect, afterEach } from 'vitest';
 
 import { SidePanel } from '@presentation/side-panel/SidePanel';
 import { useHighlightsStore } from '@presentation/stores/useHighlightsStore';
+import { usePopupStore } from '@presentation/stores/usePopupStore';
 
 const NOOP = (): void => undefined;
 const SEL_TAB_HIGHLIGHTS = '[data-testid="sidepanel-tab-highlights"]';
@@ -105,5 +106,20 @@ describe('SidePanel — highlights tab', () => {
     if (!tab) throw new Error('highlights tab not found');
     await userEvent.setup().click(tab as HTMLElement);
     expect(document.querySelector('[data-testid="highlights-empty"]')).not.toBeNull();
+  });
+});
+
+describe('SidePanel — reader tab', () => {
+  afterEach(() => {
+    cleanup();
+    usePopupStore.setState({ isReaderActive: false });
+  });
+
+  it('shows the reader tab content when the Reader tab is clicked', async () => {
+    render(<SidePanel onClose={NOOP} onSave={NOOP} />);
+    const tab = document.querySelector('[data-testid="sidepanel-tab-reader"]');
+    if (!tab) throw new Error('reader tab not found');
+    await userEvent.setup().click(tab as HTMLElement);
+    expect(document.querySelector('[data-testid="reader-tab"]')).not.toBeNull();
   });
 });
