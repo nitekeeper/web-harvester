@@ -1,0 +1,87 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
+
+import {
+  parseFrontmatterFields,
+  rebuildMarkdownWithFields,
+  type FrontmatterField,
+} from '@presentation/popup/lib/parseFrontmatter';
+
+const INPUT_CLASS =
+  'h-7 rounded border border-input bg-background px-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring';
+
+/** Props for {@link PropertiesEditor}. */
+export interface PropertiesEditorProps {
+  /** The full compiled markdown string (may include a YAML frontmatter block). */
+  readonly markdown: string;
+  /** Called with the rebuilt markdown string when a field value is edited. */
+  readonly onMarkdownChange: (markdown: string) => void;
+}
+
+/** Props for {@link FieldItem}. */
+interface FieldItemProps {
+  /** Index in the fields array. */
+  readonly index: number;
+  /** The field to render. */
+  readonly field: FrontmatterField;
+  /** Called when the field value changes. */
+  readonly onFieldChange: (index: number, value: string) => void;
+}
+
+/**
+ * Renders a single field input with label.
+ * @param props The field item props.
+ * @returns JSX element.
+ */
+function FieldItem({ index, field: { key, value }, onFieldChange }: FieldItemProps) {
+  return (
+    <div className="flex flex-col gap-0.5">
+      <label htmlFor={`prop-${key}`} className="text-[10.5px] text-muted-foreground font-mono">
+        {key}
+      </label>
+      <input
+        id={`prop-${key}`}
+        data-testid={`prop-input-${key}`}
+        value={value}
+        onChange={(e) => onFieldChange(index, e.target.value)}
+        className={INPUT_CLASS}
+      />
+    </div>
+  );
+}
+
+/**
+ * Renders an editable text input for each YAML frontmatter key-value pair.
+ * Returns `null` when the markdown contains no frontmatter block.
+ */
+export function PropertiesEditor({ markdown, onMarkdownChange }: PropertiesEditorProps) {
+  const [fields, setFields] = useState<FrontmatterField[]>(() => parseFrontmatterFields(markdown));
+  const lastExternalRef = useRef(markdown);
+
+  useEffect(() => {
+    if (lastExternalRef.current !== markdown) {
+      lastExternalRef.current = markdown;
+      setFields(parseFrontmatterFields(markdown));
+    }
+  }, [markdown]);
+
+  const handleChange = useCallback(
+    (index: number, newValue: string): void => {
+      const updated = fields.map((f, i) => (i === index ? { key: f.key, value: newValue } : f));
+      setFields(updated);
+      const newMarkdown = rebuildMarkdownWithFields(markdown, updated);
+      lastExternalRef.current = newMarkdown;
+      onMarkdownChange(newMarkdown);
+    },
+    [fields, markdown, onMarkdownChange],
+  );
+
+  if (fields.length === 0) return null;
+
+  return (
+    <div data-testid="properties-editor" className="flex flex-col gap-1.5">
+      {fields.map((field, index) => (
+        <FieldItem key={field.key} index={index} field={field} onFieldChange={handleChange} />
+      ))}
+    </div>
+  );
+}

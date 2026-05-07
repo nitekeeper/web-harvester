@@ -13,3 +13,14 @@ Utilities for parsing and rebuilding YAML frontmatter in markdown strings.
 | `FrontmatterField`                            | Interface | A single key-value pair parsed from YAML frontmatter. Has `readonly key: string` and `readonly value: string`.                                                                                                          |
 | `parseFrontmatterFields(markdown)`            | Function  | Parses simple `key: value` YAML frontmatter from a markdown string. Returns `FrontmatterField[]`. Returns empty array when no frontmatter block is present, closing fence is missing, or block has no parseable fields. |
 | `rebuildMarkdownWithFields(markdown, fields)` | Function  | Rebuilds a markdown string by replacing its frontmatter block with the supplied fields as `key: value` lines. Returns the original markdown unchanged when it contains no frontmatter block.                            |
+
+---
+
+## `src/presentation/popup/components/PropertiesEditor.tsx`
+
+Editable form for YAML frontmatter fields rendered in the popup.
+
+| Name                    | Kind      | Description                                                                                                                                                                                   |
+| ----------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PropertiesEditorProps` | Interface | Props: `markdown` (full markdown string) and `onMarkdownChange` (callback receiving rebuilt markdown).                                                                                        |
+| `PropertiesEditor`      | Component | Renders a labeled `<input>` for each YAML frontmatter key-value pair. Returns `null` when no frontmatter block is present. Calls `onMarkdownChange` with rebuilt markdown on each field edit. |
