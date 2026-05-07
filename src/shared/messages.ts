@@ -1,3 +1,35 @@
+/** Type discriminant for the preview-page IPC message. */
+export const MSG_PREVIEW = 'preview' as const;
+
+/**
+ * Message sent from the popup to the background service worker to request a
+ * live preview of the current page compiled against the active template.
+ */
+export interface PreviewPageMessage {
+  readonly type: typeof MSG_PREVIEW;
+  /** ID of the template to compile the preview with. Null means no template. */
+  readonly templateId: string | null;
+}
+
+/**
+ * Response payload the background returns after processing a
+ * {@link PreviewPageMessage}. On success contains the compiled markdown string.
+ */
+export type PreviewPageResponse =
+  | { readonly ok: true; readonly previewMarkdown: string }
+  | { readonly ok: false; readonly error: string };
+
+/**
+ * Type guard for {@link PreviewPageMessage}.
+ */
+export function isPreviewPageMessage(msg: unknown): msg is PreviewPageMessage {
+  return (
+    typeof msg === 'object' &&
+    msg !== null &&
+    (msg as Record<string, unknown>)['type'] === MSG_PREVIEW
+  );
+}
+
 /** Type discriminant for the clip-page IPC message. */
 export const MSG_CLIP = 'clip' as const;
 
@@ -8,6 +40,9 @@ export const MSG_CLIP = 'clip' as const;
 export interface ClipPageMessage {
   readonly type: typeof MSG_CLIP;
   readonly destinationId: string;
+  /** Pre-compiled markdown from the live preview. When present the background
+   *  skips re-extraction and uses this content directly. */
+  readonly previewMarkdown?: string;
 }
 
 /**
