@@ -4,8 +4,10 @@ import userEvent from '@testing-library/user-event';
 import { describe, it, expect, afterEach } from 'vitest';
 
 import { SidePanel } from '@presentation/side-panel/SidePanel';
+import { useHighlightsStore } from '@presentation/stores/useHighlightsStore';
 
 const NOOP = (): void => undefined;
+const SEL_TAB_HIGHLIGHTS = '[data-testid="sidepanel-tab-highlights"]';
 
 /** Returns the close button in the side panel header, asserting it exists. */
 function getCloseButton(): HTMLElement {
@@ -50,7 +52,7 @@ describe('SidePanel — header & shell', () => {
 
   it('renders the three tabs', () => {
     render(<SidePanel onClose={NOOP} onSave={NOOP} />);
-    expect(document.querySelector('[data-testid="sidepanel-tab-highlights"]')).not.toBeNull();
+    expect(document.querySelector(SEL_TAB_HIGHLIGHTS)).not.toBeNull();
     expect(document.querySelector('[data-testid="sidepanel-tab-reader"]')).not.toBeNull();
     expect(document.querySelector('[data-testid="sidepanel-tab-clip"]')).not.toBeNull();
   });
@@ -84,9 +86,24 @@ describe('SidePanel — clip tab content', () => {
 
   it('switches to Highlights tab when clicked', async () => {
     render(<SidePanel onClose={NOOP} onSave={NOOP} />);
-    const highlightsTab = document.querySelector('[data-testid="sidepanel-tab-highlights"]');
+    const highlightsTab = document.querySelector(SEL_TAB_HIGHLIGHTS);
     if (highlightsTab === null) throw new Error('highlights tab not found');
     await userEvent.setup().click(highlightsTab as HTMLElement);
     expect(document.querySelector('[data-testid="destination-selector"]')).toBeNull();
+  });
+});
+
+describe('SidePanel — highlights tab', () => {
+  afterEach(() => {
+    cleanup();
+    useHighlightsStore.setState({ highlights: [], isLoading: false });
+  });
+
+  it('shows the highlights tab content when the Highlights tab is clicked', async () => {
+    render(<SidePanel onClose={NOOP} onSave={NOOP} />);
+    const tab = document.querySelector(SEL_TAB_HIGHLIGHTS);
+    if (!tab) throw new Error('highlights tab not found');
+    await userEvent.setup().click(tab as HTMLElement);
+    expect(document.querySelector('[data-testid="highlights-empty"]')).not.toBeNull();
   });
 });

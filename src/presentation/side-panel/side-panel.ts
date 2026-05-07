@@ -9,12 +9,14 @@ import 'reflect-metadata';
 import { StrictMode, createElement } from 'react';
 import { createRoot } from 'react-dom/client';
 
+import type { Highlight } from '@application/HighlightService';
 import { ChromeAdapter } from '@infrastructure/adapters/chrome/ChromeAdapter';
 import { ensureWritable } from '@infrastructure/fsa/fsa';
 import { createDestinationStorage } from '@infrastructure/storage/destinations';
 import { createSaveHandler } from '@presentation/hooks/useSaveHandler';
 import '@presentation/styles/global.css';
 import { bootstrapStore } from '@presentation/stores/bootstrapStore';
+import { useHighlightsStore } from '@presentation/stores/useHighlightsStore';
 import { usePopupStore } from '@presentation/stores/usePopupStore';
 import { useSettingsStore } from '@presentation/stores/useSettingsStore';
 import { bootstrapTheme } from '@presentation/theme/bootstrapTheme';
@@ -35,6 +37,16 @@ async function init(): Promise<void> {
     }),
     bootstrapStore(adapter, 'popup-state', usePopupStore),
   ]);
+
+  const currentUrl = usePopupStore.getState().activeTab?.url;
+  if (currentUrl) {
+    useHighlightsStore.getState().setLoading(true);
+    const rawHighlights = await adapter.getLocal(`highlights:${currentUrl}`);
+    if (Array.isArray(rawHighlights)) {
+      useHighlightsStore.getState().setHighlights(rawHighlights as Highlight[]);
+    }
+    useHighlightsStore.getState().setLoading(false);
+  }
 
   const idbStorage = await createDestinationStorage();
   const destinations = await idbStorage.getAll();

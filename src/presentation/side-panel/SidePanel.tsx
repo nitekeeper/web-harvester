@@ -10,6 +10,8 @@ import { SaveButton } from '@presentation/popup/components/SaveButton';
 import { usePopupStore } from '@presentation/stores/usePopupStore';
 import { useSettingsStore } from '@presentation/stores/useSettingsStore';
 
+import { HighlightsTab } from './components/HighlightsTab';
+
 /** Tabs available in the side panel. */
 type SidePanelTab = 'highlights' | 'reader' | 'clip';
 
@@ -163,12 +165,7 @@ export function SidePanel({ onClose = () => window.close(), onSave }: SidePanelP
       <SidePanelHeader onClose={onClose} />
       <TabBar activeTab={activeTab} onTab={setActiveTab} />
       <div className="flex-1 overflow-y-auto">
-        {activeTab === 'highlights' && (
-          <PlaceholderTab
-            messageId="sidepanel.tab.highlights.placeholder"
-            defaultMessage="Highlights will appear here."
-          />
-        )}
+        {activeTab === 'highlights' && <HighlightsTab />}
         {activeTab === 'reader' && (
           <PlaceholderTab
             messageId="sidepanel.tab.reader.placeholder"
