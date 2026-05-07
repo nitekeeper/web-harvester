@@ -3,13 +3,14 @@
 import { useCallback } from 'react';
 
 import { useFormatMessage } from '@presentation/hooks/useFormatMessage';
-import { usePopupStore } from '@presentation/stores/usePopupStore';
+import { type PopupStoreState, usePopupStore } from '@presentation/stores/usePopupStore';
 import { useSettingsStore } from '@presentation/stores/useSettingsStore';
 
 import { ActionFooter } from './components/ActionFooter';
 import { DestinationSelector } from './components/DestinationSelector';
 import { MarkdownPreview } from './components/MarkdownPreview';
 import { PopupHeader } from './components/PopupHeader';
+import { PropertiesEditor } from './components/PropertiesEditor';
 import { TemplateSelector } from './components/TemplateSelector';
 import { ToolbarSlot } from './components/ToolbarSlot';
 
@@ -37,30 +38,45 @@ function useSettingsBindings() {
   return { theme, handleTheme };
 }
 
-/** Reads the slice of {@link usePopupStore} that the popup root cares about. */
-function usePopupBindings() {
-  const popup = usePopupStore();
-  const { isPickerActive, setPickerActive } = popup;
-  const handlePickerToggle = useCallback(
-    () => setPickerActive(!isPickerActive),
-    [isPickerActive, setPickerActive],
-  );
-  return { popup, handlePickerToggle };
+/** Props for the {@link PropertiesSection} sub-component. */
+interface PropertiesSectionProps {
+  /** Current markdown string, including frontmatter. */
+  readonly markdown: string;
+  /** Called when the user edits a frontmatter field. */
+  readonly onMarkdownChange: (next: string) => void;
 }
 
 /**
- * Renders the scrollable body section of the popup: toolbar slot, destination
- * selector, template selector, and markdown preview — each with a small
- * uppercase label. Reads directly from the popup and settings stores.
+ * Renders the labeled PROPERTIES group containing the {@link PropertiesEditor}.
+ * Extracted to keep {@link PopupScrollBody} within the 40-line function limit.
  */
-function PopupScrollBody() {
+function PropertiesSection({ markdown, onMarkdownChange }: PropertiesSectionProps) {
+  const fmt = useFormatMessage();
+  return (
+    <div className="flex flex-col gap-1" role="group" aria-labelledby="popup-properties-label">
+      <span id="popup-properties-label" className={LABEL_CLASS}>
+        {fmt({ id: 'popup.propertiesLabel', defaultMessage: 'PROPERTIES' })}
+      </span>
+      <PropertiesEditor markdown={markdown} onMarkdownChange={onMarkdownChange} />
+    </div>
+  );
+}
+
+/** Props for the {@link DestinationTemplateGroups} sub-component. */
+interface DestinationTemplateGroupsProps {
+  /** Popup store slice needed for selectors. */
+  readonly popup: PopupStoreState;
+}
+
+/**
+ * Renders the DESTINATION and TEMPLATE labeled groups side-by-side.
+ * Extracted to keep {@link PopupScrollBody} within the 40-line function limit.
+ */
+function DestinationTemplateGroups({ popup }: DestinationTemplateGroupsProps) {
   const fmt = useFormatMessage();
   const { destinations, templates } = useSettingsStore();
-  const popup = usePopupStore();
-
   return (
-    <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-3">
-      <ToolbarSlot />
+    <>
       <div className="flex flex-col gap-1" role="group" aria-labelledby="popup-destination-label">
         <span id="popup-destination-label" className={LABEL_CLASS}>
           {fmt({ id: 'popup.destinationLabel', defaultMessage: 'DESTINATION' })}
@@ -81,6 +97,42 @@ function PopupScrollBody() {
           onSelect={popup.setSelectedTemplateId}
         />
       </div>
+    </>
+  );
+}
+
+/** Reads the slice of {@link usePopupStore} that the popup root cares about. */
+function usePopupBindings() {
+  const popup = usePopupStore();
+  const { isPickerActive, setPickerActive } = popup;
+  const handlePickerToggle = useCallback(
+    () => setPickerActive(!isPickerActive),
+    [isPickerActive, setPickerActive],
+  );
+  return { popup, handlePickerToggle };
+}
+
+/**
+ * Renders the scrollable body section of the popup: toolbar slot, destination
+ * selector, template selector, optional properties editor (when frontmatter is
+ * present), and markdown preview — each with a small uppercase label. Reads
+ * directly from the popup and settings stores.
+ */
+function PopupScrollBody() {
+  const fmt = useFormatMessage();
+  const popup = usePopupStore();
+  const hasProperties = popup.previewMarkdown.startsWith('---\n');
+
+  return (
+    <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-3">
+      <ToolbarSlot />
+      <DestinationTemplateGroups popup={popup} />
+      {hasProperties && (
+        <PropertiesSection
+          markdown={popup.previewMarkdown}
+          onMarkdownChange={popup.setPreviewMarkdown}
+        />
+      )}
       <div className="flex flex-col gap-1" role="group" aria-labelledby="popup-preview-label">
         <span id="popup-preview-label" className={LABEL_CLASS}>
           {fmt({ id: 'popup.previewLabel', defaultMessage: 'PREVIEW' })}

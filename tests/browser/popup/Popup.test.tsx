@@ -99,3 +99,24 @@ describe('Popup — interactions', () => {
     expect(screen.getByText('Article')).not.toBeNull();
   });
 });
+
+describe('Popup — properties section', () => {
+  afterEach(() => {
+    cleanup();
+    usePopupStore.setState({ previewMarkdown: '' });
+  });
+
+  it('renders the properties editor when previewMarkdown has frontmatter', () => {
+    usePopupStore.setState({
+      previewMarkdown: '---\ntitle: My Page\nauthor: Jane\n---\n\n# Body',
+    });
+    render(<Popup onSave={() => undefined} onSettings={() => undefined} />);
+    expect(document.querySelector('[data-testid="properties-editor"]')).not.toBeNull();
+  });
+
+  it('does not render the properties editor when previewMarkdown has no frontmatter', () => {
+    usePopupStore.setState({ previewMarkdown: '# No frontmatter\n\nBody.' });
+    render(<Popup onSave={() => undefined} onSettings={() => undefined} />);
+    expect(document.querySelector('[data-testid="properties-editor"]')).toBeNull();
+  });
+});
