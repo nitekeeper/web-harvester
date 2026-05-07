@@ -104,12 +104,16 @@ function DestinationTemplateGroups({ popup }: DestinationTemplateGroupsProps) {
 /** Reads the slice of {@link usePopupStore} that the popup root cares about. */
 function usePopupBindings() {
   const popup = usePopupStore();
-  const { isPickerActive, setPickerActive } = popup;
+  const { isPickerActive, setPickerActive, isReaderActive, setReaderActive } = popup;
   const handlePickerToggle = useCallback(
     () => setPickerActive(!isPickerActive),
     [isPickerActive, setPickerActive],
   );
-  return { popup, handlePickerToggle };
+  const handleReaderToggle = useCallback(
+    () => setReaderActive(!isReaderActive),
+    [isReaderActive, setReaderActive],
+  );
+  return { popup, handlePickerToggle, handleReaderToggle };
 }
 
 /**
@@ -157,7 +161,7 @@ function PopupScrollBody() {
  */
 export function Popup({ onSave, onSettings }: PopupProps) {
   const { theme, handleTheme } = useSettingsBindings();
-  const { popup, handlePickerToggle } = usePopupBindings();
+  const { popup, handlePickerToggle, handleReaderToggle } = usePopupBindings();
 
   return (
     <div className="w-80 min-h-48 bg-background text-foreground flex flex-col">
@@ -169,10 +173,10 @@ export function Popup({ onSave, onSettings }: PopupProps) {
         onSave={onSave}
         isPickerActive={popup.isPickerActive}
         isHighlightActive={false}
-        isReaderActive={false}
+        isReaderActive={popup.isReaderActive}
         onPickerToggle={handlePickerToggle}
         onHighlightToggle={NOOP_TOGGLE}
-        onReaderToggle={NOOP_TOGGLE}
+        onReaderToggle={handleReaderToggle}
         saveStatus={popup.saveStatus}
         saveDestinationLabel={popup.saveDestinationLabel}
       />

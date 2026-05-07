@@ -56,6 +56,8 @@ export interface PopupStoreState {
   saveStatus: SaveStatus;
   /** Label of the destination last written to; used by the StatusBar success message. */
   saveDestinationLabel: string | null;
+  /** Whether reader mode is currently active for the active tab. Synced across popup and side panel. */
+  isReaderActive: boolean;
 
   /** Sets the active tab descriptor. */
   setActiveTab: (tab: PopupTab | null) => void;
@@ -77,6 +79,8 @@ export interface PopupStoreState {
   clearError: () => void;
   /** Sets the save-flow status and optionally the destination label. */
   setSaveStatus: (status: SaveStatus, destinationLabel?: string) => void;
+  /** Toggles reader mode active state. */
+  setReaderActive: (active: boolean) => void;
 }
 
 function makeSlice(set: StoreApi<PopupStoreState>['setState']): PopupStoreState {
@@ -91,6 +95,7 @@ function makeSlice(set: StoreApi<PopupStoreState>['setState']): PopupStoreState 
     error: null,
     saveStatus: 'idle' as SaveStatus,
     saveDestinationLabel: null,
+    isReaderActive: false,
 
     setActiveTab: (activeTab): void => set({ activeTab }),
     setSelectedDestinationId: (selectedDestinationId): void => set({ selectedDestinationId }),
@@ -103,6 +108,7 @@ function makeSlice(set: StoreApi<PopupStoreState>['setState']): PopupStoreState 
     clearError: (): void => set({ error: null }),
     setSaveStatus: (status, destinationLabel): void =>
       set({ saveStatus: status, saveDestinationLabel: destinationLabel ?? null }),
+    setReaderActive: (isReaderActive): void => set({ isReaderActive }),
   };
 }
 
