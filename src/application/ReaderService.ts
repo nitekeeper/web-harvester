@@ -105,3 +105,5 @@ export class ReaderService implements IReaderService {
     };
   }
 }
+
+export { defaultReaderSettings, type ReaderSettings } from '@domain/reader/reader';
