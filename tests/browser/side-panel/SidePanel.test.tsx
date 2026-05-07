@@ -3,9 +3,11 @@ import { render, cleanup, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, afterEach } from 'vitest';
 
+import { defaultReaderSettings } from '@application/ReaderService';
 import { SidePanel } from '@presentation/side-panel/SidePanel';
 import { useHighlightsStore } from '@presentation/stores/useHighlightsStore';
 import { usePopupStore } from '@presentation/stores/usePopupStore';
+import { useReaderStore } from '@presentation/stores/useReaderStore';
 
 const NOOP = (): void => undefined;
 const SEL_TAB_HIGHLIGHTS = '[data-testid="sidepanel-tab-highlights"]';
@@ -113,6 +115,7 @@ describe('SidePanel — reader tab', () => {
   afterEach(() => {
     cleanup();
     usePopupStore.setState({ isReaderActive: false });
+    useReaderStore.setState({ settings: defaultReaderSettings() });
   });
 
   it('shows the reader tab content when the Reader tab is clicked', async () => {

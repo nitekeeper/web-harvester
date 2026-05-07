@@ -136,8 +136,8 @@ function ClipTab({ onSave }: { readonly onSave: () => void }) {
 /**
  * Root component for the Chrome side panel. Renders a persistent header with
  * the WHLogo and a close button, a three-tab bar (Highlights / Reader / Clip),
- * and tab content. The Clip tab hosts the existing clipping workflow;
- * Highlights and Reader are placeholders for future features.
+ * and tab content. The Clip tab hosts the clipping workflow; the Highlights tab
+ * lists saved highlights; the Reader tab controls reader-mode settings.
  *
  * The `onSave` callback is supplied by the side-panel composition root, which
  * owns the `chrome.runtime` IPC wiring per CLAUDE.md and ADR-022.
