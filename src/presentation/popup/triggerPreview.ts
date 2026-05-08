@@ -36,6 +36,8 @@ export async function triggerPreview(adapter: IMessageSender, logger: Logger): P
     })) as PreviewPageResponse;
     if (response.ok) {
       setPreviewMarkdown(response.previewMarkdown);
+    } else {
+      logger.warn('preview returned error from background', response.error);
     }
   } catch (err: unknown) {
     logger.warn('preview failed', err);

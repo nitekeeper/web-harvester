@@ -21,16 +21,6 @@ export interface ISendMessagePort {
   sendMessage(msg: unknown): Promise<unknown>;
 }
 
-/**
- * Returns an `onSave` callback that sends a {@link ClipPageMessage} to the
- * background service worker and updates the popup store with the result.
- * Intended to be called once from a composition root and passed as a prop.
- *
- * @param adapter - Port used to send the IPC message to the background.
- * @param preFlight - Optional async check run before the clip message is sent
- *   (e.g. FSA permission request in a user-gesture context). Returning `false`
- *   or rejecting cancels the clip and sets saveStatus to `'error'`.
- */
 /** Handles the clip response and updates the store accordingly. */
 function handleClipResponse(raw: unknown): void {
   const response = raw as ClipPageResponse;

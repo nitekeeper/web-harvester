@@ -16,6 +16,28 @@ Utilities for parsing and rebuilding YAML frontmatter in markdown strings.
 
 ---
 
+## `src/presentation/popup/triggerPreview.ts`
+
+Helper that dispatches a live-preview request to the background service worker and updates the popup store.
+
+| Name                              | Kind      | Description                                                                                                                                                                                     |
+| --------------------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `IMessageSender`                  | Interface | Minimal port interface: `sendMessage(msg: unknown): Promise<unknown>`. Avoids a cross-layer import of `IRuntimeAdapter` into presentation.                                                      |
+| `triggerPreview(adapter, logger)` | Function  | Sends a `MSG_PREVIEW` message via `adapter`, clears stale `previewMarkdown` first, and updates the popup store on success. Logs a warning via `logger` when the background returns `ok: false`. |
+
+---
+
+## `src/presentation/hooks/useSaveHandler.ts`
+
+Factory that creates the `onSave` callback wired into the popup and side-panel composition roots.
+
+| Name                                     | Kind      | Description                                                                                                                                                                                                   |
+| ---------------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ISendMessagePort`                       | Interface | Minimal port interface: `sendMessage(msg: unknown): Promise<unknown>`. `ChromeAdapter` satisfies this structurally.                                                                                           |
+| `createSaveHandler(adapter, preFlight?)` | Function  | Returns a fire-and-forget `onSave` callback that sends `MSG_CLIP` to the background and updates the popup store with the result. Optional `preFlight` async guard runs before the clip (e.g. FSA permission). |
+
+---
+
 ## `src/presentation/popup/components/PropertiesEditor.tsx`
 
 Editable form for YAML frontmatter fields rendered in the popup.
