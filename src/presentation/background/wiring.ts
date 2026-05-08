@@ -24,6 +24,7 @@ import {
   type ClipPageMessage,
   type PreviewPageMessage,
   type PreviewPageResponse,
+  type ToggleReaderMessage,
 } from '@shared/messages';
 import { normalizeError } from '@shared/normalizeError';
 
@@ -168,12 +169,13 @@ export async function handleClipMessage(
 }
 
 /**
- * Handles a {@link ToggleReaderMessage} by resolving the active tab and calling
- * `readerService.toggle(tabId)`. Exported for unit-testing.
+ * Handles a {@link ToggleReaderMessage} by resolving the active tab and
+ * calling `readerService.toggle(tabId, msg.settings)`. Exported for unit-testing.
  */
 export async function handleToggleReaderMessage(
   adapter: Pick<ITabAdapter, 'getActiveTab'>,
   readerService: Pick<IReaderService, 'toggle'>,
+  msg: ToggleReaderMessage,
   sendResponse: (response?: unknown) => void,
 ): Promise<void> {
   const tab = await adapter.getActiveTab();
@@ -181,7 +183,7 @@ export async function handleToggleReaderMessage(
     sendResponse({ ok: false });
     return;
   }
-  await readerService.toggle(tab.id);
+  await readerService.toggle(tab.id, msg.settings);
   sendResponse({ ok: true });
 }
 
@@ -225,9 +227,11 @@ export function wireMessageListenerDeferred(
           return;
         }
         if (isToggleReaderMessage(msg)) {
-          handleToggleReaderMessage(adapter, readerService, sendResponse).catch((err: unknown) => {
-            logger.error('toggle-reader message handler failed', err);
-          });
+          handleToggleReaderMessage(adapter, readerService, msg, sendResponse).catch(
+            (err: unknown) => {
+              logger.error('toggle-reader message handler failed', err);
+            },
+          );
         }
       })
       .catch((err: unknown) => {
