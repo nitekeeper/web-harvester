@@ -58,6 +58,16 @@ Scoped logger factory.
 
 ---
 
+## `src/shared/normalizeError.ts`
+
+Error normalization utility for consistent error message extraction.
+
+| Name                  | Kind     | Description                                                                                                                                          |
+| --------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `normalizeError(err)` | Function | Extracts a human-readable string from an unknown thrown value. For `Error` instances returns `err.message`; for anything else returns `String(err)`. |
+
+---
+
 ## `src/shared/types.ts`
 
 Shared data shapes used across domain, application, and presentation layers. No imports — safe to use from any layer.
