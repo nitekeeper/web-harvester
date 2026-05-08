@@ -65,7 +65,8 @@ export async function activateReader(settings: ReaderSettings): Promise<void> {
  * stylesheets, removes the injected style tag and CSS custom properties.
  */
 export function deactivateReader(): void {
-  document.body.innerHTML = savedBodyHTML ?? '';
+  if (savedBodyHTML === null) return;
+  document.body.innerHTML = savedBodyHTML;
   for (const el of savedHeadStyles) {
     document.head.appendChild(el);
   }

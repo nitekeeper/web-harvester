@@ -13,7 +13,7 @@ vi.mock('@presentation/content/defuddleParse', () => ({
   }),
 }));
 
-vi.mock('@domain/reader/reader-styles', () => ({
+vi.mock('@application/ReaderService', () => ({
   generateReaderCSS: vi.fn().mockReturnValue('body{color:red}'),
 }));
 
@@ -138,5 +138,20 @@ describe('deactivateReader', () => {
     await activateReader(SETTINGS);
     deactivateReader();
     expect(document.documentElement.classList.contains(CLASS_THEME_LIGHT)).toBe(false);
+  });
+
+  it('re-appends saved stylesheets to head', async () => {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'style.css';
+    document.head.appendChild(link);
+
+    await activateReader(SETTINGS);
+    // stylesheet should be removed from head during activation
+    expect(document.head.querySelector('link[rel="stylesheet"]')).toBeNull();
+
+    deactivateReader();
+    // stylesheet should be re-appended
+    expect(document.head.querySelector('link[rel="stylesheet"]')).not.toBeNull();
   });
 });
