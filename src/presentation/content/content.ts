@@ -7,10 +7,12 @@
 
 /* eslint-disable no-restricted-syntax */
 
+import type { ReaderSettings } from '@application/ReaderService';
 import { createLogger } from '@shared/logger';
 
 import { defuddleParse } from './defuddleParse';
 import { startPicker } from './picker';
+import { activateReader, deactivateReader } from './reader';
 
 const logger = createLogger('content');
 
@@ -18,7 +20,9 @@ const logger = createLogger('content');
 type IncomingMessage =
   | { type: 'START_PICKER'; mode: 'exclude' | 'include' }
   | { type: 'STOP_PICKER' }
-  | { type: 'getHtml' };
+  | { type: 'getHtml' }
+  | { type: 'READER_ACTIVATE'; settings: ReaderSettings }
+  | { type: 'READER_DEACTIVATE' };
 
 let activePicker: (() => void) | null = null;
 
@@ -86,6 +90,20 @@ chrome.runtime.onMessage.addListener((msg: unknown, _sender, sendResponse): bool
       sendResponse({ html: document.documentElement.outerHTML, markdown: '' });
     });
     return true;
+  }
+
+  if (message.type === 'READER_ACTIVATE') {
+    activateReader(message.settings).catch((err: unknown) => {
+      logger.error('reader activate failed', err);
+      sendResponse({ ok: false });
+    });
+    return true; // async response
+  }
+
+  if (message.type === 'READER_DEACTIVATE') {
+    deactivateReader();
+    sendResponse({ ok: true });
+    return false;
   }
 
   return false;
