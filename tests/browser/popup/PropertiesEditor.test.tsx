@@ -6,6 +6,9 @@ import { PropertiesEditor } from '@presentation/popup/components/PropertiesEdito
 
 const WITH_FM = '---\ntitle: My Page\nauthor: Jane\n---\n\n# Body';
 const WITHOUT_FM = '# No frontmatter\n\nBody.';
+const TESTID_EDITOR = 'properties-editor';
+const TESTID_EMPTY = 'properties-empty';
+const TESTID_LOADING = 'properties-loading';
 const TESTID_TITLE_INPUT = 'prop-input-title';
 const TESTID_AUTHOR_INPUT = 'prop-input-author';
 
@@ -22,15 +25,37 @@ function getLastOnChangeCall(onChange: ReturnType<typeof vi.fn>) {
   return lastCall?.[0] as string;
 }
 
-describe('PropertiesEditor', () => {
+describe('PropertiesEditor — empty and loading states', () => {
   afterEach(() => {
     cleanup();
   });
 
   it('renders an empty-state placeholder when markdown has no frontmatter', () => {
     render(<PropertiesEditor markdown={WITHOUT_FM} onMarkdownChange={vi.fn()} />);
-    expect(document.querySelector('[data-testid="properties-editor"]')).not.toBeNull();
-    expect(document.querySelector('[data-testid="properties-empty"]')).not.toBeNull();
+    expect(document.querySelector(`[data-testid="${TESTID_EDITOR}"]`)).not.toBeNull();
+    expect(document.querySelector(`[data-testid="${TESTID_EMPTY}"]`)).not.toBeNull();
+  });
+
+  it('renders a loading skeleton when isPreviewing is true and fields.length === 0', () => {
+    render(
+      <PropertiesEditor markdown={WITHOUT_FM} onMarkdownChange={vi.fn()} isPreviewing={true} />,
+    );
+    expect(document.querySelector(`[data-testid="${TESTID_LOADING}"]`)).not.toBeNull();
+    expect(document.querySelector(`[data-testid="${TESTID_EMPTY}"]`)).toBeNull();
+  });
+
+  it('does not render a loading skeleton when isPreviewing is false', () => {
+    render(
+      <PropertiesEditor markdown={WITHOUT_FM} onMarkdownChange={vi.fn()} isPreviewing={false} />,
+    );
+    expect(document.querySelector(`[data-testid="${TESTID_LOADING}"]`)).toBeNull();
+    expect(document.querySelector(`[data-testid="${TESTID_EMPTY}"]`)).not.toBeNull();
+  });
+});
+
+describe('PropertiesEditor — field editing', () => {
+  afterEach(() => {
+    cleanup();
   });
 
   it('renders an input for each frontmatter field', () => {

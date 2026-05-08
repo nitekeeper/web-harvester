@@ -22,4 +22,15 @@ describe('MarkdownPreview', () => {
     render(<MarkdownPreview markdown="# Hello" />);
     expect(screen.getByTestId('markdown-preview').textContent).toBe('# Hello');
   });
+
+  it('renders a loading indicator when isPreviewing is true', () => {
+    render(<MarkdownPreview markdown="" isPreviewing={true} />);
+    expect(document.querySelector('[data-testid="markdown-preview"]')).not.toBeNull();
+    expect(screen.getByText('Loading preview…')).not.toBeNull();
+  });
+
+  it('renders normal placeholder when isPreviewing is false and markdown is empty', () => {
+    render(<MarkdownPreview markdown="" isPreviewing={false} />);
+    expect(screen.getByText('Preview will appear here')).not.toBeNull();
+  });
 });

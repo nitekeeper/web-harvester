@@ -48,20 +48,26 @@ interface PropertiesSectionProps {
   readonly markdown: string;
   /** Called when the user edits a frontmatter field. */
   readonly onMarkdownChange: (next: string) => void;
+  /** When true and no fields are present, shows a loading skeleton. */
+  readonly isPreviewing: boolean;
 }
 
 /**
  * Renders the labeled PROPERTIES group containing the {@link PropertiesEditor}.
  * Extracted to keep {@link PopupScrollBody} within the 40-line function limit.
  */
-function PropertiesSection({ markdown, onMarkdownChange }: PropertiesSectionProps) {
+function PropertiesSection({ markdown, onMarkdownChange, isPreviewing }: PropertiesSectionProps) {
   const fmt = useFormatMessage();
   return (
     <div className="flex flex-col gap-1" role="group" aria-labelledby="popup-properties-label">
       <span id="popup-properties-label" className={LABEL_CLASS}>
         {fmt({ id: 'popup.propertiesLabel', defaultMessage: 'PROPERTIES' })}
       </span>
-      <PropertiesEditor markdown={markdown} onMarkdownChange={onMarkdownChange} />
+      <PropertiesEditor
+        markdown={markdown}
+        onMarkdownChange={onMarkdownChange}
+        isPreviewing={isPreviewing}
+      />
     </div>
   );
 }
@@ -147,12 +153,13 @@ function PopupScrollBody({ onTemplateChange }: PopupScrollBodyProps) {
       <PropertiesSection
         markdown={popup.previewMarkdown}
         onMarkdownChange={popup.setPreviewMarkdown}
+        isPreviewing={popup.isPreviewing}
       />
       <div className="flex flex-col gap-1" role="group" aria-labelledby="popup-preview-label">
         <span id="popup-preview-label" className={LABEL_CLASS}>
           {fmt({ id: 'popup.previewLabel', defaultMessage: 'PREVIEW' })}
         </span>
-        <MarkdownPreview markdown={popup.previewMarkdown} />
+        <MarkdownPreview markdown={popup.previewMarkdown} isPreviewing={popup.isPreviewing} />
       </div>
     </div>
   );

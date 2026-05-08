@@ -16,6 +16,8 @@ export interface PropertiesEditorProps {
   readonly markdown: string;
   /** Called with the rebuilt markdown string when a field value is edited. */
   readonly onMarkdownChange: (markdown: string) => void;
+  /** When true and no fields are present, shows a loading skeleton instead of the empty state. */
+  readonly isPreviewing?: boolean;
 }
 
 /** Props for {@link FieldItem}. */
@@ -66,11 +68,30 @@ function PropertiesEmptyState() {
   );
 }
 
+/** Shown while a live preview is in flight and no fields have arrived yet. */
+function PropertiesLoadingState() {
+  const fmt = useFormatMessage();
+  return (
+    <div data-testid="properties-editor">
+      <span
+        data-testid="properties-loading"
+        className="text-[11px] italic text-muted-foreground animate-pulse"
+      >
+        {fmt({ id: 'popup.propertiesLoading', defaultMessage: 'Loading properties…' })}
+      </span>
+    </div>
+  );
+}
+
 /**
  * Renders an editable text input for each YAML frontmatter key-value pair.
  * Shows a placeholder when the markdown contains no frontmatter block.
  */
-export function PropertiesEditor({ markdown, onMarkdownChange }: PropertiesEditorProps) {
+export function PropertiesEditor({
+  markdown,
+  onMarkdownChange,
+  isPreviewing = false,
+}: PropertiesEditorProps) {
   const [fields, setFields] = useState<FrontmatterField[]>(() => parseFrontmatterFields(markdown));
   const lastExternalRef = useRef(markdown);
 
@@ -94,7 +115,10 @@ export function PropertiesEditor({ markdown, onMarkdownChange }: PropertiesEdito
     [markdown, onMarkdownChange],
   );
 
-  if (fields.length === 0) return <PropertiesEmptyState />;
+  if (fields.length === 0) {
+    if (isPreviewing) return <PropertiesLoadingState />;
+    return <PropertiesEmptyState />;
+  }
 
   return (
     <div data-testid="properties-editor" className="flex flex-col gap-1.5">
