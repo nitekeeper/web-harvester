@@ -7,6 +7,8 @@ import { createLogger } from '@shared/logger';
 
 const logger = createLogger('highlighter');
 
+const SAVE_FAILED_MSG = 'save highlights failed';
+
 /** Tag names that trigger a new highlight range when the selection crosses them. */
 const TEXT_BLOCK_SPLIT_TAGS = new Set([
   'P',
@@ -74,6 +76,10 @@ function applyTextMark(h: AnyHighlightData & { type: 'text' }, el: Element): voi
       range.setEnd(textNode, h.endOffset - start);
       const mark = document.createElement('mark');
       mark.className = 'wh-highlight';
+      mark.dataset.hlId = h.id;
+      mark.addEventListener('click', () => {
+        removeHighlightById(h.id);
+      });
       try {
         range.surroundContents(mark);
       } catch {
@@ -93,6 +99,10 @@ function applyMark(h: AnyHighlightData): void {
   if (h.type === 'element') {
     const mark = document.createElement('mark');
     mark.className = 'wh-highlight';
+    mark.dataset.hlId = h.id;
+    mark.addEventListener('click', () => {
+      removeHighlightById(h.id);
+    });
     el.insertAdjacentElement('beforebegin', mark);
     mark.appendChild(el);
     return;
@@ -128,16 +138,43 @@ function updateFloatingMenu(): void {
   }
 }
 
+/** Removes a single highlight by id: unwraps its <mark>, updates storage, and refreshes the menu. */
+function removeHighlightById(id: string): void {
+  const mark = document.querySelector(`mark.wh-highlight[data-hl-id="${id}"]`);
+  if (mark) {
+    const parent = mark.parentNode;
+    if (parent) {
+      while (mark.firstChild) parent.insertBefore(mark.firstChild, mark);
+      parent.removeChild(mark);
+    }
+  }
+  highlights = highlights.filter((h) => h.id !== id);
+  saveHighlights().catch((err: unknown) => {
+    logger.error(SAVE_FAILED_MSG, err);
+  });
+  updateFloatingMenu();
+}
+
+/** Removes all highlights for the current page from the DOM and from storage. */
+function clearAllHighlights(): void {
+  removeMarks();
+  highlights = [];
+  saveHighlights().catch((err: unknown) => {
+    logger.error(SAVE_FAILED_MSG, err);
+  });
+  updateFloatingMenu();
+}
+
 /** Creates and appends the floating highlight-mode menu to the document body. */
 function injectFloatingMenu(): void {
   const style = document.createElement('style');
   style.id = 'wh-highlight-styles';
-  style.textContent = `.wh-highlight-menu{position:fixed;bottom:16px;right:16px;z-index:2147483647;display:flex;align-items:center;gap:8px;background:#1e1e1e;color:#fff;padding:8px 12px;border-radius:6px;font-family:system-ui,sans-serif;font-size:14px}.wh-highlight-exit{background:transparent;border:1px solid rgba(255,255,255,.4);color:#fff;padding:4px 10px;border-radius:4px;cursor:pointer}mark.wh-highlight{background:rgba(255,220,0,.4);border-radius:2px}`;
+  style.textContent = `.wh-highlight-menu{position:fixed;bottom:16px;right:16px;z-index:2147483647;display:flex;align-items:center;gap:8px;background:#1e1e1e;color:#fff;padding:8px 12px;border-radius:6px;font-family:system-ui,sans-serif;font-size:14px}.wh-highlight-exit{background:transparent;border:1px solid rgba(255,255,255,.4);color:#fff;padding:4px 10px;border-radius:4px;cursor:pointer}.wh-highlight-clear{background:transparent;border:1px solid rgba(255,255,255,.4);color:#fff;padding:4px 10px;border-radius:4px;cursor:pointer}mark.wh-highlight{background:rgba(255,220,0,.4);border-radius:2px}`;
   document.head.appendChild(style);
 
   const menu = document.createElement('div');
   menu.className = 'wh-highlight-menu';
-  menu.innerHTML = `<span class="wh-highlight-count">✦ 0 highlights</span><button class="wh-highlight-exit">Exit</button>`;
+  menu.innerHTML = `<span class="wh-highlight-count">✦ 0 highlights</span><button class="wh-highlight-clear">Clear all</button><button class="wh-highlight-exit">Exit</button>`;
 
   const exitBtn = menu.querySelector('.wh-highlight-exit');
   exitBtn?.addEventListener('click', () => {
@@ -145,6 +182,11 @@ function injectFloatingMenu(): void {
     chrome.runtime.sendMessage({ type: 'highlight-mode-exited' }).catch((err: unknown) => {
       logger.error('highlight-mode-exited send failed', err);
     });
+  });
+
+  const clearBtn = menu.querySelector('.wh-highlight-clear');
+  clearBtn?.addEventListener('click', () => {
+    clearAllHighlights();
   });
 
   document.body.appendChild(menu);
@@ -258,7 +300,7 @@ function handleTextSelection(sel: Selection): void {
   if (newHighlights.length === 0) return;
   highlights = mergeOverlappingHighlights(highlights, newHighlights);
   saveHighlights().catch((err: unknown) => {
-    logger.error('save highlights failed', err);
+    logger.error(SAVE_FAILED_MSG, err);
   });
   for (const h of newHighlights) {
     applyMark(h);
