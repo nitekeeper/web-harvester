@@ -11,6 +11,7 @@ import type { ReaderSettings } from '@application/ReaderService';
 import { createLogger } from '@shared/logger';
 
 import { defuddleParse } from './defuddleParse';
+import { activateHighlighter, deactivateHighlighter } from './highlighter';
 import { startPicker } from './picker';
 import { activateReader, deactivateReader } from './reader';
 
@@ -22,7 +23,9 @@ type IncomingMessage =
   | { type: 'STOP_PICKER' }
   | { type: 'getHtml' }
   | { type: 'READER_ACTIVATE'; settings: ReaderSettings }
-  | { type: 'READER_DEACTIVATE' };
+  | { type: 'READER_DEACTIVATE' }
+  | { type: 'START_HIGHLIGHT' }
+  | { type: 'STOP_HIGHLIGHT' };
 
 let activePicker: (() => void) | null = null;
 
@@ -71,6 +74,27 @@ async function extractPageContent(sendResponse: (r: unknown) => void): Promise<v
   sendResponse({ html, markdown });
 }
 
+/** Handles highlighter control messages. */
+function handleHighlighterMessage(
+  message: { type: 'START_HIGHLIGHT' } | { type: 'STOP_HIGHLIGHT' },
+  sendResponse: (response: unknown) => void,
+): boolean {
+  if (message.type === 'START_HIGHLIGHT') {
+    activateHighlighter().catch((err: unknown) => {
+      logger.error('highlight activate failed', err);
+      sendResponse({ ok: false });
+    });
+    return true; // async response
+  }
+
+  if (message.type === 'STOP_HIGHLIGHT') {
+    deactivateHighlighter();
+    sendResponse({ ok: true });
+  }
+
+  return false;
+}
+
 chrome.runtime.onMessage.addListener((msg: unknown, _sender, sendResponse): boolean => {
   const message = msg as IncomingMessage;
 
@@ -104,6 +128,10 @@ chrome.runtime.onMessage.addListener((msg: unknown, _sender, sendResponse): bool
     deactivateReader();
     sendResponse({ ok: true });
     return false;
+  }
+
+  if (message.type === 'START_HIGHLIGHT' || message.type === 'STOP_HIGHLIGHT') {
+    return handleHighlighterMessage(message, sendResponse);
   }
 
   return false;
