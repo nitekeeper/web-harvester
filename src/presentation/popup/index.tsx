@@ -24,7 +24,7 @@ import { useReaderStore } from '@presentation/stores/useReaderStore';
 import { useSettingsStore } from '@presentation/stores/useSettingsStore';
 import { bootstrapTheme } from '@presentation/theme/bootstrapTheme';
 import { createLogger } from '@shared/logger';
-import { MSG_TOGGLE_READER } from '@shared/messages';
+import { MSG_START_HIGHLIGHT, MSG_STOP_HIGHLIGHT, MSG_TOGGLE_READER } from '@shared/messages';
 
 import { Popup } from './Popup';
 import { triggerPreview } from './triggerPreview';
@@ -43,6 +43,18 @@ function makeReaderToggleHandler(adapter: ChromeAdapter): () => void {
   };
 }
 
+/** Builds the highlight-toggle handler wired to the given adapter. */
+function makeHighlightToggleHandler(adapter: ChromeAdapter): () => void {
+  return (): void => {
+    const current = usePopupStore.getState().isHighlightActive;
+    usePopupStore.getState().setHighlightActive(!current);
+    const type = current ? MSG_STOP_HIGHLIGHT : MSG_START_HIGHLIGHT;
+    adapter.sendMessage({ type }).catch((err: unknown) => {
+      logger.error('highlight toggle message failed', err);
+    });
+  };
+}
+
 /** Mounts the React tree into `rootEl` and fires the initial preview. */
 function mountPopup(rootEl: HTMLElement, adapter: ChromeAdapter, onSave: () => void): void {
   bootstrapTheme().catch((err: unknown) => {
@@ -56,6 +68,7 @@ function mountPopup(rootEl: HTMLElement, adapter: ChromeAdapter, onSave: () => v
           adapter.openOptionsPage();
         }}
         onReaderToggle={makeReaderToggleHandler(adapter)}
+        onHighlightToggle={makeHighlightToggleHandler(adapter)}
         onTemplateChange={() => {
           triggerPreview(adapter, logger).catch((err: unknown) => {
             logger.error('template-change preview failed', err);

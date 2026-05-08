@@ -27,6 +27,8 @@ export interface PopupProps {
   readonly onSettings: () => void;
   /** Called when the user clicks the reader-mode toggle; triggers IPC to background. Defaults to no-op. */
   readonly onReaderToggle?: () => void;
+  /** Called when the user clicks the highlight toggle; triggers IPC to background. Defaults to no-op. */
+  readonly onHighlightToggle?: () => void;
   /** Called when the selected template changes; triggers a live-preview re-fetch. Defaults to no-op. */
   readonly onTemplateChange?: () => void;
 }
@@ -185,6 +187,7 @@ export function Popup({
   onSave,
   onSettings,
   onReaderToggle = NOOP_TOGGLE,
+  onHighlightToggle = NOOP_TOGGLE,
   onTemplateChange,
 }: PopupProps) {
   const { theme, handleTheme } = useSettingsBindings();
@@ -199,10 +202,10 @@ export function Popup({
         isDisabled={popup.selectedDestinationId === null}
         onSave={onSave}
         isPickerActive={popup.isPickerActive}
-        isHighlightActive={false}
+        isHighlightActive={popup.isHighlightActive}
         isReaderActive={popup.isReaderActive}
         onPickerToggle={handlePickerToggle}
-        onHighlightToggle={NOOP_TOGGLE}
+        onHighlightToggle={onHighlightToggle}
         onReaderToggle={onReaderToggle}
         saveStatus={popup.saveStatus}
         saveDestinationLabel={popup.saveDestinationLabel}
