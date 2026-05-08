@@ -7,7 +7,6 @@
 // for the rationale behind the cross-layer imports.
 
 import { type IClipService } from '@application/ClipService';
-import type { IReaderService } from '@application/ReaderService';
 import { ChromeAdapter } from '@infrastructure/adapters/chrome/ChromeAdapter';
 import type {
   ContextMenuInfo,
@@ -173,11 +172,13 @@ export async function handleClipMessage(
 
 /**
  * Handles a {@link ToggleReaderMessage} by resolving the active tab and
- * calling `readerService.toggle(tabId, msg.settings)`. Exported for unit-testing.
+ * forwarding either `READER_ACTIVATE` or `READER_DEACTIVATE` directly to the
+ * content script based on `msg.activate`. No in-memory state is consulted so
+ * the handler is safe to call after an MV3 service-worker restart.
+ * Exported for unit-testing.
  */
 export async function handleToggleReaderMessage(
-  adapter: Pick<ITabAdapter, 'getActiveTab'>,
-  readerService: Pick<IReaderService, 'toggle'>,
+  adapter: Pick<ITabAdapter, 'getActiveTab' | 'sendMessageToTab'>,
   msg: ToggleReaderMessage,
   sendResponse: (response?: unknown) => void,
 ): Promise<void> {
@@ -186,7 +187,11 @@ export async function handleToggleReaderMessage(
     sendResponse({ ok: false });
     return;
   }
-  await readerService.toggle(tab.id, msg.settings);
+  if (msg.activate) {
+    await adapter.sendMessageToTab(tab.id, { type: 'READER_ACTIVATE', settings: msg.settings });
+  } else {
+    await adapter.sendMessageToTab(tab.id, { type: 'READER_DEACTIVATE' });
+  }
   sendResponse({ ok: true });
 }
 
@@ -259,7 +264,6 @@ export async function handleHighlightModeExitedMessage(
  */
 export interface MessageListenerServices {
   readonly clipService: IClipService;
-  readonly readerService: IReaderService;
   readonly storageAdapter: IWiringStoragePort;
 }
 
@@ -308,7 +312,7 @@ function dispatchMessage(
   adapter: MessageDispatchAdapter,
   services: MessageListenerServices,
 ): void {
-  const { clipService, readerService, storageAdapter } = services;
+  const { clipService, storageAdapter } = services;
   if (isPreviewPageMessage(msg)) {
     handlePreviewMessage(msg, clipService, sendResponse as (r: PreviewPageResponse) => void).catch(
       (err: unknown) => {
@@ -324,7 +328,7 @@ function dispatchMessage(
     return;
   }
   if (isToggleReaderMessage(msg)) {
-    handleToggleReaderMessage(adapter, readerService, msg, sendResponse).catch((err: unknown) => {
+    handleToggleReaderMessage(adapter, msg, sendResponse).catch((err: unknown) => {
       logger.error('toggle-reader message handler failed', err);
     });
     return;
@@ -365,11 +369,7 @@ export function wireMessageListener(
   adapter: Pick<IRuntimeAdapter, 'onMessage'> &
     Pick<ITabAdapter, 'getActiveTab' | 'sendMessageToTab'>,
   clipService: IClipService,
-  readerService: IReaderService,
   storageAdapter: IWiringStoragePort,
 ): void {
-  wireMessageListenerDeferred(
-    adapter,
-    Promise.resolve({ clipService, readerService, storageAdapter }),
-  );
+  wireMessageListenerDeferred(adapter, Promise.resolve({ clipService, storageAdapter }));
 }

@@ -97,15 +97,6 @@ describe('handleClipMessage failure paths', () => {
 
 // ── wireMessageListener ──────────────────────────────────────────────────────
 
-/** Minimal IReaderService stub for wireMessageListener tests. */
-function makeReaderService() {
-  return {
-    toggle: vi.fn().mockResolvedValue(undefined),
-    isActive: vi.fn().mockReturnValue(false),
-    getState: vi.fn(),
-  };
-}
-
 /** Minimal storage adapter stub for wireMessageListener tests. */
 function makeStorageAdapter() {
   return {
@@ -117,7 +108,7 @@ function makeStorageAdapter() {
 describe('wireMessageListener', () => {
   it('registers exactly one onMessage handler', () => {
     const adapter = { onMessage: vi.fn(), getActiveTab: vi.fn(), sendMessageToTab: vi.fn() };
-    wireMessageListener(adapter, makeClipService(), makeReaderService(), makeStorageAdapter());
+    wireMessageListener(adapter, makeClipService(), makeStorageAdapter());
     expect(adapter.onMessage).toHaveBeenCalledTimes(1);
   });
 
@@ -132,7 +123,7 @@ describe('wireMessageListener', () => {
     };
     const clipService = makeClipService();
 
-    wireMessageListener(adapter, clipService, makeReaderService(), makeStorageAdapter());
+    wireMessageListener(adapter, clipService, makeStorageAdapter());
     capturedHandler?.({ type: 'getHtml' }, vi.fn());
 
     expect(clipService.clip).not.toHaveBeenCalled();

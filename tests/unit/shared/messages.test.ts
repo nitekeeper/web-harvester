@@ -54,25 +54,38 @@ describe('isClipPageMessage', () => {
   });
 });
 
-describe('isToggleReaderMessage', () => {
-  it('returns true when message has type and settings', () => {
+describe('isToggleReaderMessage — valid messages', () => {
+  it('returns true when message has type, settings, and activate: true', () => {
+    const msg = { type: MSG_TOGGLE_READER, settings: defaultReaderSettings(), activate: true };
+    expect(isToggleReaderMessage(msg)).toBe(true);
+  });
+
+  it('returns true when activate is false', () => {
+    const msg = { type: MSG_TOGGLE_READER, settings: defaultReaderSettings(), activate: false };
+    expect(isToggleReaderMessage(msg)).toBe(true);
+  });
+});
+
+describe('isToggleReaderMessage — invalid messages', () => {
+  it('returns false when activate is missing', () => {
     expect(
       isToggleReaderMessage({ type: MSG_TOGGLE_READER, settings: defaultReaderSettings() }),
-    ).toBe(true);
+    ).toBe(false);
   });
 
   it('returns false when settings is missing', () => {
-    expect(isToggleReaderMessage({ type: MSG_TOGGLE_READER })).toBe(false);
+    expect(isToggleReaderMessage({ type: MSG_TOGGLE_READER, activate: true })).toBe(false);
   });
 
   it('returns false when settings is null', () => {
-    expect(isToggleReaderMessage({ type: MSG_TOGGLE_READER, settings: null })).toBe(false);
+    expect(isToggleReaderMessage({ type: MSG_TOGGLE_READER, settings: null, activate: true })).toBe(
+      false,
+    );
   });
 
   it('returns false when type is different', () => {
-    expect(
-      isToggleReaderMessage({ type: 'other-message', settings: defaultReaderSettings() }),
-    ).toBe(false);
+    const msg = { type: 'other-message', settings: defaultReaderSettings(), activate: true };
+    expect(isToggleReaderMessage(msg)).toBe(false);
   });
 });
 

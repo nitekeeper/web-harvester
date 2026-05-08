@@ -37,9 +37,11 @@ function makeReaderToggleHandler(adapter: ChromeAdapter): () => void {
     const current = usePopupStore.getState().isReaderActive;
     usePopupStore.getState().setReaderActive(!current);
     const settings = useReaderStore.getState().settings;
-    adapter.sendMessage({ type: MSG_TOGGLE_READER, settings }).catch((err: unknown) => {
-      logger.error('toggle-reader message failed', err);
-    });
+    adapter
+      .sendMessage({ type: MSG_TOGGLE_READER, settings, activate: !current })
+      .catch((err: unknown) => {
+        logger.error('toggle-reader message failed', err);
+      });
   };
 }
 

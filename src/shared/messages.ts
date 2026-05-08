@@ -79,10 +79,16 @@ export const MSG_TOGGLE_READER = 'toggle-reader' as const;
  * Message sent from the popup or side-panel to the background service worker
  * to toggle reader mode on the currently active tab. Carries the current
  * reader settings so the content script can apply them immediately.
+ *
+ * The `activate` flag encodes the desired direction explicitly so the
+ * background never needs to track state — MV3 service workers restart on
+ * idle and would otherwise lose the in-memory toggle state.
  */
 export interface ToggleReaderMessage {
   readonly type: typeof MSG_TOGGLE_READER;
   readonly settings: ReaderSettings;
+  /** `true` to activate reader mode, `false` to deactivate. */
+  readonly activate: boolean;
 }
 
 /**
@@ -94,7 +100,8 @@ export function isToggleReaderMessage(msg: unknown): msg is ToggleReaderMessage 
     msg !== null &&
     (msg as Record<string, unknown>)['type'] === MSG_TOGGLE_READER &&
     typeof (msg as Record<string, unknown>)['settings'] === 'object' &&
-    (msg as Record<string, unknown>)['settings'] !== null
+    (msg as Record<string, unknown>)['settings'] !== null &&
+    typeof (msg as Record<string, unknown>)['activate'] === 'boolean'
   );
 }
 

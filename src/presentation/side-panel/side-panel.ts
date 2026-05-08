@@ -102,9 +102,12 @@ async function init(): Promise<void> {
   const handleReaderToggle = (): void => {
     const current = usePopupStore.getState().isReaderActive;
     usePopupStore.getState().setReaderActive(!current);
-    adapter.sendMessage({ type: MSG_TOGGLE_READER }).catch((err: unknown) => {
-      logger.error('toggle-reader message failed', err);
-    });
+    const settings = useReaderStore.getState().settings;
+    adapter
+      .sendMessage({ type: MSG_TOGGLE_READER, settings, activate: !current })
+      .catch((err: unknown) => {
+        logger.error('toggle-reader message failed', err);
+      });
   };
 
   bootstrapTheme().catch((err: unknown) => {

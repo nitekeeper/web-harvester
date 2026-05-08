@@ -213,7 +213,6 @@ export async function bootstrap(): Promise<BackgroundContext> {
   // system available before processing the first preview request.
   resolveServices({
     clipService: services.clipService,
-    readerService: services.readerService,
     storageAdapter: adapter,
   });
 

@@ -42,15 +42,6 @@ function makeClipService(overrides: Partial<IClipService> = {}): IClipService {
   };
 }
 
-/** Minimal IReaderService stub. */
-function makeReaderService() {
-  return {
-    toggle: vi.fn().mockResolvedValue(undefined),
-    isActive: vi.fn().mockReturnValue(false),
-    getState: vi.fn(),
-  };
-}
-
 const PREVIEW_MSG: PreviewPageMessage = { type: MSG_PREVIEW, templateId: null };
 const CLIP_MSG_WITH_PREVIEW: ClipPageMessage = {
   type: MSG_CLIP,
@@ -154,7 +145,7 @@ describe('wireMessageListener MSG_PREVIEW routing', () => {
     };
     const clipService = makeClipService();
 
-    wireMessageListener(adapter, clipService, makeReaderService(), makeStorageAdapter());
+    wireMessageListener(adapter, clipService, makeStorageAdapter());
     capturedHandler?.(PREVIEW_MSG, vi.fn());
 
     // Give the async handler a chance to run
@@ -174,7 +165,7 @@ describe('wireMessageListener MSG_PREVIEW routing', () => {
     };
     const clipService = makeClipService();
 
-    wireMessageListener(adapter, clipService, makeReaderService(), makeStorageAdapter());
+    wireMessageListener(adapter, clipService, makeStorageAdapter());
     capturedHandler?.(PREVIEW_MSG, vi.fn());
 
     await Promise.resolve();
@@ -198,7 +189,6 @@ describe('wireMessageListenerDeferred — routes MSG_PREVIEW to preview handler'
     const clipService = makeClipService();
     const services: MessageListenerServices = {
       clipService,
-      readerService: makeReaderService(),
       storageAdapter: makeStorageAdapter(),
     };
     wireMessageListenerDeferred(adapter, Promise.resolve(services));
@@ -221,7 +211,6 @@ describe('wireMessageListenerDeferred — does not clip for MSG_PREVIEW', () => 
     const clipService = makeClipService();
     const services: MessageListenerServices = {
       clipService,
-      readerService: makeReaderService(),
       storageAdapter: makeStorageAdapter(),
     };
     wireMessageListenerDeferred(adapter, Promise.resolve(services));
@@ -251,7 +240,6 @@ describe('wireMessageListenerDeferred — deferred services', () => {
     expect(clipService.preview).not.toHaveBeenCalled();
     resolveServices({
       clipService,
-      readerService: makeReaderService(),
       storageAdapter: makeStorageAdapter(),
     });
     await Promise.resolve();
