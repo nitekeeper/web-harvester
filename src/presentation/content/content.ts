@@ -7,11 +7,9 @@
 
 /* eslint-disable no-restricted-syntax */
 
-import Defuddle from 'defuddle';
-
 import { createLogger } from '@shared/logger';
-import { buildTurndown } from '@shared/turndown';
 
+import { defuddleParse } from './defuddleParse';
 import { startPicker } from './picker';
 
 const logger = createLogger('content');
@@ -62,11 +60,7 @@ async function extractPageContent(sendResponse: (r: unknown) => void): Promise<v
   const html = document.documentElement.outerHTML;
   let markdown = '';
   try {
-    const defuddle = new Defuddle(document, { url: window.location.href });
-    const result = defuddle.parse();
-    markdown = buildTurndown()
-      .turndown(result.content ?? '')
-      .trim();
+    markdown = defuddleParse(document, window.location.href);
   } catch (err: unknown) {
     logger.error('Defuddle extraction failed', err);
   }
