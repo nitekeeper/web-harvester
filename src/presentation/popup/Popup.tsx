@@ -138,28 +138,32 @@ interface PopupScrollBodyProps {
 }
 
 /**
- * Renders the scrollable body section of the popup: toolbar slot, destination
- * selector, template selector, optional properties editor (when frontmatter is
- * present), and markdown preview — each with a small uppercase label. Reads
- * directly from the popup and settings stores.
+ * Renders the popup body: selector area (toolbar + destination/template pickers)
+ * above a scrollable region (properties editor + preview). The selector area has
+ * no overflow clipping so Radix Select dropdowns can extend beyond it without
+ * being clipped — the Chrome extension popup window expands to show them.
  */
 function PopupScrollBody({ onTemplateChange }: PopupScrollBodyProps) {
   const fmt = useFormatMessage();
   const popup = usePopupStore();
   return (
-    <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-3">
-      <ToolbarSlot />
-      <DestinationTemplateGroups popup={popup} onTemplateChange={onTemplateChange} />
-      <PropertiesSection
-        markdown={popup.previewMarkdown}
-        onMarkdownChange={popup.setPreviewMarkdown}
-        isPreviewing={popup.isPreviewing}
-      />
-      <div className="flex flex-col gap-1" role="group" aria-labelledby="popup-preview-label">
-        <span id="popup-preview-label" className={LABEL_CLASS}>
-          {fmt({ id: 'popup.previewLabel', defaultMessage: 'PREVIEW' })}
-        </span>
-        <MarkdownPreview markdown={popup.previewMarkdown} isPreviewing={popup.isPreviewing} />
+    <div className="flex-1 flex flex-col">
+      <div className="relative px-3 pt-3 flex flex-col gap-3">
+        <ToolbarSlot />
+        <DestinationTemplateGroups popup={popup} onTemplateChange={onTemplateChange} />
+      </div>
+      <div className="flex-1 overflow-y-auto px-3 pt-3 pb-3 flex flex-col gap-3">
+        <PropertiesSection
+          markdown={popup.previewMarkdown}
+          onMarkdownChange={popup.setPreviewMarkdown}
+          isPreviewing={popup.isPreviewing}
+        />
+        <div className="flex flex-col gap-1" role="group" aria-labelledby="popup-preview-label">
+          <span id="popup-preview-label" className={LABEL_CLASS}>
+            {fmt({ id: 'popup.previewLabel', defaultMessage: 'PREVIEW' })}
+          </span>
+          <MarkdownPreview markdown={popup.previewMarkdown} isPreviewing={popup.isPreviewing} />
+        </div>
       </div>
     </div>
   );

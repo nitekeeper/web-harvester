@@ -98,6 +98,25 @@ describe('Popup — interactions', () => {
     await userEvent.setup().click(screen.getByTestId('template-selector'));
     expect(screen.getByText('Article')).not.toBeNull();
   });
+
+  it('renders select dropdown content inside the popup container, not portaled to document.body', async () => {
+    useSettingsStore.setState({
+      templates: [
+        {
+          id: 't1',
+          name: 'Article',
+          frontmatterTemplate: '',
+          bodyTemplate: '',
+          noteNameTemplate: '',
+        },
+      ],
+    });
+    const { container } = render(<Popup onSave={() => undefined} onSettings={() => undefined} />);
+    await userEvent.setup().click(screen.getByTestId('template-selector'));
+    // Without Portal, SelectContent renders inside the component tree (container).
+    // With Portal (the broken state), it renders at document.body and container query returns null.
+    expect(container.querySelector('[data-slot="select-content"]')).not.toBeNull();
+  });
 });
 
 describe('Popup — properties section', () => {
