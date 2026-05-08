@@ -23,11 +23,72 @@ import { usePopupStore } from '@presentation/stores/usePopupStore';
 import { useSettingsStore } from '@presentation/stores/useSettingsStore';
 import { bootstrapTheme } from '@presentation/theme/bootstrapTheme';
 import { createLogger } from '@shared/logger';
-import { MSG_TOGGLE_READER } from '@shared/messages';
+import { MSG_PREVIEW, MSG_TOGGLE_READER, type PreviewPageResponse } from '@shared/messages';
 
 import { Popup } from './Popup';
 
 const logger = createLogger('popup');
+
+/**
+ * Sends a {@link MSG_PREVIEW} message to the background service worker and
+ * updates the popup store with the compiled markdown on success. Clears any
+ * stale previewMarkdown first so the UI shows the loading state immediately.
+ */
+async function triggerPreview(adapter: ChromeAdapter): Promise<void> {
+  const { selectedTemplateId, setIsPreviewing, setPreviewMarkdown } = usePopupStore.getState();
+  setPreviewMarkdown('');
+  setIsPreviewing(true);
+  try {
+    const response = (await adapter.sendMessage({
+      type: MSG_PREVIEW,
+      templateId: selectedTemplateId,
+    })) as PreviewPageResponse;
+    if (response.ok) {
+      setPreviewMarkdown(response.previewMarkdown);
+    }
+  } catch (err: unknown) {
+    logger.warn('preview failed', err);
+  } finally {
+    setIsPreviewing(false);
+  }
+}
+
+/** Builds the reader-toggle handler wired to the given adapter. */
+function makeReaderToggleHandler(adapter: ChromeAdapter): () => void {
+  return (): void => {
+    const current = usePopupStore.getState().isReaderActive;
+    usePopupStore.getState().setReaderActive(!current);
+    adapter.sendMessage({ type: MSG_TOGGLE_READER }).catch((err: unknown) => {
+      logger.error('toggle-reader message failed', err);
+    });
+  };
+}
+
+/** Mounts the React tree into `rootEl` and fires the initial preview. */
+function mountPopup(rootEl: HTMLElement, adapter: ChromeAdapter, onSave: () => void): void {
+  bootstrapTheme().catch((err: unknown) => {
+    logger.error('theme bootstrap failed', err);
+  });
+  createRoot(rootEl).render(
+    <StrictMode>
+      <Popup
+        onSave={onSave}
+        onSettings={() => {
+          adapter.openOptionsPage();
+        }}
+        onReaderToggle={makeReaderToggleHandler(adapter)}
+        onTemplateChange={() => {
+          triggerPreview(adapter).catch((err: unknown) => {
+            logger.error('template-change preview failed', err);
+          });
+        }}
+      />
+    </StrictMode>,
+  );
+  triggerPreview(adapter).catch((err: unknown) => {
+    logger.error('initial preview failed', err);
+  });
+}
 
 async function init(): Promise<void> {
   const rootEl = document.getElementById('root');
@@ -51,28 +112,7 @@ async function init(): Promise<void> {
     return ensureWritable(dest.dirHandle);
   });
 
-  const handleReaderToggle = (): void => {
-    const current = usePopupStore.getState().isReaderActive;
-    usePopupStore.getState().setReaderActive(!current);
-    adapter.sendMessage({ type: MSG_TOGGLE_READER }).catch((err: unknown) => {
-      logger.error('toggle-reader message failed', err);
-    });
-  };
-
-  bootstrapTheme().catch((err: unknown) => {
-    logger.error('theme bootstrap failed', err);
-  });
-  createRoot(rootEl).render(
-    <StrictMode>
-      <Popup
-        onSave={handleSave}
-        onSettings={() => {
-          adapter.openOptionsPage();
-        }}
-        onReaderToggle={handleReaderToggle}
-      />
-    </StrictMode>,
-  );
+  mountPopup(rootEl, adapter, handleSave);
 }
 
 init().catch((err: unknown) => {

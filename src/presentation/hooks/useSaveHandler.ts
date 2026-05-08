@@ -31,6 +31,27 @@ export interface ISendMessagePort {
  *   (e.g. FSA permission request in a user-gesture context). Returning `false`
  *   or rejecting cancels the clip and sets saveStatus to `'error'`.
  */
+/** Handles the clip response and updates the store accordingly. */
+function handleClipResponse(raw: unknown): void {
+  const response = raw as ClipPageResponse;
+  if (response.ok) {
+    usePopupStore.getState().setSaveStatus('success', response.destination);
+  } else {
+    usePopupStore.getState().setSaveStatus('error');
+    logger.error('clip request failed', response.error);
+  }
+}
+
+/**
+ * Returns an `onSave` callback that sends a {@link ClipPageMessage} to the
+ * background service worker and updates the popup store with the result.
+ * Intended to be called once from a composition root and passed as a prop.
+ *
+ * @param adapter - Port used to send the IPC message to the background.
+ * @param preFlight - Optional async check run before the clip message is sent
+ *   (e.g. FSA permission request in a user-gesture context). Returning `false`
+ *   or rejecting cancels the clip and sets saveStatus to `'error'`.
+ */
 export function createSaveHandler(
   adapter: ISendMessagePort,
   preFlight?: (destinationId: string) => Promise<boolean>,
@@ -48,17 +69,13 @@ export function createSaveHandler(
     preFlightPromise
       .then((granted) => {
         if (!granted) throw new Error('FSA permission denied');
-        return adapter.sendMessage({ type: MSG_CLIP, destinationId: selectedDestinationId });
+        return adapter.sendMessage({
+          type: MSG_CLIP,
+          destinationId: selectedDestinationId,
+          previewMarkdown: usePopupStore.getState().previewMarkdown || undefined,
+        });
       })
-      .then((raw) => {
-        const response = raw as ClipPageResponse;
-        if (response.ok) {
-          usePopupStore.getState().setSaveStatus('success', response.destination);
-        } else {
-          usePopupStore.getState().setSaveStatus('error');
-          logger.error('clip request failed', response.error);
-        }
-      })
+      .then(handleClipResponse)
       .catch((err: unknown) => {
         usePopupStore.getState().setSaveStatus('error');
         logger.error('sendMessage rejected', err);

@@ -27,6 +27,8 @@ export interface PopupProps {
   readonly onSettings: () => void;
   /** Called when the user clicks the reader-mode toggle; triggers IPC to background. Defaults to no-op. */
   readonly onReaderToggle?: () => void;
+  /** Called when the selected template changes; triggers a live-preview re-fetch. Defaults to no-op. */
+  readonly onTemplateChange?: () => void;
 }
 
 /** Reads the slice of {@link useSettingsStore} that the popup root cares about. */
@@ -68,15 +70,24 @@ function PropertiesSection({ markdown, onMarkdownChange }: PropertiesSectionProp
 interface DestinationTemplateGroupsProps {
   /** Popup store slice needed for selectors. */
   readonly popup: PopupStoreState;
+  /** Called when the selected template changes; triggers a live-preview re-fetch. */
+  readonly onTemplateChange?: () => void;
 }
 
 /**
  * Renders the DESTINATION and TEMPLATE labeled groups side-by-side.
  * Extracted to keep {@link PopupScrollBody} within the 40-line function limit.
  */
-function DestinationTemplateGroups({ popup }: DestinationTemplateGroupsProps) {
+function DestinationTemplateGroups({ popup, onTemplateChange }: DestinationTemplateGroupsProps) {
   const fmt = useFormatMessage();
   const { destinations, templates } = useSettingsStore();
+  const handleTemplateSelect = useCallback(
+    (id: string) => {
+      popup.setSelectedTemplateId(id);
+      onTemplateChange?.();
+    },
+    [popup, onTemplateChange],
+  );
   return (
     <>
       <div className="flex flex-col gap-1" role="group" aria-labelledby="popup-destination-label">
@@ -96,7 +107,7 @@ function DestinationTemplateGroups({ popup }: DestinationTemplateGroupsProps) {
         <TemplateSelector
           templates={templates}
           selectedId={popup.selectedTemplateId}
-          onSelect={popup.setSelectedTemplateId}
+          onSelect={handleTemplateSelect}
         />
       </div>
     </>
@@ -114,19 +125,25 @@ function usePopupBindings() {
   return { popup, handlePickerToggle };
 }
 
+/** Props for the {@link PopupScrollBody} sub-component. */
+interface PopupScrollBodyProps {
+  /** Called when the selected template changes; triggers a live-preview re-fetch. */
+  readonly onTemplateChange?: () => void;
+}
+
 /**
  * Renders the scrollable body section of the popup: toolbar slot, destination
  * selector, template selector, optional properties editor (when frontmatter is
  * present), and markdown preview — each with a small uppercase label. Reads
  * directly from the popup and settings stores.
  */
-function PopupScrollBody() {
+function PopupScrollBody({ onTemplateChange }: PopupScrollBodyProps) {
   const fmt = useFormatMessage();
   const popup = usePopupStore();
   return (
     <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-3">
       <ToolbarSlot />
-      <DestinationTemplateGroups popup={popup} />
+      <DestinationTemplateGroups popup={popup} onTemplateChange={onTemplateChange} />
       <PropertiesSection
         markdown={popup.previewMarkdown}
         onMarkdownChange={popup.setPreviewMarkdown}
@@ -153,14 +170,19 @@ function PopupScrollBody() {
  * sends an IPC toggle-reader message to the background service worker —
  * see ADR-022 for the rationale.
  */
-export function Popup({ onSave, onSettings, onReaderToggle = NOOP_TOGGLE }: PopupProps) {
+export function Popup({
+  onSave,
+  onSettings,
+  onReaderToggle = NOOP_TOGGLE,
+  onTemplateChange,
+}: PopupProps) {
   const { theme, handleTheme } = useSettingsBindings();
   const { popup, handlePickerToggle } = usePopupBindings();
 
   return (
     <div className="w-80 min-h-48 bg-background text-foreground flex flex-col">
       <PopupHeader theme={theme} onTheme={handleTheme} onSettings={onSettings} />
-      <PopupScrollBody />
+      <PopupScrollBody onTemplateChange={onTemplateChange} />
       <ActionFooter
         isSaving={popup.isSaving}
         isDisabled={popup.selectedDestinationId === null}
