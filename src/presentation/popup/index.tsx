@@ -20,6 +20,7 @@ import { createSaveHandler } from '@presentation/hooks/useSaveHandler';
 import '@presentation/styles/global.css';
 import { bootstrapStore } from '@presentation/stores/bootstrapStore';
 import { usePopupStore } from '@presentation/stores/usePopupStore';
+import { useReaderStore } from '@presentation/stores/useReaderStore';
 import { useSettingsStore } from '@presentation/stores/useSettingsStore';
 import { bootstrapTheme } from '@presentation/theme/bootstrapTheme';
 import { createLogger } from '@shared/logger';
@@ -35,7 +36,8 @@ function makeReaderToggleHandler(adapter: ChromeAdapter): () => void {
   return (): void => {
     const current = usePopupStore.getState().isReaderActive;
     usePopupStore.getState().setReaderActive(!current);
-    adapter.sendMessage({ type: MSG_TOGGLE_READER }).catch((err: unknown) => {
+    const settings = useReaderStore.getState().settings;
+    adapter.sendMessage({ type: MSG_TOGGLE_READER, settings }).catch((err: unknown) => {
       logger.error('toggle-reader message failed', err);
     });
   };

@@ -60,6 +60,8 @@ export interface PopupStoreState {
   isReaderActive: boolean;
   /** True while the MSG_PREVIEW round-trip to the background is in flight. */
   isPreviewing: boolean;
+  /** Whether highlight mode is currently active for the active tab. */
+  isHighlightActive: boolean;
 
   /** Sets the active tab descriptor. */
   setActiveTab: (tab: PopupTab | null) => void;
@@ -85,6 +87,8 @@ export interface PopupStoreState {
   setReaderActive: (active: boolean) => void;
   /** Sets the isPreviewing loading flag. */
   setIsPreviewing: (v: boolean) => void;
+  /** Toggles highlight mode active state. */
+  setHighlightActive: (active: boolean) => void;
 }
 
 function makeSlice(set: StoreApi<PopupStoreState>['setState']): PopupStoreState {
@@ -101,6 +105,7 @@ function makeSlice(set: StoreApi<PopupStoreState>['setState']): PopupStoreState 
     saveDestinationLabel: null,
     isReaderActive: false,
     isPreviewing: false,
+    isHighlightActive: false,
 
     setActiveTab: (activeTab): void => set({ activeTab }),
     setSelectedDestinationId: (selectedDestinationId): void => set({ selectedDestinationId }),
@@ -115,6 +120,7 @@ function makeSlice(set: StoreApi<PopupStoreState>['setState']): PopupStoreState 
       set({ saveStatus: status, saveDestinationLabel: destinationLabel ?? null }),
     setReaderActive: (isReaderActive): void => set({ isReaderActive }),
     setIsPreviewing: (isPreviewing): void => set({ isPreviewing }),
+    setHighlightActive: (isHighlightActive): void => set({ isHighlightActive }),
   };
 }
 
