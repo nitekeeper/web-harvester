@@ -1,3 +1,5 @@
+import type { ReaderSettings } from './reader-settings';
+
 /** Type discriminant for the preview-page IPC message. */
 export const MSG_PREVIEW = 'preview' as const;
 
@@ -75,10 +77,12 @@ export const MSG_TOGGLE_READER = 'toggle-reader' as const;
 
 /**
  * Message sent from the popup or side-panel to the background service worker
- * to toggle reader mode on the currently active tab.
+ * to toggle reader mode on the currently active tab. Carries the current
+ * reader settings so the content script can apply them immediately.
  */
 export interface ToggleReaderMessage {
   readonly type: typeof MSG_TOGGLE_READER;
+  readonly settings: ReaderSettings;
 }
 
 /**
@@ -88,6 +92,8 @@ export function isToggleReaderMessage(msg: unknown): msg is ToggleReaderMessage 
   return (
     typeof msg === 'object' &&
     msg !== null &&
-    (msg as Record<string, unknown>)['type'] === MSG_TOGGLE_READER
+    (msg as Record<string, unknown>)['type'] === MSG_TOGGLE_READER &&
+    typeof (msg as Record<string, unknown>)['settings'] === 'object' &&
+    (msg as Record<string, unknown>)['settings'] !== null
   );
 }

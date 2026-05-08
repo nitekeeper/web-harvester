@@ -1,14 +1,6 @@
 // src/domain/reader/reader.ts
 
-/** Reader display settings for font size, line height, and layout. */
-export interface ReaderSettings {
-  readonly fontSize: number;
-  readonly lineHeight: number;
-  readonly maxWidth: number;
-  readonly theme: 'auto' | 'light' | 'dark' | 'sepia';
-  readonly fontFamily: string;
-  readonly showHighlights: boolean;
-}
+export { type ReaderSettings, defaultReaderSettings } from '@shared/reader-settings';
 
 /** Extracted content from a reader-mode article. */
 export interface ReaderContent {
@@ -18,20 +10,6 @@ export interface ReaderContent {
   readonly published?: string;
   readonly domain?: string;
   readonly wordCount?: number;
-}
-
-/**
- * Returns the default reader settings.
- */
-export function defaultReaderSettings(): ReaderSettings {
-  return {
-    fontSize: 16,
-    lineHeight: 1.6,
-    maxWidth: 38,
-    theme: 'auto',
-    fontFamily: 'default',
-    showHighlights: true,
-  };
 }
 
 /**

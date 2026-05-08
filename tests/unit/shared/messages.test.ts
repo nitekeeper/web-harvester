@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { isClipPageMessage, MSG_CLIP } from '@shared/messages';
+import {
+  isClipPageMessage,
+  MSG_CLIP,
+  isToggleReaderMessage,
+  MSG_TOGGLE_READER,
+} from '@shared/messages';
+import { defaultReaderSettings } from '@shared/reader-settings';
 
 describe('isClipPageMessage', () => {
   it('returns true for a valid ClipPageMessage', () => {
@@ -39,5 +45,27 @@ describe('isClipPageMessage', () => {
     expect(isClipPageMessage({ type: 'clip', destinationId: 'd1', previewMarkdown: '# hi' })).toBe(
       true,
     );
+  });
+});
+
+describe('isToggleReaderMessage', () => {
+  it('returns true when message has type and settings', () => {
+    expect(
+      isToggleReaderMessage({ type: MSG_TOGGLE_READER, settings: defaultReaderSettings() }),
+    ).toBe(true);
+  });
+
+  it('returns false when settings is missing', () => {
+    expect(isToggleReaderMessage({ type: MSG_TOGGLE_READER })).toBe(false);
+  });
+
+  it('returns false when settings is null', () => {
+    expect(isToggleReaderMessage({ type: MSG_TOGGLE_READER, settings: null })).toBe(false);
+  });
+
+  it('returns false when type is different', () => {
+    expect(
+      isToggleReaderMessage({ type: 'other-message', settings: defaultReaderSettings() }),
+    ).toBe(false);
   });
 });
