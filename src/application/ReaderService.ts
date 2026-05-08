@@ -1,30 +1,23 @@
 // src/application/ReaderService.ts
 
-import { READER_CSS } from '@domain/reader/reader-styles';
+import { defaultReaderSettings, type ReaderSettings } from '@domain/reader/reader';
 import type { ILogger } from '@domain/types';
 import { createLogger } from '@shared/logger';
 
-// ── Port interfaces (subset used by this service) ────────────────────────────
+// ── Port interfaces ───────────────────────────────────────────────────────────
 
 /**
- * Minimal adapter port needed by `ReaderService` — requires `insertCSS` and
- * `removeCSS`.
- *
- * Defined locally so this service stays within the application layer's
- * allowed import surface (`domain/` and `shared/` only).
+ * Minimal adapter port needed by `ReaderService`. The content script owns the
+ * CSS lifecycle; the background only forwards activate/deactivate messages.
  */
 export interface IReaderTabAdapterPort {
-  insertCSS(tabId: number, css: string): Promise<void>;
-  removeCSS(tabId: number, css: string): Promise<void>;
+  sendMessageToTab(tabId: number, msg: unknown): Promise<unknown>;
 }
 
 // ── Public types ──────────────────────────────────────────────────────────────
 
 /**
  * Snapshot of the reader-mode state for the most recently toggled tab.
- *
- * `tabId` is `undefined` until `toggle()` has been called at least once;
- * `isActive` reflects whether reader mode is currently enabled on that tab.
  */
 export interface ReaderState {
   readonly isActive: boolean;
@@ -32,12 +25,11 @@ export interface ReaderState {
 }
 
 /**
- * Public surface of the reader service. Toggles reader-mode CSS injection
- * per tab and exposes per-tab and last-toggled-tab state.
+ * Public surface of the reader service.
  */
 export interface IReaderService {
-  /** Toggle reader mode for the given tab — injects CSS on first call, removes on second. */
-  toggle(tabId: number): Promise<void>;
+  /** Toggle reader mode for the given tab. Sends READER_ACTIVATE or READER_DEACTIVATE. */
+  toggle(tabId: number, settings?: ReaderSettings): Promise<void>;
   /** Whether reader mode is currently active for `tabId`. */
   isActive(tabId: number): boolean;
   /** Snapshot of state for the most recently toggled tab. */
@@ -47,18 +39,16 @@ export interface IReaderService {
 // ── Implementation ────────────────────────────────────────────────────────────
 
 /**
- * Application service that manages reader mode by injecting and removing
- * `READER_CSS` per tab via an injected tab adapter port. Tracks which tabs
- * currently have reader mode active so `toggle()` can decide whether to
- * inject or remove, and remembers the most recently toggled tab for
- * `getState()`.
+ * Application service that manages reader mode by sending READER_ACTIVATE /
+ * READER_DEACTIVATE messages to the content script via the tab adapter.
+ * Tracks which tabs have reader mode active so `toggle()` can decide direction.
  */
 export class ReaderService implements IReaderService {
   private readonly activeTabIds = new Set<number>();
   private lastTabId: number | undefined;
 
   /**
-   * @param tabAdapter - Tab port providing `insertCSS` and `removeCSS`.
+   * @param tabAdapter - Tab port providing `sendMessageToTab`.
    * @param logger - Scoped logger; defaults to a `ReaderService`-scoped logger.
    */
   constructor(
@@ -67,20 +57,18 @@ export class ReaderService implements IReaderService {
   ) {}
 
   /**
-   * Toggles reader mode for `tabId`. On first call for a given tab, injects
-   * `READER_CSS`; on the next call, removes it. Updates the internal active
-   * set and remembers `tabId` as the most recently toggled tab so
-   * `getState()` reflects the latest action.
+   * Toggles reader mode for `tabId`. Sends READER_ACTIVATE with settings on
+   * first call, READER_DEACTIVATE on the next. Tracks active state per tab.
    */
-  async toggle(tabId: number): Promise<void> {
+  async toggle(tabId: number, settings: ReaderSettings = defaultReaderSettings()): Promise<void> {
     this.lastTabId = tabId;
 
     if (this.activeTabIds.has(tabId)) {
-      await this.tabAdapter.removeCSS(tabId, READER_CSS);
+      await this.tabAdapter.sendMessageToTab(tabId, { type: 'READER_DEACTIVATE' });
       this.activeTabIds.delete(tabId);
       this.logger.info('Reader mode deactivated', { tabId });
     } else {
-      await this.tabAdapter.insertCSS(tabId, READER_CSS);
+      await this.tabAdapter.sendMessageToTab(tabId, { type: 'READER_ACTIVATE', settings });
       this.activeTabIds.add(tabId);
       this.logger.info('Reader mode activated', { tabId });
     }

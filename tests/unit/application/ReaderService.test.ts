@@ -1,16 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import { ReaderService, type IReaderService } from '@application/ReaderService';
+import {
+  ReaderService,
+  type IReaderService,
+  defaultReaderSettings,
+} from '@application/ReaderService';
 import { createLogger } from '@shared/logger';
 
-/**
- * Builds a minimal mock tab adapter whose surface matches the slice of
- * `IReaderTabAdapterPort` that `ReaderService` actually exercises.
- */
 function createMockTabAdapter() {
   return {
-    insertCSS: vi.fn().mockResolvedValue(undefined),
-    removeCSS: vi.fn().mockResolvedValue(undefined),
+    sendMessageToTab: vi.fn().mockResolvedValue(undefined),
   };
 }
 
@@ -24,23 +23,29 @@ beforeEach(() => {
 });
 
 describe('ReaderService — toggle()', () => {
-  it('activates reader mode on first toggle — injects CSS via insertCSS', async () => {
-    await service.toggle(42);
-    expect(tabAdapter.insertCSS).toHaveBeenCalledWith(42, expect.stringContaining('max-width'));
+  it('sends READER_ACTIVATE with settings on first toggle', async () => {
+    const settings = defaultReaderSettings();
+    await service.toggle(42, settings);
+    expect(tabAdapter.sendMessageToTab).toHaveBeenCalledWith(42, {
+      type: 'READER_ACTIVATE',
+      settings,
+    });
     expect(service.isActive(42)).toBe(true);
   });
 
-  it('deactivates reader mode on second toggle — removes CSS via removeCSS', async () => {
-    await service.toggle(42); // activate
-    await service.toggle(42); // deactivate
-    expect(tabAdapter.removeCSS).toHaveBeenCalledWith(42, expect.stringContaining('max-width'));
+  it('sends READER_DEACTIVATE on second toggle', async () => {
+    await service.toggle(42, defaultReaderSettings());
+    await service.toggle(42, defaultReaderSettings());
+    expect(tabAdapter.sendMessageToTab).toHaveBeenLastCalledWith(42, {
+      type: 'READER_DEACTIVATE',
+    });
     expect(service.isActive(42)).toBe(false);
   });
 
   it('tracks state independently per tab', async () => {
-    await service.toggle(1);
-    await service.toggle(2);
-    await service.toggle(2); // deactivate tab 2
+    await service.toggle(1, defaultReaderSettings());
+    await service.toggle(2, defaultReaderSettings());
+    await service.toggle(2, defaultReaderSettings());
     expect(service.isActive(1)).toBe(true);
     expect(service.isActive(2)).toBe(false);
   });
@@ -53,9 +58,9 @@ describe('ReaderService — isActive()', () => {
 
   it('returns true after activation and false after deactivation', async () => {
     expect(service.isActive(42)).toBe(false);
-    await service.toggle(42);
+    await service.toggle(42, defaultReaderSettings());
     expect(service.isActive(42)).toBe(true);
-    await service.toggle(42);
+    await service.toggle(42, defaultReaderSettings());
     expect(service.isActive(42)).toBe(false);
   });
 });
@@ -68,15 +73,15 @@ describe('ReaderService — getState()', () => {
   });
 
   it('returns isActive true and the tabId of the most recently toggled tab', async () => {
-    await service.toggle(42);
+    await service.toggle(42, defaultReaderSettings());
     const state = service.getState();
     expect(state.isActive).toBe(true);
     expect(state.tabId).toBe(42);
   });
 
   it('reflects deactivation in getState()', async () => {
-    await service.toggle(42);
-    await service.toggle(42);
+    await service.toggle(42, defaultReaderSettings());
+    await service.toggle(42, defaultReaderSettings());
     const state = service.getState();
     expect(state.isActive).toBe(false);
   });
