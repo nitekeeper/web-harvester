@@ -1,18 +1,11 @@
 // src/plugins/highlighter/HighlighterPlugin.ts
 import type { IHighlightService } from '@application/HighlightService';
 import { TYPES } from '@core/types';
-import type {
-  ClipContent,
-  HighlightEvent,
-  IPlugin,
-  IPluginContext,
-  IPluginManifest,
-} from '@domain/types';
+import type { ClipContent, IPlugin, IPluginContext, IPluginManifest } from '@domain/types';
 
 /**
- * Plugin that injects persisted highlights into the `beforeClip` waterfall and
- * persists new highlight events emitted on the `onHighlight` event hook. Also
- * contributes a `HighlighterButton` UI affordance to the popup toolbar.
+ * Plugin that injects persisted highlights into the `beforeClip` waterfall at
+ * clip time.
  */
 export class HighlighterPlugin implements IPlugin {
   readonly manifest: IPluginManifest = {
@@ -23,20 +16,15 @@ export class HighlighterPlugin implements IPlugin {
   };
 
   private beforeClipUnsubscribe: (() => void) | null = null;
-  private onHighlightUnsubscribe: (() => void) | null = null;
 
   /**
-   * Resolves `IHighlightService` from the container, registers the highlighter
-   * UI affordance, and taps the `beforeClip` and `onHighlight` hooks so
-   * persisted highlights flow into clipped content and new highlight events
-   * are persisted.
+   * Resolves `IHighlightService` from the container and taps the `beforeClip`
+   * hook to inject persisted highlights into clipped content.
    */
   async activate(context: IPluginContext): Promise<void> {
-    const { container, hooks, ui, logger } = context;
+    const { container, hooks, logger } = context;
 
     const highlightService = container.get<IHighlightService>(TYPES.IHighlightService);
-
-    ui.addToSlot('popup-toolbar', { component: 'HighlighterButton', order: 100 });
 
     this.beforeClipUnsubscribe = hooks.beforeClip.tapAsync(
       async (content: ClipContent): Promise<ClipContent | undefined> => {
@@ -49,20 +37,12 @@ export class HighlighterPlugin implements IPlugin {
       },
     );
 
-    this.onHighlightUnsubscribe = hooks.onHighlight.tapAsync(
-      async (event: HighlightEvent): Promise<void> => {
-        await highlightService.addHighlight(event.url, event.text, event.xpath, event.color);
-      },
-    );
-
     logger.info('HighlighterPlugin activated');
   }
 
-  /** Unsubscribes both hook taps registered during `activate()`. */
+  /** Unsubscribes the `beforeClip` tap registered during `activate()`. */
   async deactivate(): Promise<void> {
     this.beforeClipUnsubscribe?.();
-    this.onHighlightUnsubscribe?.();
     this.beforeClipUnsubscribe = null;
-    this.onHighlightUnsubscribe = null;
   }
 }

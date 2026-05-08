@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { TYPES } from '@core/types';
-import type { ClipContent, HighlightEvent, IPluginContext } from '@domain/types';
+import type { ClipContent, IPluginContext } from '@domain/types';
 import { HighlighterPlugin } from '@plugins/highlighter/HighlighterPlugin';
 
 import { createMockContext } from '../../helpers/createMockContext';
@@ -87,27 +87,6 @@ describe('HighlighterPlugin — activate() container resolution', () => {
 
     expect(harness.ctx.container.get).toHaveBeenCalledWith(TYPES.IHighlightService);
   });
-});
-
-describe('HighlighterPlugin — activate() UI registration and logging', () => {
-  let harness: HighlighterTestHarness;
-
-  beforeEach(() => {
-    harness = setupHarness();
-  });
-
-  afterEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it('registers HighlighterButton in the popup-toolbar slot', async () => {
-    await harness.plugin.activate(harness.ctx);
-
-    expect(harness.ctx.ui.addToSlot).toHaveBeenCalledWith(
-      'popup-toolbar',
-      expect.objectContaining({ component: 'HighlighterButton' }),
-    );
-  });
 
   it('logs activation info', async () => {
     await harness.plugin.activate(harness.ctx);
@@ -133,14 +112,6 @@ describe('HighlighterPlugin — activate() hook taps', () => {
     await harness.plugin.activate(harness.ctx);
 
     expect(beforeClipSpy).toHaveBeenCalledWith(expect.any(Function));
-  });
-
-  it('taps hooks.onHighlight with tapAsync', async () => {
-    const onHighlightSpy = vi.spyOn(harness.ctx.hooks.onHighlight, 'tapAsync');
-
-    await harness.plugin.activate(harness.ctx);
-
-    expect(onHighlightSpy).toHaveBeenCalledWith(expect.any(Function));
   });
 });
 
@@ -221,37 +192,6 @@ describe('HighlighterPlugin — beforeClip handler injection', () => {
   });
 });
 
-describe('HighlighterPlugin — onHighlight handler behavior', () => {
-  let harness: HighlighterTestHarness;
-  const event: HighlightEvent = {
-    id: 'evt_1',
-    url: TEST_URL,
-    text: 'persisted text',
-    xpath: '/html/body/p[3]',
-    color: 'pink',
-  };
-
-  beforeEach(() => {
-    harness = setupHarness();
-  });
-
-  afterEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it('persists the highlight via highlightService.addHighlight()', async () => {
-    await harness.plugin.activate(harness.ctx);
-    await harness.ctx.hooks.onHighlight.call(event);
-
-    expect(harness.highlightService.addHighlight).toHaveBeenCalledWith(
-      event.url,
-      event.text,
-      event.xpath,
-      event.color,
-    );
-  });
-});
-
 describe('HighlighterPlugin — deactivate() resolution', () => {
   let harness: HighlighterTestHarness;
 
@@ -297,21 +237,5 @@ describe('HighlighterPlugin — deactivate() hook unsubscription', () => {
     });
 
     expect(harness.highlightService.getHighlightsForUrl).not.toHaveBeenCalled();
-  });
-
-  it('unsubscribes the onHighlight tap so subsequent events do not invoke addHighlight', async () => {
-    await harness.plugin.activate(harness.ctx);
-    await harness.plugin.deactivate();
-
-    harness.highlightService.addHighlight.mockClear();
-    await harness.ctx.hooks.onHighlight.call({
-      id: 'evt_after',
-      url: TEST_URL,
-      text: 'no-op',
-      xpath: '/x',
-      color: 'yellow',
-    });
-
-    expect(harness.highlightService.addHighlight).not.toHaveBeenCalled();
   });
 });
