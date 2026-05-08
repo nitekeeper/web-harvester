@@ -97,3 +97,54 @@ export function isToggleReaderMessage(msg: unknown): msg is ToggleReaderMessage 
     (msg as Record<string, unknown>)['settings'] !== null
   );
 }
+
+/** Type discriminant for the start-highlight IPC message. */
+export const MSG_START_HIGHLIGHT = 'start-highlight' as const;
+
+/** Message sent from the popup to start highlight mode on the active tab. */
+export interface StartHighlightMessage {
+  readonly type: typeof MSG_START_HIGHLIGHT;
+}
+
+/** Type guard for {@link StartHighlightMessage}. */
+export function isStartHighlightMessage(msg: unknown): msg is StartHighlightMessage {
+  return (
+    typeof msg === 'object' &&
+    msg !== null &&
+    (msg as Record<string, unknown>)['type'] === MSG_START_HIGHLIGHT
+  );
+}
+
+/** Type discriminant for the stop-highlight IPC message. */
+export const MSG_STOP_HIGHLIGHT = 'stop-highlight' as const;
+
+/** Message sent from the popup to stop highlight mode on the active tab. */
+export interface StopHighlightMessage {
+  readonly type: typeof MSG_STOP_HIGHLIGHT;
+}
+
+/** Type guard for {@link StopHighlightMessage}. */
+export function isStopHighlightMessage(msg: unknown): msg is StopHighlightMessage {
+  return (
+    typeof msg === 'object' &&
+    msg !== null &&
+    (msg as Record<string, unknown>)['type'] === MSG_STOP_HIGHLIGHT
+  );
+}
+
+/** Type discriminant for the highlight-mode-exited notification from the content script. */
+export const MSG_HIGHLIGHT_MODE_EXITED = 'highlight-mode-exited' as const;
+
+/** Message sent from the content script when the user exits highlight mode via the floating menu. */
+export interface HighlightModeExitedMessage {
+  readonly type: typeof MSG_HIGHLIGHT_MODE_EXITED;
+}
+
+/** Type guard for {@link HighlightModeExitedMessage}. */
+export function isHighlightModeExitedMessage(msg: unknown): msg is HighlightModeExitedMessage {
+  return (
+    typeof msg === 'object' &&
+    msg !== null &&
+    (msg as Record<string, unknown>)['type'] === MSG_HIGHLIGHT_MODE_EXITED
+  );
+}
