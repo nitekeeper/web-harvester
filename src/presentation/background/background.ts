@@ -211,7 +211,11 @@ export async function bootstrap(): Promise<BackgroundContext> {
 
   // Resolve after plugins are active so message handlers have the full hook
   // system available before processing the first preview request.
-  resolveServices({ clipService: services.clipService, readerService: services.readerService });
+  resolveServices({
+    clipService: services.clipService,
+    readerService: services.readerService,
+    storageAdapter: adapter,
+  });
 
   wireOnInstalled(adapter, settingsStorage);
   await wireContextMenus(adapter, services.clipService);

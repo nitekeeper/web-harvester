@@ -19,7 +19,10 @@ import { createSettingsStorage } from '@infrastructure/storage/settings';
 import { createLogger } from '@shared/logger';
 import {
   isClipPageMessage,
+  isHighlightModeExitedMessage,
   isPreviewPageMessage,
+  isStartHighlightMessage,
+  isStopHighlightMessage,
   isToggleReaderMessage,
   type ClipPageMessage,
   type PreviewPageMessage,
@@ -187,6 +190,69 @@ export async function handleToggleReaderMessage(
   sendResponse({ ok: true });
 }
 
+/** Minimal storage port needed for highlight-mode-exited state sync. */
+export interface IWiringStoragePort {
+  getLocal(key: string): Promise<unknown>;
+  setLocal(key: string, value: unknown): Promise<void>;
+}
+
+/**
+ * Sends a highlight control message to the active tab. Returns false immediately
+ * (calling `sendResponse({ ok: false })`) when there is no active tab id.
+ */
+async function sendHighlightCommandToTab(
+  adapter: Pick<ITabAdapter, 'getActiveTab' | 'sendMessageToTab'>,
+  msgType: 'START_HIGHLIGHT' | 'STOP_HIGHLIGHT',
+  sendResponse: (r: unknown) => void,
+): Promise<void> {
+  const tab = await adapter.getActiveTab();
+  if (tab?.id === undefined) {
+    sendResponse({ ok: false });
+    return;
+  }
+  await adapter.sendMessageToTab(tab.id, { type: msgType });
+  sendResponse({ ok: true });
+}
+
+/**
+ * Forwards a start-highlight request to the active tab's content script.
+ * Exported for unit-testing.
+ */
+export async function handleStartHighlightMessage(
+  adapter: Pick<ITabAdapter, 'getActiveTab' | 'sendMessageToTab'>,
+  sendResponse: (r: unknown) => void,
+): Promise<void> {
+  await sendHighlightCommandToTab(adapter, 'START_HIGHLIGHT', sendResponse);
+}
+
+/**
+ * Forwards a stop-highlight request to the active tab's content script.
+ * Exported for unit-testing.
+ */
+export async function handleStopHighlightMessage(
+  adapter: Pick<ITabAdapter, 'getActiveTab' | 'sendMessageToTab'>,
+  sendResponse: (r: unknown) => void,
+): Promise<void> {
+  await sendHighlightCommandToTab(adapter, 'STOP_HIGHLIGHT', sendResponse);
+}
+
+/**
+ * Handles the content-script notification that the user exited highlight mode.
+ * Writes `isHighlightActive: false` into the shared popup-state storage key
+ * so the popup store can update reactively.
+ * Exported for unit-testing.
+ */
+export async function handleHighlightModeExitedMessage(
+  storage: IWiringStoragePort,
+  sendResponse: (r: unknown) => void,
+): Promise<void> {
+  const raw = await storage.getLocal('popup-state');
+  const current: Record<string, unknown> =
+    typeof raw === 'object' && raw !== null ? (raw as Record<string, unknown>) : {};
+  await storage.setLocal('popup-state', { ...current, isHighlightActive: false });
+  sendResponse({ ok: true });
+}
+
 /**
  * Services bag shared by {@link wireMessageListener} and
  * {@link wireMessageListenerDeferred}.
@@ -194,6 +260,76 @@ export async function handleToggleReaderMessage(
 export interface MessageListenerServices {
   readonly clipService: IClipService;
   readonly readerService: IReaderService;
+  readonly storageAdapter: IWiringStoragePort;
+}
+
+/** Adapter shape used internally by the message dispatcher. */
+type MessageDispatchAdapter = Pick<ITabAdapter, 'getActiveTab' | 'sendMessageToTab'>;
+
+/**
+ * Dispatches highlight-related messages to their handlers. Returns `true` if
+ * the message was handled, `false` otherwise.
+ */
+function dispatchHighlightMessage(
+  msg: unknown,
+  sendResponse: (r: unknown) => void,
+  adapter: MessageDispatchAdapter,
+  storageAdapter: IWiringStoragePort,
+): boolean {
+  if (isStartHighlightMessage(msg)) {
+    handleStartHighlightMessage(adapter, sendResponse).catch((err: unknown) => {
+      logger.error('start-highlight handler failed', err);
+    });
+    return true;
+  }
+  if (isStopHighlightMessage(msg)) {
+    handleStopHighlightMessage(adapter, sendResponse).catch((err: unknown) => {
+      logger.error('stop-highlight handler failed', err);
+    });
+    return true;
+  }
+  if (isHighlightModeExitedMessage(msg)) {
+    handleHighlightModeExitedMessage(storageAdapter, sendResponse).catch((err: unknown) => {
+      logger.error('highlight-mode-exited handler failed', err);
+    });
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Dispatches a single incoming message to the appropriate handler.
+ * Extracted from {@link wireMessageListenerDeferred} to keep each function
+ * within the 40-line limit.
+ */
+function dispatchMessage(
+  msg: unknown,
+  sendResponse: (r: unknown) => void,
+  adapter: MessageDispatchAdapter,
+  services: MessageListenerServices,
+): void {
+  const { clipService, readerService, storageAdapter } = services;
+  if (isPreviewPageMessage(msg)) {
+    handlePreviewMessage(msg, clipService, sendResponse as (r: PreviewPageResponse) => void).catch(
+      (err: unknown) => {
+        logger.error('preview message handler failed', err);
+      },
+    );
+    return;
+  }
+  if (isClipPageMessage(msg)) {
+    handleClipMessage(msg, adapter, clipService, sendResponse).catch((err: unknown) => {
+      logger.error('clip message handler failed', err);
+    });
+    return;
+  }
+  if (isToggleReaderMessage(msg)) {
+    handleToggleReaderMessage(adapter, readerService, msg, sendResponse).catch((err: unknown) => {
+      logger.error('toggle-reader message handler failed', err);
+    });
+    return;
+  }
+  dispatchHighlightMessage(msg, sendResponse, adapter, storageAdapter);
 }
 
 /**
@@ -204,35 +340,14 @@ export interface MessageListenerServices {
  * "receiving end does not exist" race condition.
  */
 export function wireMessageListenerDeferred(
-  adapter: Pick<IRuntimeAdapter, 'onMessage'> & Pick<ITabAdapter, 'getActiveTab'>,
+  adapter: Pick<IRuntimeAdapter, 'onMessage'> &
+    Pick<ITabAdapter, 'getActiveTab' | 'sendMessageToTab'>,
   servicesPromise: Promise<MessageListenerServices>,
 ): void {
   adapter.onMessage((msg, sendResponse) => {
     servicesPromise
-      .then(({ clipService, readerService }) => {
-        if (isPreviewPageMessage(msg)) {
-          handlePreviewMessage(
-            msg,
-            clipService,
-            sendResponse as (r: PreviewPageResponse) => void,
-          ).catch((err: unknown) => {
-            logger.error('preview message handler failed', err);
-          });
-          return;
-        }
-        if (isClipPageMessage(msg)) {
-          handleClipMessage(msg, adapter, clipService, sendResponse).catch((err: unknown) => {
-            logger.error('clip message handler failed', err);
-          });
-          return;
-        }
-        if (isToggleReaderMessage(msg)) {
-          handleToggleReaderMessage(adapter, readerService, msg, sendResponse).catch(
-            (err: unknown) => {
-              logger.error('toggle-reader message handler failed', err);
-            },
-          );
-        }
+      .then((services) => {
+        dispatchMessage(msg, sendResponse, adapter, services);
       })
       .catch((err: unknown) => {
         logger.error('message listener services unavailable', err);
@@ -242,13 +357,19 @@ export function wireMessageListenerDeferred(
 
 /**
  * Registers a `chrome.runtime.onMessage` listener that handles
- * {@link PreviewPageMessage}, {@link ClipPageMessage}, and
- * {@link ToggleReaderMessage} requests from the popup and side-panel.
+ * {@link PreviewPageMessage}, {@link ClipPageMessage}, {@link ToggleReaderMessage},
+ * {@link StartHighlightMessage}, {@link StopHighlightMessage}, and
+ * {@link HighlightModeExitedMessage} requests from the popup and content scripts.
  */
 export function wireMessageListener(
-  adapter: Pick<IRuntimeAdapter, 'onMessage'> & Pick<ITabAdapter, 'getActiveTab'>,
+  adapter: Pick<IRuntimeAdapter, 'onMessage'> &
+    Pick<ITabAdapter, 'getActiveTab' | 'sendMessageToTab'>,
   clipService: IClipService,
   readerService: IReaderService,
+  storageAdapter: IWiringStoragePort,
 ): void {
-  wireMessageListenerDeferred(adapter, Promise.resolve({ clipService, readerService }));
+  wireMessageListenerDeferred(
+    adapter,
+    Promise.resolve({ clipService, readerService, storageAdapter }),
+  );
 }

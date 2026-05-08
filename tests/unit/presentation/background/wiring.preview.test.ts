@@ -16,6 +16,14 @@ import {
   type PreviewPageMessage,
 } from '@shared/messages';
 
+/** Minimal storage adapter stub for wireMessageListener/Deferred tests. */
+function makeStorageAdapter() {
+  return {
+    getLocal: vi.fn().mockResolvedValue(undefined),
+    setLocal: vi.fn().mockResolvedValue(undefined),
+  };
+}
+
 /** Minimal tab adapter stub used by handleClipMessage. */
 function makeTabAdapter() {
   return {
@@ -142,10 +150,11 @@ describe('wireMessageListener MSG_PREVIEW routing', () => {
         capturedHandler = h;
       }),
       getActiveTab: vi.fn(),
+      sendMessageToTab: vi.fn(),
     };
     const clipService = makeClipService();
 
-    wireMessageListener(adapter, clipService, makeReaderService());
+    wireMessageListener(adapter, clipService, makeReaderService(), makeStorageAdapter());
     capturedHandler?.(PREVIEW_MSG, vi.fn());
 
     // Give the async handler a chance to run
@@ -161,10 +170,11 @@ describe('wireMessageListener MSG_PREVIEW routing', () => {
         capturedHandler = h;
       }),
       getActiveTab: vi.fn(),
+      sendMessageToTab: vi.fn(),
     };
     const clipService = makeClipService();
 
-    wireMessageListener(adapter, clipService, makeReaderService());
+    wireMessageListener(adapter, clipService, makeReaderService(), makeStorageAdapter());
     capturedHandler?.(PREVIEW_MSG, vi.fn());
 
     await Promise.resolve();
@@ -175,23 +185,30 @@ describe('wireMessageListener MSG_PREVIEW routing', () => {
 
 // ── wireMessageListenerDeferred ──────────────────────────────────────────────
 
-describe('wireMessageListenerDeferred MSG_PREVIEW routing', () => {
-  it('routes MSG_PREVIEW after a pre-resolved services promise', async () => {
+describe('wireMessageListenerDeferred — routes MSG_PREVIEW to preview handler', () => {
+  it('calls clipService.preview for MSG_PREVIEW messages', async () => {
     let capturedHandler: ((msg: unknown, sendResponse: (r?: unknown) => void) => void) | undefined;
     const adapter = {
       onMessage: vi.fn((h: (msg: unknown, sr: (r?: unknown) => void) => void) => {
         capturedHandler = h;
       }),
       getActiveTab: vi.fn(),
+      sendMessageToTab: vi.fn(),
     };
     const clipService = makeClipService();
-    const services: MessageListenerServices = { clipService, readerService: makeReaderService() };
+    const services: MessageListenerServices = {
+      clipService,
+      readerService: makeReaderService(),
+      storageAdapter: makeStorageAdapter(),
+    };
     wireMessageListenerDeferred(adapter, Promise.resolve(services));
     capturedHandler?.(PREVIEW_MSG, vi.fn());
     await Promise.resolve();
     expect(clipService.preview).toHaveBeenCalledTimes(1);
   });
+});
 
+describe('wireMessageListenerDeferred — does not clip for MSG_PREVIEW', () => {
   it('does not call clipService.clip for MSG_PREVIEW via deferred services', async () => {
     let capturedHandler: ((msg: unknown, sendResponse: (r?: unknown) => void) => void) | undefined;
     const adapter = {
@@ -199,9 +216,14 @@ describe('wireMessageListenerDeferred MSG_PREVIEW routing', () => {
         capturedHandler = h;
       }),
       getActiveTab: vi.fn(),
+      sendMessageToTab: vi.fn(),
     };
     const clipService = makeClipService();
-    const services: MessageListenerServices = { clipService, readerService: makeReaderService() };
+    const services: MessageListenerServices = {
+      clipService,
+      readerService: makeReaderService(),
+      storageAdapter: makeStorageAdapter(),
+    };
     wireMessageListenerDeferred(adapter, Promise.resolve(services));
     capturedHandler?.(PREVIEW_MSG, vi.fn());
     await Promise.resolve();
@@ -217,6 +239,7 @@ describe('wireMessageListenerDeferred — deferred services', () => {
         capturedHandler = h;
       }),
       getActiveTab: vi.fn(),
+      sendMessageToTab: vi.fn(),
     };
     const clipService = makeClipService();
     let resolveServices!: (s: MessageListenerServices) => void;
@@ -226,7 +249,11 @@ describe('wireMessageListenerDeferred — deferred services', () => {
     wireMessageListenerDeferred(adapter, servicesPromise);
     capturedHandler?.(PREVIEW_MSG, vi.fn());
     expect(clipService.preview).not.toHaveBeenCalled();
-    resolveServices({ clipService, readerService: makeReaderService() });
+    resolveServices({
+      clipService,
+      readerService: makeReaderService(),
+      storageAdapter: makeStorageAdapter(),
+    });
     await Promise.resolve();
     expect(clipService.preview).toHaveBeenCalledTimes(1);
   });

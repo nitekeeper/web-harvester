@@ -106,10 +106,18 @@ function makeReaderService() {
   };
 }
 
+/** Minimal storage adapter stub for wireMessageListener tests. */
+function makeStorageAdapter() {
+  return {
+    getLocal: vi.fn().mockResolvedValue(undefined),
+    setLocal: vi.fn().mockResolvedValue(undefined),
+  };
+}
+
 describe('wireMessageListener', () => {
   it('registers exactly one onMessage handler', () => {
-    const adapter = { onMessage: vi.fn(), getActiveTab: vi.fn() };
-    wireMessageListener(adapter, makeClipService(), makeReaderService());
+    const adapter = { onMessage: vi.fn(), getActiveTab: vi.fn(), sendMessageToTab: vi.fn() };
+    wireMessageListener(adapter, makeClipService(), makeReaderService(), makeStorageAdapter());
     expect(adapter.onMessage).toHaveBeenCalledTimes(1);
   });
 
@@ -120,10 +128,11 @@ describe('wireMessageListener', () => {
         capturedHandler = h;
       }),
       getActiveTab: vi.fn(),
+      sendMessageToTab: vi.fn(),
     };
     const clipService = makeClipService();
 
-    wireMessageListener(adapter, clipService, makeReaderService());
+    wireMessageListener(adapter, clipService, makeReaderService(), makeStorageAdapter());
     capturedHandler?.({ type: 'getHtml' }, vi.fn());
 
     expect(clipService.clip).not.toHaveBeenCalled();
