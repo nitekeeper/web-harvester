@@ -6,6 +6,7 @@ import {
   type IHighlightService,
   type Highlight,
 } from '@application/HighlightService';
+import type { AnyHighlightData } from '@shared/highlighter';
 import { createLogger } from '@shared/logger';
 
 const TEST_URL = 'https://example.com/article';
@@ -76,30 +77,27 @@ describe('HighlightService — addHighlight() shape', () => {
 });
 
 describe('HighlightService — addHighlight() side-effects', () => {
-  it('persists the highlight under key "highlights:{url}"', async () => {
+  it('persists the highlight under key "highlights:{normalizedUrl}"', async () => {
     await service.addHighlight(TEST_URL, 'Text', XPATH_P1);
     expect(storage.setLocal).toHaveBeenCalledWith(
-      HIGHLIGHTS_KEY,
+      `highlights:${TEST_URL}`,
       expect.arrayContaining([expect.objectContaining({ text: 'Text' })]),
     );
   });
 
-  it('fires hooks.onHighlight with the new highlight', async () => {
-    const highlight = await service.addHighlight(TEST_URL, 'Text', XPATH_P1);
-    expect(hooks.onHighlight.call).toHaveBeenCalledWith(
-      expect.objectContaining({ id: highlight.id, text: 'Text' }),
-    );
+  it('does NOT fire hooks.onHighlight (content script owns persistence)', async () => {
+    await service.addHighlight(TEST_URL, 'Text', XPATH_P1);
+    expect(hooks.onHighlight.call).not.toHaveBeenCalled();
   });
 
   it('appends to existing highlights for the same URL', async () => {
-    await service.addHighlight(TEST_URL, 'First', '/p[1]');
     const firstHighlight: Highlight = {
       id: 'h1',
       url: TEST_URL,
       text: 'First',
       color: 'yellow',
       xpath: '/p[1]',
-      createdAt: Date.now(),
+      createdAt: 1000,
     };
     storage.getLocal.mockResolvedValue([firstHighlight]);
     await service.addHighlight(TEST_URL, 'Second', '/p[2]');
@@ -108,29 +106,42 @@ describe('HighlightService — addHighlight() side-effects', () => {
   });
 });
 
+function makeTextHighlight(id: string, xpath: string, text: string): AnyHighlightData {
+  return {
+    type: 'text',
+    id,
+    xpath,
+    content: `<p>${text}</p>`,
+    text,
+    startOffset: 0,
+    endOffset: text.length,
+  };
+}
+
 describe('HighlightService — getHighlightsForUrl()', () => {
-  it('returns all highlights for a given URL', async () => {
-    const stored: Highlight[] = [
-      {
-        id: 'h1',
-        url: TEST_URL,
-        text: 'A',
-        color: 'yellow',
-        xpath: '/p[1]',
-        createdAt: 1000,
-      },
-      {
-        id: 'h2',
-        url: TEST_URL,
-        text: 'B',
-        color: 'blue',
-        xpath: '/p[2]',
-        createdAt: 2000,
-      },
-    ];
-    storage.getLocal.mockResolvedValue(stored);
+  it('maps AnyHighlightData[] from storage to Highlight[] using text field', async () => {
+    storage.getLocal.mockResolvedValue([
+      makeTextHighlight('h1', '/p[1]', 'A'),
+      makeTextHighlight('h2', '/p[2]', 'B'),
+    ]);
     const results = await service.getHighlightsForUrl(TEST_URL);
     expect(results).toHaveLength(2);
+    expect(results[0]?.text).toBe('A');
+    expect(results[1]?.text).toBe('B');
+  });
+
+  it('falls back to content field when text is absent', async () => {
+    const noText: AnyHighlightData = {
+      type: 'text',
+      id: 'h1',
+      xpath: '/p[1]',
+      content: 'fallback text',
+      startOffset: 0,
+      endOffset: 8,
+    };
+    storage.getLocal.mockResolvedValue([noText]);
+    const results = await service.getHighlightsForUrl(TEST_URL);
+    expect(results[0]?.text).toBe('fallback text');
   });
 
   it('returns an empty array when no highlights exist for the URL', async () => {

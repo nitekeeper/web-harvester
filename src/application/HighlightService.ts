@@ -1,6 +1,7 @@
 // src/application/HighlightService.ts
 
 import type { ILogger } from '@domain/types';
+import { normalizeUrl, type AnyHighlightData } from '@shared/highlighter';
 import { createLogger } from '@shared/logger';
 
 // ── Domain types ──────────────────────────────────────────────────────────────
@@ -88,7 +89,7 @@ const HIGHLIGHT_INDEX_KEY = 'highlight_index';
 
 /** Returns the storage key under which highlights for a URL are persisted. */
 function storageKey(url: string): string {
-  return `highlights:${url}`;
+  return `highlights:${normalizeUrl(url)}`;
 }
 
 /**
@@ -122,10 +123,10 @@ export class HighlightService implements IHighlightService {
   ) {}
 
   /**
-   * Creates a new `Highlight`, appends it to the URL's bucket, persists the
-   * updated bucket, then fires the `onHighlight` hook so plugins can react.
-   * Returns the freshly-created highlight (with generated `id` and
-   * `createdAt`).
+   * Creates a new `Highlight`, appends it to the URL's bucket, and persists
+   * the updated bucket. Returns the freshly-created highlight (with generated
+   * `id` and `createdAt`). Note: the `onHighlight` hook is not fired; the
+   * content script owns persistence and will trigger hooks via the plugin system.
    */
   async addHighlight(
     url: string,
@@ -145,18 +146,30 @@ export class HighlightService implements IHighlightService {
     await this.storage.setLocal(storageKey(url), [...existing, highlight]);
     await this.updateIndex(url);
     this.logger.debug('Highlight added', { id: highlight.id, url });
-    await this.hooks.onHighlight.call(highlight);
     return highlight;
   }
 
   /**
-   * Reads the persisted bucket for `url`. Returns an empty array on a missing
-   * or non-array record so callers always receive a usable list.
+   * Reads the persisted bucket for `url` written by the content script.
+   * The bucket contains `AnyHighlightData[]`; maps to `Highlight[]` via the
+   * pre-extracted `text` field (falling back to `content` for older entries).
+   * Falls back to the raw URL if the normalised key returns nothing (one-time
+   * migration for highlights stored before URL normalisation was introduced).
    */
   async getHighlightsForUrl(url: string): Promise<Highlight[]> {
-    const raw = await this.storage.getLocal(storageKey(url));
+    let raw = await this.storage.getLocal(storageKey(url));
+    if (!Array.isArray(raw)) {
+      raw = await this.storage.getLocal(`highlights:${url}`);
+    }
     if (!Array.isArray(raw)) return [];
-    return raw as Highlight[];
+    return (raw as AnyHighlightData[]).map((h) => ({
+      id: h.id,
+      url,
+      text: h.text ?? h.content,
+      color: 'yellow',
+      xpath: h.xpath,
+      createdAt: Date.now(),
+    }));
   }
 
   /**
