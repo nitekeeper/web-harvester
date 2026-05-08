@@ -44,7 +44,13 @@ import {
   buildTemplateService,
   saveToWithStringStrategy,
 } from './bridges';
-import { wireCommands, wireContextMenus, wireMessageListener, wireOnInstalled } from './wiring';
+import {
+  wireCommands,
+  wireContextMenus,
+  wireMessageListenerDeferred,
+  wireOnInstalled,
+  type MessageListenerServices,
+} from './wiring';
 
 const logger = createLogger('background');
 
@@ -184,6 +190,16 @@ export async function bootstrap(): Promise<BackgroundContext> {
   const hooks = createHookSystem();
   const ui = createUIRegistry();
   const settingsStorage = createSettingsStorage(adapter);
+
+  // Register the message listener BEFORE any await so Chrome sees it even
+  // when the service worker is restarted and the popup sends a preview request
+  // during bootstrap (MV3 "receiving end does not exist" race condition).
+  let resolveServices!: (s: MessageListenerServices) => void;
+  const servicesPromise = new Promise<MessageListenerServices>((resolve) => {
+    resolveServices = resolve;
+  });
+  wireMessageListenerDeferred(adapter, servicesPromise);
+
   const destinationStorage = await createDestinationStorage();
 
   const services = createApplicationServices({ adapter, hooks, destinationStorage });
@@ -193,10 +209,13 @@ export async function bootstrap(): Promise<BackgroundContext> {
   registerPlugins(registry);
   await registry.activateAll();
 
+  // Resolve after plugins are active so message handlers have the full hook
+  // system available before processing the first preview request.
+  resolveServices({ clipService: services.clipService, readerService: services.readerService });
+
   wireOnInstalled(adapter, settingsStorage);
   await wireContextMenus(adapter, services.clipService);
   wireCommands(adapter, services.clipService);
-  wireMessageListener(adapter, services.clipService, services.readerService);
   broadcastInitialSettings(services.settingsService, hooks);
 
   logger.info('Background service worker bootstrapped');

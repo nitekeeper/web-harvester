@@ -186,6 +186,57 @@ export async function handleToggleReaderMessage(
 }
 
 /**
+ * Services bag shared by {@link wireMessageListener} and
+ * {@link wireMessageListenerDeferred}.
+ */
+export interface MessageListenerServices {
+  readonly clipService: IClipService;
+  readonly readerService: IReaderService;
+}
+
+/**
+ * Registers an `onMessage` listener that resolves services lazily from the
+ * supplied promise. Calling this BEFORE any `await` in the bootstrap function
+ * ensures Chrome sees a listener even when the service worker is restarted and
+ * the popup fires a preview request during initialisation — preventing the MV3
+ * "receiving end does not exist" race condition.
+ */
+export function wireMessageListenerDeferred(
+  adapter: Pick<IRuntimeAdapter, 'onMessage'> & Pick<ITabAdapter, 'getActiveTab'>,
+  servicesPromise: Promise<MessageListenerServices>,
+): void {
+  adapter.onMessage((msg, sendResponse) => {
+    servicesPromise
+      .then(({ clipService, readerService }) => {
+        if (isPreviewPageMessage(msg)) {
+          handlePreviewMessage(
+            msg,
+            clipService,
+            sendResponse as (r: PreviewPageResponse) => void,
+          ).catch((err: unknown) => {
+            logger.error('preview message handler failed', err);
+          });
+          return;
+        }
+        if (isClipPageMessage(msg)) {
+          handleClipMessage(msg, adapter, clipService, sendResponse).catch((err: unknown) => {
+            logger.error('clip message handler failed', err);
+          });
+          return;
+        }
+        if (isToggleReaderMessage(msg)) {
+          handleToggleReaderMessage(adapter, readerService, sendResponse).catch((err: unknown) => {
+            logger.error('toggle-reader message handler failed', err);
+          });
+        }
+      })
+      .catch((err: unknown) => {
+        logger.error('message listener services unavailable', err);
+      });
+  });
+}
+
+/**
  * Registers a `chrome.runtime.onMessage` listener that handles
  * {@link PreviewPageMessage}, {@link ClipPageMessage}, and
  * {@link ToggleReaderMessage} requests from the popup and side-panel.
@@ -195,27 +246,5 @@ export function wireMessageListener(
   clipService: IClipService,
   readerService: IReaderService,
 ): void {
-  adapter.onMessage((msg, sendResponse) => {
-    if (isPreviewPageMessage(msg)) {
-      handlePreviewMessage(
-        msg,
-        clipService,
-        sendResponse as (r: PreviewPageResponse) => void,
-      ).catch((err: unknown) => {
-        logger.error('preview message handler failed', err);
-      });
-      return;
-    }
-    if (isClipPageMessage(msg)) {
-      handleClipMessage(msg, adapter, clipService, sendResponse).catch((err: unknown) => {
-        logger.error('clip message handler failed', err);
-      });
-      return;
-    }
-    if (isToggleReaderMessage(msg)) {
-      handleToggleReaderMessage(adapter, readerService, sendResponse).catch((err: unknown) => {
-        logger.error('toggle-reader message handler failed', err);
-      });
-    }
-  });
+  wireMessageListenerDeferred(adapter, Promise.resolve({ clipService, readerService }));
 }

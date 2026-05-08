@@ -6,6 +6,8 @@ import {
   handleClipMessage,
   handlePreviewMessage,
   wireMessageListener,
+  wireMessageListenerDeferred,
+  type MessageListenerServices,
 } from '@presentation/background/wiring';
 import {
   MSG_CLIP,
@@ -168,5 +170,64 @@ describe('wireMessageListener MSG_PREVIEW routing', () => {
     await Promise.resolve();
 
     expect(clipService.clip).not.toHaveBeenCalled();
+  });
+});
+
+// ── wireMessageListenerDeferred ──────────────────────────────────────────────
+
+describe('wireMessageListenerDeferred MSG_PREVIEW routing', () => {
+  it('routes MSG_PREVIEW after a pre-resolved services promise', async () => {
+    let capturedHandler: ((msg: unknown, sendResponse: (r?: unknown) => void) => void) | undefined;
+    const adapter = {
+      onMessage: vi.fn((h: (msg: unknown, sr: (r?: unknown) => void) => void) => {
+        capturedHandler = h;
+      }),
+      getActiveTab: vi.fn(),
+    };
+    const clipService = makeClipService();
+    const services: MessageListenerServices = { clipService, readerService: makeReaderService() };
+    wireMessageListenerDeferred(adapter, Promise.resolve(services));
+    capturedHandler?.(PREVIEW_MSG, vi.fn());
+    await Promise.resolve();
+    expect(clipService.preview).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not call clipService.clip for MSG_PREVIEW via deferred services', async () => {
+    let capturedHandler: ((msg: unknown, sendResponse: (r?: unknown) => void) => void) | undefined;
+    const adapter = {
+      onMessage: vi.fn((h: (msg: unknown, sr: (r?: unknown) => void) => void) => {
+        capturedHandler = h;
+      }),
+      getActiveTab: vi.fn(),
+    };
+    const clipService = makeClipService();
+    const services: MessageListenerServices = { clipService, readerService: makeReaderService() };
+    wireMessageListenerDeferred(adapter, Promise.resolve(services));
+    capturedHandler?.(PREVIEW_MSG, vi.fn());
+    await Promise.resolve();
+    expect(clipService.clip).not.toHaveBeenCalled();
+  });
+});
+
+describe('wireMessageListenerDeferred — deferred services', () => {
+  it('defers dispatch until the services promise resolves', async () => {
+    let capturedHandler: ((msg: unknown, sendResponse: (r?: unknown) => void) => void) | undefined;
+    const adapter = {
+      onMessage: vi.fn((h: (msg: unknown, sr: (r?: unknown) => void) => void) => {
+        capturedHandler = h;
+      }),
+      getActiveTab: vi.fn(),
+    };
+    const clipService = makeClipService();
+    let resolveServices!: (s: MessageListenerServices) => void;
+    const servicesPromise = new Promise<MessageListenerServices>((resolve) => {
+      resolveServices = resolve;
+    });
+    wireMessageListenerDeferred(adapter, servicesPromise);
+    capturedHandler?.(PREVIEW_MSG, vi.fn());
+    expect(clipService.preview).not.toHaveBeenCalled();
+    resolveServices({ clipService, readerService: makeReaderService() });
+    await Promise.resolve();
+    expect(clipService.preview).toHaveBeenCalledTimes(1);
   });
 });
