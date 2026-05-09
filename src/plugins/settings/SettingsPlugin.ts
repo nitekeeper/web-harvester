@@ -39,7 +39,7 @@ export class SettingsPlugin implements IPlugin {
    * request; `onSettingsChanged` is a post-write notification.
    */
   async activate(context: IPluginContext): Promise<void> {
-    const { container, hooks, ui, logger } = context;
+    const { container, hooks, ui } = context;
 
     const settingsService = container.get<ISettingsServicePort>(TYPES.ISettingsService);
     container.get<PluginRegistry>(TYPES.IPluginRegistry);
@@ -53,8 +53,6 @@ export class SettingsPlugin implements IPlugin {
         await settingsService.setAll(settings);
       },
     );
-
-    logger.info('SettingsPlugin activated');
   }
 
   /** Unsubscribes the `onSaveSettings` tap registered during activation. */

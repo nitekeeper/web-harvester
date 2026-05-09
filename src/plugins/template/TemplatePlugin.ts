@@ -70,8 +70,6 @@ export class TemplatePlugin implements IPlugin {
     this.onTemplateRenderUnsubscribe = hooks.onTemplateRender.tapAsync(
       async (rendered: string): Promise<string | undefined> => rendered,
     );
-
-    logger.info('TemplatePlugin activated');
   }
 
   /** Unsubscribes both hook taps registered during `activate()`. */

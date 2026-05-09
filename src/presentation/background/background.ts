@@ -221,7 +221,6 @@ export async function bootstrap(): Promise<BackgroundContext> {
   wireCommands(adapter, services.clipService);
   broadcastInitialSettings(services.settingsService, hooks);
 
-  logger.info('Background service worker bootstrapped');
   return { container, hooks, ui, registry, settingsStorage, ...services };
 }
 

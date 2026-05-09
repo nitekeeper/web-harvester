@@ -50,7 +50,6 @@ async function activateOne(
     const context = contextFactory(plugin);
     await plugin.activate(context);
     state.active.add(id);
-    logger.info(`Plugin "${id}" activated`);
   } catch (err) {
     state.failed.set(id, err);
     logger.error(`Plugin "${id}" failed to activate`, err);
@@ -65,7 +64,6 @@ async function deactivateOne(state: RegistryState, id: string): Promise<void> {
   try {
     await plugin.deactivate();
     state.active.delete(id);
-    logger.info(`Plugin "${id}" deactivated`);
   } catch (err) {
     logger.error(`Plugin "${id}" failed to deactivate`, err);
   }

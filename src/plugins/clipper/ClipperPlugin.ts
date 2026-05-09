@@ -15,7 +15,7 @@ export class ClipperPlugin implements IPlugin {
 
   /** Resolves required adapters and the clip service, then registers the SaveButton in the popup footer. */
   async activate(context: IPluginContext): Promise<void> {
-    const { container, ui, logger } = context;
+    const { container, ui } = context;
 
     // Eager-validate that required bindings are registered; throws at activation time if missing.
     // IClipService is checked here too because it's an application-layer service (not an adapter)
@@ -26,8 +26,6 @@ export class ClipperPlugin implements IPlugin {
 
     // Register the primary save action in the popup footer
     ui.addToSlot('popup-footer', { component: 'SaveButton', order: 100 });
-
-    logger.info('ClipperPlugin activated');
   }
 
   /** No-op — ClipService lifecycle is managed by the DI container. */

@@ -39,7 +39,7 @@ export class ReaderPlugin implements IPlugin {
    * active tab and calls `readerService.toggle(tab.id)`, and logs activation.
    */
   async activate(context: IPluginContext): Promise<void> {
-    const { container, ui, logger } = context;
+    const { container, ui } = context;
 
     const readerService = container.get<IReaderServicePort>(TYPES.IReaderService);
     const tabAdapter = container.get<ITabAdapterPort>(TYPES.ITabAdapter);
@@ -53,8 +53,6 @@ export class ReaderPlugin implements IPlugin {
         await readerService.toggle(tab.id);
       },
     });
-
-    logger.info('ReaderPlugin activated');
   }
 
   /** No-op — ReaderService lifecycle is managed by the DI container. */

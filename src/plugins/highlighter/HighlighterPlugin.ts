@@ -22,7 +22,7 @@ export class HighlighterPlugin implements IPlugin {
    * hook to inject persisted highlights into clipped content.
    */
   async activate(context: IPluginContext): Promise<void> {
-    const { container, hooks, logger } = context;
+    const { container, hooks } = context;
 
     const highlightService = container.get<IHighlightService>(TYPES.IHighlightService);
 
@@ -36,8 +36,6 @@ export class HighlighterPlugin implements IPlugin {
         return { ...content, highlights: joined };
       },
     );
-
-    logger.info('HighlighterPlugin activated');
   }
 
   /** Unsubscribes the `beforeClip` tap registered during `activate()`. */
