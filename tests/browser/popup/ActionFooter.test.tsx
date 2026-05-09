@@ -12,6 +12,8 @@ import { ActionFooter } from '@presentation/popup/components/ActionFooter';
 
 const NOOP = (): void => undefined;
 
+const PICKER_BTN_TEST_ID = 'footer-picker-btn';
+
 const defaultProps = {
   isSaving: false,
   isDisabled: false,
@@ -50,7 +52,7 @@ describe('ActionFooter — labels and structure', () => {
 
   it('renders all three icon toggle buttons', () => {
     render(<ActionFooter {...defaultProps} />);
-    expect(document.querySelector('[data-testid="footer-picker-btn"]')).not.toBeNull();
+    expect(document.querySelector(`[data-testid="${PICKER_BTN_TEST_ID}"]`)).not.toBeNull();
     expect(document.querySelector('[data-testid="footer-highlight-btn"]')).not.toBeNull();
     expect(document.querySelector('[data-testid="footer-reader-btn"]')).not.toBeNull();
   });
@@ -82,9 +84,44 @@ describe('ActionFooter — interactions', () => {
       called = true;
     };
     render(<ActionFooter {...defaultProps} onPickerToggle={onPickerToggle} />);
-    const pickerBtn = document.querySelector('[data-testid="footer-picker-btn"]');
+    const pickerBtn = document.querySelector(`[data-testid="${PICKER_BTN_TEST_ID}"]`);
     expect(pickerBtn).not.toBeNull();
     await userEvent.setup().click(pickerBtn as HTMLElement);
     expect(called).toBe(true);
+  });
+});
+
+describe('ActionFooter — PickerIcon grid structure', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  it('renders PickerIcon with 4-cell grid pattern', () => {
+    render(<ActionFooter {...defaultProps} />);
+    const pickerBtn = document.querySelector(`[data-testid="${PICKER_BTN_TEST_ID}"]`);
+    expect(pickerBtn).not.toBeNull();
+
+    const svg = pickerBtn?.querySelector('svg');
+    expect(svg).not.toBeNull();
+
+    const rectSelector = 'rect[x="3"][y="3"][width="18"][height="18"][rx="2"]';
+    const horizontalLineSelector = 'line[x1="3"][y1="12"][x2="21"][y2="12"]';
+    const verticalLineSelector = 'line[x1="12"][y1="3"][x2="12"][y2="21"]';
+
+    // Check for rounded outer rectangle
+    const rect = svg?.querySelector(rectSelector);
+    expect(rect).not.toBeNull();
+
+    // Check for horizontal divider line at y=12
+    const horizontalLine = svg?.querySelector(horizontalLineSelector);
+    expect(horizontalLine).not.toBeNull();
+
+    // Check for vertical divider line at x=12
+    const verticalLine = svg?.querySelector(verticalLineSelector);
+    expect(verticalLine).not.toBeNull();
+
+    // Ensure the old circle element is NOT present
+    const circle = svg?.querySelector('circle');
+    expect(circle).toBeNull();
   });
 });
