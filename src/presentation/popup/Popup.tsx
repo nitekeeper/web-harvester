@@ -1,8 +1,10 @@
 // src/presentation/popup/Popup.tsx
 
-import { useCallback } from 'react';
+import { ChevronDownIcon } from 'lucide-react';
+import { useCallback, useState } from 'react';
 
 import { useFormatMessage } from '@presentation/hooks/useFormatMessage';
+import { parseFrontmatterFields } from '@presentation/popup/lib/parseFrontmatter';
 import { type PopupStoreState, usePopupStore } from '@presentation/stores/usePopupStore';
 import { useSettingsStore } from '@presentation/stores/useSettingsStore';
 
@@ -46,6 +48,51 @@ function useSettingsBindings() {
   return { theme, handleTheme };
 }
 
+/** Props for the {@link PropertiesSectionHeader} sub-component. */
+interface PropertiesSectionHeaderProps {
+  /** Whether the section is currently expanded. */
+  readonly isExpanded: boolean;
+  /** Number of frontmatter fields to display in the badge. */
+  readonly fieldCount: number;
+  /** Called when the user clicks the toggle button. */
+  readonly onToggle: () => void;
+}
+
+/** Toggle button header row for the properties section — chevron + label + field count badge. */
+function PropertiesSectionHeader({
+  isExpanded,
+  fieldCount,
+  onToggle,
+}: PropertiesSectionHeaderProps) {
+  const fmt = useFormatMessage();
+  return (
+    <button
+      type="button"
+      data-testid="properties-toggle"
+      onClick={onToggle}
+      className="flex items-center justify-between w-full text-left"
+      aria-expanded={isExpanded}
+    >
+      <span className="flex items-center gap-1">
+        <ChevronDownIcon
+          data-testid="properties-chevron"
+          className={`size-3 text-muted-foreground transition-transform ${isExpanded ? '' : 'rotate-180'}`}
+        />
+        <span id="popup-properties-label" className={LABEL_CLASS}>
+          {fmt({ id: 'popup.propertiesLabel', defaultMessage: 'PROPERTIES' })}
+        </span>
+      </span>
+      <span className="text-[10px] text-muted-foreground">
+        {fmt({
+          id: 'popup.propertiesFieldCount',
+          defaultMessage: '{count} fields',
+          values: { count: fieldCount },
+        })}
+      </span>
+    </button>
+  );
+}
+
 /** Props for the {@link PropertiesSection} sub-component. */
 interface PropertiesSectionProps {
   /** Current markdown string, including frontmatter. */
@@ -58,20 +105,30 @@ interface PropertiesSectionProps {
 
 /**
  * Renders the labeled PROPERTIES group containing the {@link PropertiesEditor}.
+ * The header is a toggle button that collapses/expands the section body.
  * Extracted to keep {@link PopupScrollBody} within the 40-line function limit.
  */
 function PropertiesSection({ markdown, onMarkdownChange, isPreviewing }: PropertiesSectionProps) {
-  const fmt = useFormatMessage();
+  const [isExpanded, setIsExpanded] = useState(true);
+  const fieldCount = parseFrontmatterFields(markdown).length;
+  const handleToggle = useCallback(() => setIsExpanded((prev) => !prev), []);
+
   return (
     <div className="flex flex-col gap-1" role="group" aria-labelledby="popup-properties-label">
-      <span id="popup-properties-label" className={LABEL_CLASS}>
-        {fmt({ id: 'popup.propertiesLabel', defaultMessage: 'PROPERTIES' })}
-      </span>
-      <PropertiesEditor
-        markdown={markdown}
-        onMarkdownChange={onMarkdownChange}
-        isPreviewing={isPreviewing}
+      <PropertiesSectionHeader
+        isExpanded={isExpanded}
+        fieldCount={fieldCount}
+        onToggle={handleToggle}
       />
+      {isExpanded && (
+        <div data-testid="properties-body">
+          <PropertiesEditor
+            markdown={markdown}
+            onMarkdownChange={onMarkdownChange}
+            isPreviewing={isPreviewing}
+          />
+        </div>
+      )}
     </div>
   );
 }

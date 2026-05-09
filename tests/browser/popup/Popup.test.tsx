@@ -146,3 +146,87 @@ describe('Popup — properties section', () => {
     expect(document.querySelector('[data-testid="properties-empty"]')).not.toBeNull();
   });
 });
+
+const TOGGLE_SELECTOR = '[data-testid="properties-toggle"]';
+const BODY_SELECTOR = '[data-testid="properties-body"]';
+const CHEVRON_SELECTOR = '[data-testid="properties-chevron"]';
+const TOGGLE_NOT_FOUND = 'properties-toggle not found';
+
+describe('Popup — collapsible properties header (static)', () => {
+  afterEach(() => {
+    cleanup();
+    usePopupStore.setState({ previewMarkdown: '' });
+  });
+
+  it('renders the properties header as a button element', () => {
+    render(<Popup onSave={() => undefined} onSettings={() => undefined} />);
+    const btn = document.querySelector(TOGGLE_SELECTOR);
+    expect(btn).not.toBeNull();
+    expect(btn?.tagName.toLowerCase()).toBe('button');
+  });
+
+  it('shows the chevron icon in the properties header button', () => {
+    render(<Popup onSave={() => undefined} onSettings={() => undefined} />);
+    expect(document.querySelector(CHEVRON_SELECTOR)).not.toBeNull();
+  });
+
+  it('shows "0 fields" badge when previewMarkdown has no frontmatter', () => {
+    usePopupStore.setState({ previewMarkdown: '' });
+    render(<Popup onSave={() => undefined} onSettings={() => undefined} />);
+    expect(screen.getByText('0 fields')).not.toBeNull();
+  });
+
+  it('shows "N fields" badge matching the number of frontmatter fields', () => {
+    usePopupStore.setState({
+      previewMarkdown: '---\ntitle: My Page\nauthor: Jane\ntags: foo\n---\n\n# Body',
+    });
+    render(<Popup onSave={() => undefined} onSettings={() => undefined} />);
+    expect(screen.getByText('3 fields')).not.toBeNull();
+  });
+
+  it('shows "1 fields" badge for a single frontmatter field', () => {
+    usePopupStore.setState({ previewMarkdown: '---\ntitle: Hello\n---\n' });
+    render(<Popup onSave={() => undefined} onSettings={() => undefined} />);
+    expect(screen.getByText('1 fields')).not.toBeNull();
+  });
+
+  it('section body is visible by default (expanded)', () => {
+    render(<Popup onSave={() => undefined} onSettings={() => undefined} />);
+    expect(document.querySelector(BODY_SELECTOR)).not.toBeNull();
+  });
+});
+
+describe('Popup — collapsible properties header (interactions)', () => {
+  afterEach(() => {
+    cleanup();
+    usePopupStore.setState({ previewMarkdown: '' });
+  });
+
+  it('collapses the section body when the header button is clicked', async () => {
+    render(<Popup onSave={() => undefined} onSettings={() => undefined} />);
+    const btn = document.querySelector(TOGGLE_SELECTOR);
+    if (!btn) throw new Error(TOGGLE_NOT_FOUND);
+    await userEvent.setup().click(btn);
+    expect(document.querySelector(BODY_SELECTOR)).toBeNull();
+  });
+
+  it('re-expands the section body when the header button is clicked again', async () => {
+    render(<Popup onSave={() => undefined} onSettings={() => undefined} />);
+    const user = userEvent.setup();
+    const btn = document.querySelector(TOGGLE_SELECTOR);
+    if (!btn) throw new Error(TOGGLE_NOT_FOUND);
+    await user.click(btn);
+    expect(document.querySelector(BODY_SELECTOR)).toBeNull();
+    await user.click(btn);
+    expect(document.querySelector(BODY_SELECTOR)).not.toBeNull();
+  });
+
+  it('rotates the chevron 180deg when collapsed', async () => {
+    render(<Popup onSave={() => undefined} onSettings={() => undefined} />);
+    const btn = document.querySelector(TOGGLE_SELECTOR);
+    if (!btn) throw new Error(TOGGLE_NOT_FOUND);
+    expect(document.querySelector(CHEVRON_SELECTOR)?.classList.contains('rotate-180')).toBe(false);
+    await userEvent.setup().click(btn);
+    expect(document.querySelector(CHEVRON_SELECTOR)?.classList.contains('rotate-180')).toBe(true);
+  });
+});
