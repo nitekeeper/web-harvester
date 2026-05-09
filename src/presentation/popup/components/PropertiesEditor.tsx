@@ -40,7 +40,7 @@ interface FieldItemProps {
  */
 function FieldItem({ index, field: { key, value }, onFieldChange }: FieldItemProps) {
   return (
-    <div data-testid="prop-row" className="grid grid-cols-[auto_1fr] items-center gap-x-2 py-0.5">
+    <div data-testid="prop-row" className="grid grid-cols-[62px_1fr] items-center gap-x-2 py-0.5">
       <label
         htmlFor={`prop-${key}`}
         className="text-[10.5px] text-muted-foreground font-mono whitespace-nowrap"
