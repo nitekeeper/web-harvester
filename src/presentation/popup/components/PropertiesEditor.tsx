@@ -7,8 +7,12 @@ import {
   type FrontmatterField,
 } from '@presentation/popup/lib/parseFrontmatter';
 
-const INPUT_CLASS =
-  'h-7 rounded border border-input bg-background px-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring';
+/**
+ * Tailwind class for each value input in the compact grid layout.
+ * Transparent and borderless at rest; gains a subtle ring on focus.
+ */
+const VALUE_INPUT_CLASS =
+  'bg-transparent border-0 px-1 py-0 text-xs text-foreground w-full focus:outline-none focus:ring-1 focus:ring-ring rounded';
 
 /** Props for {@link PropertiesEditor}. */
 export interface PropertiesEditorProps {
@@ -31,14 +35,16 @@ interface FieldItemProps {
 }
 
 /**
- * Renders a single field input with label.
- * @param props The field item props.
- * @returns JSX element.
+ * Renders a single field row in the compact 2-column grid layout.
+ * Left cell: muted monospace key label. Right cell: transparent inline value input.
  */
 function FieldItem({ index, field: { key, value }, onFieldChange }: FieldItemProps) {
   return (
-    <div className="flex flex-col gap-0.5">
-      <label htmlFor={`prop-${key}`} className="text-[10.5px] text-muted-foreground font-mono">
+    <div data-testid="prop-row" className="grid grid-cols-[auto_1fr] items-center gap-x-2 py-0.5">
+      <label
+        htmlFor={`prop-${key}`}
+        className="text-[10.5px] text-muted-foreground font-mono whitespace-nowrap"
+      >
         {key}
       </label>
       <input
@@ -47,7 +53,7 @@ function FieldItem({ index, field: { key, value }, onFieldChange }: FieldItemPro
         data-testid={`prop-input-${key}`}
         value={value}
         onChange={(e) => onFieldChange(index, e.target.value)}
-        className={INPUT_CLASS}
+        className={VALUE_INPUT_CLASS}
       />
     </div>
   );
@@ -121,7 +127,10 @@ export function PropertiesEditor({
   }
 
   return (
-    <div data-testid="properties-editor" className="flex flex-col gap-1.5">
+    <div
+      data-testid="properties-editor"
+      className="border border-border rounded-md bg-card px-2 py-1 flex flex-col divide-y divide-border"
+    >
       {fields.map((field, index) => (
         <FieldItem key={field.key} index={index} field={field} onFieldChange={handleChange} />
       ))}

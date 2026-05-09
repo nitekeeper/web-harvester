@@ -90,3 +90,41 @@ describe('PropertiesEditor — field editing', () => {
     expect(lastArg).toContain('# Body');
   });
 });
+
+describe('PropertiesEditor — compact 2-column grid layout', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  it('wraps fields in a bordered card container', () => {
+    render(<PropertiesEditor markdown={WITH_FM} onMarkdownChange={vi.fn()} />);
+    const editor = document.querySelector(`[data-testid="${TESTID_EDITOR}"]`);
+    expect(editor).not.toBeNull();
+    // The card container should have a border class
+    expect(editor?.className).toMatch(/border/);
+  });
+
+  it('renders each field row in a grid container', () => {
+    render(<PropertiesEditor markdown={WITH_FM} onMarkdownChange={vi.fn()} />);
+    const gridRows = document.querySelectorAll('[data-testid="prop-row"]');
+    expect(gridRows.length).toBe(2); // title + author
+  });
+
+  it('renders the key label as muted monospace text', () => {
+    render(<PropertiesEditor markdown={WITH_FM} onMarkdownChange={vi.fn()} />);
+    const titleLabel = document.querySelector('label[for="prop-title"]');
+    expect(titleLabel).not.toBeNull();
+    expect(titleLabel?.className).toMatch(/font-mono/);
+    expect(titleLabel?.className).toMatch(/muted/);
+  });
+
+  it('renders the value input as a transparent borderless input', () => {
+    render(<PropertiesEditor markdown={WITH_FM} onMarkdownChange={vi.fn()} />);
+    const input = document.querySelector(
+      `[data-testid="${TESTID_TITLE_INPUT}"]`,
+    ) as HTMLInputElement;
+    expect(input).not.toBeNull();
+    // Input should be borderless/transparent — no border class on the input itself
+    expect(input.className).toMatch(/bg-transparent/);
+  });
+});
