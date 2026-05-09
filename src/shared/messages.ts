@@ -198,3 +198,30 @@ export function isStopPickerMessage(msg: unknown): msg is StopPickerMessage {
     (msg as Record<string, unknown>)['type'] === MSG_STOP_PICKER
   );
 }
+
+/** Type discriminant for the picker-result notification sent from the content script. */
+export const MSG_PICKER_RESULT = 'picker-result' as const;
+
+/**
+ * Message sent from the content script to the background when the user
+ * finishes a picker session. `result` is present on confirm, absent on cancel.
+ * Using a short fire-and-forget message avoids keeping the MV3 service-worker
+ * message channel open for the full duration of picker interaction.
+ */
+export interface PickerResultMessage {
+  readonly type: typeof MSG_PICKER_RESULT;
+  /** XPath lists selected by the user. Absent when the session was cancelled. */
+  readonly result?: {
+    readonly excludedXPaths?: readonly string[];
+    readonly includedXPaths?: readonly string[];
+  };
+}
+
+/** Type guard for {@link PickerResultMessage}. */
+export function isPickerResultMessage(msg: unknown): msg is PickerResultMessage {
+  return (
+    typeof msg === 'object' &&
+    msg !== null &&
+    (msg as Record<string, unknown>)['type'] === MSG_PICKER_RESULT
+  );
+}

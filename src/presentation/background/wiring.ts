@@ -19,6 +19,7 @@ import { createLogger } from '@shared/logger';
 import {
   isClipPageMessage,
   isHighlightModeExitedMessage,
+  isPickerResultMessage,
   isPreviewPageMessage,
   isStartHighlightMessage,
   isStartPickerMessage,
@@ -26,6 +27,7 @@ import {
   isStopPickerMessage,
   isToggleReaderMessage,
   type ClipPageMessage,
+  type PickerResultMessage,
   type PreviewPageMessage,
   type PreviewPageResponse,
   type StartPickerMessage,
@@ -207,6 +209,12 @@ export interface IWiringStoragePort {
 /** Storage key for the shared popup state persisted by the background. */
 const POPUP_STATE_KEY = 'popup-state';
 
+/** Reads and normalises the shared popup-state record from storage. */
+async function readPopupState(storage: IWiringStoragePort): Promise<Record<string, unknown>> {
+  const raw = await storage.getLocal(POPUP_STATE_KEY);
+  return typeof raw === 'object' && raw !== null ? (raw as Record<string, unknown>) : {};
+}
+
 /**
  * Resolves the id of the currently active tab. Calls `sendResponse({ ok: false })`
  * and returns `undefined` when there is no active tab or its id is missing.
@@ -270,45 +278,51 @@ export async function handleHighlightModeExitedMessage(
   storage: IWiringStoragePort,
   sendResponse: (r: unknown) => void,
 ): Promise<void> {
-  const raw = await storage.getLocal(POPUP_STATE_KEY);
-  const current: Record<string, unknown> =
-    typeof raw === 'object' && raw !== null ? (raw as Record<string, unknown>) : {};
+  const current = await readPopupState(storage);
   await storage.setLocal(POPUP_STATE_KEY, { ...current, isHighlightActive: false });
   sendResponse({ ok: true });
 }
 
 /**
- * Sends START_PICKER to the active tab's content script. The picker result is
- * handled asynchronously — the background responds to the popup immediately
- * and stores the result when the user confirms or cancels.
+ * Sends START_PICKER to the active tab's content script and responds to the
+ * popup immediately. The picker result arrives later via a separate
+ * {@link PickerResultMessage} from the content script — this avoids keeping an
+ * MV3 service-worker message channel open for the full duration of the
+ * (potentially long) picker interaction, which would cause a "channel closed"
+ * error when the service worker is suspended.
  */
 export async function handleStartPickerMessage(
   adapter: Pick<ITabAdapter, 'getActiveTab' | 'sendMessageToTab'>,
-  storage: IWiringStoragePort,
   msg: StartPickerMessage,
   sendResponse: (r: unknown) => void,
 ): Promise<void> {
   const tabId = await resolveActiveTabId(adapter, sendResponse);
   if (tabId === undefined) return;
-  // Fire the picker command and handle result async so we don't hold the
-  // popup message channel open for the full duration of picker interaction.
   adapter
     .sendMessageToTab(tabId, { type: 'START_PICKER', mode: msg.mode })
-    .then(async (response) => {
-      const r = response as { type: string; result?: unknown };
-      const raw = await storage.getLocal(POPUP_STATE_KEY);
-      const current: Record<string, unknown> =
-        typeof raw === 'object' && raw !== null ? (raw as Record<string, unknown>) : {};
-      const updates: Record<string, unknown> = { ...current, isPickerActive: false };
-      if (r.type === 'PICKER_DONE') {
-        const result = r.result as { excludedXPaths?: string[]; includedXPaths?: string[] };
-        updates['pickerResult'] = { excludedXPaths: result.excludedXPaths ?? [] };
-      }
-      await storage.setLocal(POPUP_STATE_KEY, updates);
-    })
     .catch((err: unknown) => {
-      logger.error('picker result handling failed', err);
+      logger.warn('START_PICKER delivery failed', err);
     });
+  sendResponse({ ok: true });
+}
+
+/**
+ * Handles a {@link PickerResultMessage} sent by the content script when the
+ * user finishes a picker session. Writes `isPickerActive: false` and, on
+ * confirm, the selected XPaths into the shared popup-state storage key so the
+ * popup store can update reactively.
+ */
+export async function handlePickerResultMessage(
+  msg: PickerResultMessage,
+  storage: IWiringStoragePort,
+  sendResponse: (r: unknown) => void,
+): Promise<void> {
+  const current = await readPopupState(storage);
+  const updates: Record<string, unknown> = { ...current, isPickerActive: false };
+  if (msg.result !== undefined) {
+    updates['pickerResult'] = { excludedXPaths: msg.result.excludedXPaths ?? [] };
+  }
+  await storage.setLocal(POPUP_STATE_KEY, updates);
   sendResponse({ ok: true });
 }
 
@@ -377,7 +391,7 @@ function dispatchPickerMessage(
   storageAdapter: IWiringStoragePort,
 ): boolean {
   if (isStartPickerMessage(msg)) {
-    handleStartPickerMessage(adapter, storageAdapter, msg, sendResponse).catch((err: unknown) => {
+    handleStartPickerMessage(adapter, msg, sendResponse).catch((err: unknown) => {
       logger.error('start-picker handler failed', err);
     });
     return true;
@@ -385,6 +399,12 @@ function dispatchPickerMessage(
   if (isStopPickerMessage(msg)) {
     handleStopPickerMessage(adapter, sendResponse).catch((err: unknown) => {
       logger.error('stop-picker handler failed', err);
+    });
+    return true;
+  }
+  if (isPickerResultMessage(msg)) {
+    handlePickerResultMessage(msg, storageAdapter, sendResponse).catch((err: unknown) => {
+      logger.error('picker-result handler failed', err);
     });
     return true;
   }

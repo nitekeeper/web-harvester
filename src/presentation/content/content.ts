@@ -9,6 +9,7 @@
 
 import type { ReaderSettings } from '@application/ReaderService';
 import { createLogger } from '@shared/logger';
+import { MSG_PICKER_RESULT } from '@shared/messages';
 
 import { defuddleParse } from './defuddleParse';
 import { activateHighlighter, deactivateHighlighter } from './highlighter';
@@ -37,25 +38,35 @@ function stopActivePicker(): void {
   }
 }
 
-/** Handles a START_PICKER message: mounts the picker and replies async. */
+/**
+ * Handles a START_PICKER message: mounts the picker, acknowledges immediately,
+ * and sends a separate PICKER_RESULT message when the session ends. Returning
+ * false (no long-lived channel) prevents the MV3 "channel closed before
+ * response" error that occurs when the service worker is suspended during the
+ * picker interaction.
+ */
 function handleStartPicker(
   message: { type: 'START_PICKER'; mode: 'exclude' | 'include' },
   sendResponse: (response: unknown) => void,
-): true {
+): false {
   stopActivePicker();
   activePicker = startPicker({
     mode: message.mode,
     onDone: (result) => {
       activePicker = null;
-      sendResponse({ type: 'PICKER_DONE', result });
+      chrome.runtime.sendMessage({ type: MSG_PICKER_RESULT, result }).catch((err: unknown) => {
+        logger.error('picker result send failed', err);
+      });
     },
     onCancel: () => {
       activePicker = null;
-      sendResponse({ type: 'PICKER_CANCELLED' });
+      chrome.runtime.sendMessage({ type: MSG_PICKER_RESULT }).catch((err: unknown) => {
+        logger.error('picker cancel send failed', err);
+      });
     },
   });
-  // Return true to keep the message channel open for async sendResponse
-  return true;
+  sendResponse({ ok: true });
+  return false;
 }
 
 /**
