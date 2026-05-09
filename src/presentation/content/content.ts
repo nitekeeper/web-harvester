@@ -132,10 +132,14 @@ chrome.runtime.onMessage.addListener((msg: unknown, _sender, sendResponse): bool
   }
 
   if (message.type === 'READER_ACTIVATE') {
-    activateReader(message.settings).catch((err: unknown) => {
-      logger.error('reader activate failed', err);
-      sendResponse({ ok: false });
-    });
+    activateReader(message.settings)
+      .then(() => {
+        sendResponse({ ok: true });
+      })
+      .catch((err: unknown) => {
+        logger.error('reader activate failed', err);
+        sendResponse({ ok: false });
+      });
     return true; // async response
   }
 
