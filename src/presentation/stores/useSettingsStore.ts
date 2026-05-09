@@ -23,6 +23,8 @@ export interface DestinationView {
   readonly fileNamePattern: string;
   /** Unix milliseconds when the destination was first added. */
   readonly createdAt: number;
+  /** Unix milliseconds of the most recent clip saved to this destination. */
+  readonly lastUsed?: number;
 }
 
 /**

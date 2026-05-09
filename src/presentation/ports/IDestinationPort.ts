@@ -31,7 +31,10 @@ export interface IDestinationPort {
    * Applies the supplied changes to an existing destination. If `id` does
    * not match a stored row, the call is a silent no-op.
    */
-  update(id: string, changes: { label?: string; fileNamePattern?: string }): Promise<void>;
+  update(
+    id: string,
+    changes: { label?: string; fileNamePattern?: string; lastUsed?: number },
+  ): Promise<void>;
   /** Removes the destination identified by `id`. */
   remove(id: string): Promise<void>;
 }
