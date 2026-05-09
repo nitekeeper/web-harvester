@@ -22,23 +22,8 @@ export interface DestinationSelectorProps {
 }
 
 /**
- * Renders the folder path hint showing the underlying directory handle name.
- */
-function DestinationPathHint({ dest }: { readonly dest: DestinationView }) {
-  return (
-    <p
-      data-testid="destination-path-hint"
-      className="text-[10.5px] text-muted-foreground font-mono mt-0.5"
-    >
-      {dest.dirHandle.name}
-    </p>
-  );
-}
-
-/**
  * Renders the popup's destination picker. Falls back to a "no destinations"
  * notice when the list is empty so the user still sees the slot location.
- * When a destination is selected, shows its folder handle name as a path hint.
  */
 export function DestinationSelector({
   destinations,
@@ -55,29 +40,24 @@ export function DestinationSelector({
     );
   }
 
-  const selectedDest = destinations.find((d) => d.id === selectedId) ?? null;
-
   return (
-    <div>
-      <Select value={selectedId ?? ''} onValueChange={onSelect}>
-        <SelectTrigger data-testid="destination-selector" className="w-full">
-          <FolderIcon />
-          <SelectValue
-            placeholder={fmt({
-              id: 'popup.selectDestination',
-              defaultMessage: 'Select destination…',
-            })}
-          />
-        </SelectTrigger>
-        <SelectContent>
-          {destinations.map((d) => (
-            <SelectItem key={d.id} value={d.id}>
-              {d.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      {selectedDest !== null ? <DestinationPathHint dest={selectedDest} /> : null}
-    </div>
+    <Select value={selectedId ?? ''} onValueChange={onSelect}>
+      <SelectTrigger data-testid="destination-selector" className="w-full">
+        <FolderIcon />
+        <SelectValue
+          placeholder={fmt({
+            id: 'popup.selectDestination',
+            defaultMessage: 'Select destination…',
+          })}
+        />
+      </SelectTrigger>
+      <SelectContent>
+        {destinations.map((d) => (
+          <SelectItem key={d.id} value={d.id}>
+            {d.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }

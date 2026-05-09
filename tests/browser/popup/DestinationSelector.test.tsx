@@ -38,11 +38,11 @@ describe('DestinationSelector', () => {
     expect(screen.getByText('Notes')).not.toBeNull();
   });
 
-  it('shows the dirHandle.name hint when a destination is selected', () => {
+  it('does not show the dirHandle.name path hint when a destination is selected', () => {
     render(
       <DestinationSelector destinations={sampleDestinations} selectedId="d1" onSelect={NOOP} />,
     );
-    expect(screen.getByText('Obsidian Vault')).not.toBeNull();
+    expect(document.querySelector('[data-testid="destination-path-hint"]')).toBeNull();
   });
 
   it('does not show a path hint when no destination is selected', () => {
