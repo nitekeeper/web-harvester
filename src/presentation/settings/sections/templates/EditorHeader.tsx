@@ -52,6 +52,58 @@ const statusRowStyle: React.CSSProperties = {
   fontSize: 11.5,
 };
 
+/** Style for the editable template name input. */
+const nameInputStyle: React.CSSProperties = {
+  flex: 1,
+  border: 0,
+  background: 'transparent',
+  fontSize: 18,
+  fontWeight: 600,
+  letterSpacing: '-0.01em',
+  color: 'var(--wh-text)',
+  outline: 'none',
+  minWidth: 0,
+};
+
+/** Style for the preview toggle button. */
+const previewBtnBaseStyle: React.CSSProperties = {
+  background: 'transparent',
+  borderRadius: 5,
+  padding: '4px 10px',
+  fontSize: 11.5,
+  cursor: 'pointer',
+  whiteSpace: 'nowrap',
+};
+
+/** Style for the ⋯ trigger button. */
+const menuTriggerBtnStyle: React.CSSProperties = {
+  width: 26,
+  height: 26,
+  background: 'transparent',
+  border: 0,
+  borderRadius: 5,
+  cursor: 'pointer',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  color: colorMuted,
+};
+
+/** Base style for each action menu button row. */
+const menuItemBaseStyle: React.CSSProperties = {
+  width: '100%',
+  textAlign: 'left',
+  background: 'transparent',
+  border: 0,
+  padding: '5px 8px',
+  borderRadius: 4,
+  fontSize: 11.5,
+  cursor: 'pointer',
+  display: 'flex',
+  alignItems: 'center',
+  gap: 8,
+};
+
 /** Renders the Saving… / Saved / Save failed indicator. */
 function AutosaveIndicator({ status }: { readonly status: AutosaveStatus }) {
   const fmt = useFormatMessage();
@@ -91,21 +143,6 @@ interface ActionItem {
 interface ActionMenuPanelProps {
   readonly items: ActionItem[];
 }
-
-/** Base style for each action menu button row. */
-const menuItemBaseStyle: React.CSSProperties = {
-  width: '100%',
-  textAlign: 'left',
-  background: 'transparent',
-  border: 0,
-  padding: '5px 8px',
-  borderRadius: 4,
-  fontSize: 11.5,
-  cursor: 'pointer',
-  display: 'flex',
-  alignItems: 'center',
-  gap: 8,
-};
 
 /** Dropdown panel rendering a list of action buttons. */
 function ActionMenuPanel({ items }: ActionMenuPanelProps) {
@@ -204,18 +241,7 @@ function ActionMenuTrigger(props: ActionMenuTriggerProps) {
           id: 'settings.templates.actionsMenu',
           defaultMessage: 'Template actions',
         })}
-        style={{
-          width: 26,
-          height: 26,
-          background: 'transparent',
-          border: 0,
-          borderRadius: 5,
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: colorMuted,
-        }}
+        style={menuTriggerBtnStyle}
       >
         <MoreHorizontal size={14} />
       </button>
@@ -240,6 +266,73 @@ function ActionMenuTrigger(props: ActionMenuTriggerProps) {
   );
 }
 
+/** Outer wrapper style for the header strip. */
+const headerWrapStyle: React.CSSProperties = {
+  padding: '14px 22px',
+  borderBottom: borderPanel,
+  display: 'flex',
+  alignItems: 'center',
+  gap: 10,
+};
+
+/** Props for {@link PreviewToggleBtn}. */
+interface PreviewToggleBtnProps {
+  readonly previewOn: boolean;
+  readonly fmt: FormatMessageFn;
+  readonly onPreviewToggle: () => void;
+}
+
+/** Preview on/off toggle button. */
+function PreviewToggleBtn({ previewOn, fmt, onPreviewToggle }: PreviewToggleBtnProps) {
+  return (
+    <button
+      data-testid="preview-toggle"
+      onClick={onPreviewToggle}
+      aria-label={fmt({
+        id: 'settings.templates.previewToggle',
+        defaultMessage: previewOn ? 'Hide preview' : 'Show preview',
+      })}
+      style={{
+        ...previewBtnBaseStyle,
+        border: borderPanel,
+        color: previewOn ? 'var(--wh-accent)' : colorMuted,
+      }}
+    >
+      {previewOn
+        ? fmt({ id: 'settings.templates.previewOn', defaultMessage: '✓ Preview' })
+        : fmt({ id: 'settings.templates.previewOff', defaultMessage: 'Preview' })}
+    </button>
+  );
+}
+
+/** Props for {@link EditorNameRow}. */
+interface EditorNameRowProps {
+  readonly template: TemplateView;
+  readonly autosaveStatus: AutosaveStatus;
+  readonly onNameChange: (name: string) => void;
+}
+
+/** Lock icon + name input + autosave indicator group. */
+function EditorNameRow({ template, autosaveStatus, onNameChange }: EditorNameRowProps) {
+  const fmt = useFormatMessage();
+  return (
+    <>
+      {template.isSystem ? (
+        <Lock size={12} style={{ color: 'var(--wh-subtle)', flexShrink: 0 }} />
+      ) : null}
+      <input
+        data-testid="editor-name-input"
+        value={template.name}
+        readOnly={template.isSystem}
+        onChange={(e) => onNameChange(e.target.value)}
+        aria-label={fmt({ id: 'settings.templates.nameLabel', defaultMessage: 'Template name' })}
+        style={nameInputStyle}
+      />
+      <AutosaveIndicator status={autosaveStatus} />
+    </>
+  );
+}
+
 /**
  * Header strip for the template editor pane. Contains the editable template
  * name, autosave status indicator, preview toggle, and the ⋯ action menu.
@@ -256,59 +349,13 @@ export function EditorHeader({
 }: EditorHeaderProps) {
   const fmt = useFormatMessage();
   return (
-    <div
-      style={{
-        padding: '14px 22px',
-        borderBottom: borderPanel,
-        display: 'flex',
-        alignItems: 'center',
-        gap: 10,
-      }}
-    >
-      {template.isSystem ? (
-        <Lock size={12} style={{ color: 'var(--wh-subtle)', flexShrink: 0 }} />
-      ) : null}
-      <input
-        data-testid="editor-name-input"
-        value={template.name}
-        readOnly={template.isSystem}
-        onChange={(e) => onNameChange(e.target.value)}
-        aria-label={fmt({ id: 'settings.templates.nameLabel', defaultMessage: 'Template name' })}
-        style={{
-          flex: 1,
-          border: 0,
-          background: 'transparent',
-          fontSize: 18,
-          fontWeight: 600,
-          letterSpacing: '-0.01em',
-          color: 'var(--wh-text)',
-          outline: 'none',
-          minWidth: 0,
-        }}
+    <div style={headerWrapStyle}>
+      <EditorNameRow
+        template={template}
+        autosaveStatus={autosaveStatus}
+        onNameChange={onNameChange}
       />
-      <AutosaveIndicator status={autosaveStatus} />
-      <button
-        data-testid="preview-toggle"
-        onClick={onPreviewToggle}
-        aria-label={fmt({
-          id: 'settings.templates.previewToggle',
-          defaultMessage: previewOn ? 'Hide preview' : 'Show preview',
-        })}
-        style={{
-          background: 'transparent',
-          border: borderPanel,
-          borderRadius: 5,
-          padding: '4px 10px',
-          fontSize: 11.5,
-          color: previewOn ? 'var(--wh-accent)' : colorMuted,
-          cursor: 'pointer',
-          whiteSpace: 'nowrap',
-        }}
-      >
-        {previewOn
-          ? fmt({ id: 'settings.templates.previewOn', defaultMessage: '✓ Preview' })
-          : fmt({ id: 'settings.templates.previewOff', defaultMessage: 'Preview' })}
-      </button>
+      <PreviewToggleBtn previewOn={previewOn} fmt={fmt} onPreviewToggle={onPreviewToggle} />
       <ActionMenuTrigger
         isSystem={template.isSystem}
         fmt={fmt}
