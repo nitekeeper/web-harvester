@@ -84,6 +84,27 @@ function KeyCell({
   );
 }
 
+/** Insert-variable glyph button shown inside the value cell. */
+function InsertVarButton({
+  index,
+  fmt,
+  onInsert,
+}: {
+  readonly index: number;
+  readonly fmt: FormatMessageFn;
+  readonly onInsert: (i: number) => void;
+}) {
+  return (
+    <button
+      onClick={() => onInsert(index)}
+      aria-label={fmt({ id: 'settings.templates.fmInsertVar', defaultMessage: 'Insert variable' })}
+      style={iconBtnStyle}
+    >
+      {fmt({ id: 'settings.templates.fmInsertVarGlyph', defaultMessage: '{{}}' })}
+    </button>
+  );
+}
+
 /** Value cell with optional insert-variable button for a frontmatter row. */
 function ValueCell({
   index,
@@ -97,8 +118,8 @@ function ValueCell({
   readonly value: string;
   readonly isReadonly: boolean;
   readonly fmt: FormatMessageFn;
-  readonly onChange: (index: number, val: string) => void;
-  readonly onInsertVariable: (index: number) => void;
+  readonly onChange: (i: number, v: string) => void;
+  readonly onInsertVariable: (i: number) => void;
 }) {
   return (
     <td>
@@ -111,16 +132,7 @@ function ValueCell({
           style={{ ...cellInputStyle, flex: 1 }}
         />
         {!isReadonly ? (
-          <button
-            onClick={() => onInsertVariable(index)}
-            aria-label={fmt({
-              id: 'settings.templates.fmInsertVar',
-              defaultMessage: 'Insert variable',
-            })}
-            style={iconBtnStyle}
-          >
-            {fmt({ id: 'settings.templates.fmInsertVarGlyph', defaultMessage: '{{}}' })}
-          </button>
+          <InsertVarButton index={index} fmt={fmt} onInsert={onInsertVariable} />
         ) : null}
       </div>
     </td>
@@ -155,6 +167,22 @@ function RemoveCell({
   );
 }
 
+/** Drag-handle cell shown at the start of each frontmatter row. */
+function DragCell({ isReadonly }: { readonly isReadonly: boolean }) {
+  return (
+    <td
+      style={{
+        width: 20,
+        paddingLeft: 8,
+        color: COLOR_SUBTLE,
+        cursor: isReadonly ? 'default' : 'grab',
+      }}
+    >
+      {!isReadonly ? <GripVertical size={12} /> : null}
+    </td>
+  );
+}
+
 /** Single editable row in the frontmatter key/value grid. */
 function FrontmatterRowItem({
   row,
@@ -180,16 +208,7 @@ function FrontmatterRowItem({
       onDrop={onDrop}
       style={{ borderBottom: BORDER_DEFAULT }}
     >
-      <td
-        style={{
-          width: 20,
-          paddingLeft: 8,
-          color: COLOR_SUBTLE,
-          cursor: isReadonly ? 'default' : 'grab',
-        }}
-      >
-        {!isReadonly ? <GripVertical size={12} /> : null}
-      </td>
+      <DragCell isReadonly={isReadonly} />
       <KeyCell index={index} value={row.key} isReadonly={isReadonly} onChange={onKeyChange} />
       <ValueCell
         index={index}
@@ -289,94 +308,89 @@ function useFrontmatterDrag(
   return { handleDragStart, handleDragOver, handleDrop };
 }
 
-/** Props for {@link FrontmatterGrid}. */
-interface FrontmatterGridProps {
+/** Props shared by table and grid components (no onAdd). */
+interface TableProps extends Omit<RowItemProps, 'row' | 'index'> {
   readonly rows: readonly FrontmatterRow[];
-  readonly isReadonly: boolean;
-  readonly fmt: FormatMessageFn;
-  readonly onKeyChange: (index: number, key: string) => void;
-  readonly onValueChange: (index: number, value: string) => void;
-  readonly onRemove: (index: number) => void;
+}
+
+/** Props for {@link FrontmatterGrid}. */
+interface FrontmatterGridProps extends TableProps {
   readonly onAdd: () => void;
-  readonly onInsertVariable: (index: number) => void;
-  readonly onDragStart: (index: number) => void;
-  readonly onDragOver: (index: number) => void;
-  readonly onDrop: () => void;
+}
+
+const tableStyle: React.CSSProperties = {
+  width: '100%',
+  borderCollapse: 'collapse',
+  border: BORDER_DEFAULT,
+  borderRadius: 5,
+  overflow: 'hidden',
+  background: 'var(--wh-panel)',
+};
+const addBtnStyle: React.CSSProperties = {
+  alignSelf: 'flex-start',
+  background: 'transparent',
+  border: 0,
+  fontSize: 11.5,
+  color: 'var(--wh-muted)',
+  cursor: 'pointer',
+  display: 'flex',
+  alignItems: 'center',
+  gap: 4,
+  padding: '2px 0',
+};
+
+/** Mapped body rows for the frontmatter table. */
+function TableBody(props: TableProps) {
+  const { rows, ...rest } = props;
+  return (
+    <>
+      {rows.map((row, i) => (
+        <FrontmatterRowItem key={`${row.key}-${i}`} row={row} index={i} {...rest} />
+      ))}
+    </>
+  );
+}
+
+/** Table of frontmatter rows (header + mapped body). */
+function FrontmatterTable(props: TableProps) {
+  return (
+    <table style={tableStyle}>
+      <FrontmatterTableHead
+        keyLabel={props.fmt({ id: 'settings.templates.fmKeyCol', defaultMessage: 'Key' })}
+        valueLabel={props.fmt({
+          id: 'settings.templates.fmValueCol',
+          defaultMessage: 'Value / Expression',
+        })}
+      />
+      <tbody>
+        <TableBody {...props} />
+      </tbody>
+    </table>
+  );
+}
+
+/** Add-row button shown below the frontmatter table. */
+function AddRowButton({
+  fmt,
+  onAdd,
+}: {
+  readonly fmt: FormatMessageFn;
+  readonly onAdd: () => void;
+}) {
+  return (
+    <button data-testid="fm-add-row" onClick={onAdd} style={addBtnStyle}>
+      <Plus size={11} />
+      {fmt({ id: 'settings.templates.fmAddRow', defaultMessage: 'Add Row' })}
+    </button>
+  );
 }
 
 /** Table + add-row button UI for the frontmatter grid. */
-function FrontmatterGrid({
-  rows,
-  isReadonly,
-  fmt,
-  onKeyChange,
-  onValueChange,
-  onRemove,
-  onAdd,
-  onInsertVariable,
-  onDragStart,
-  onDragOver,
-  onDrop,
-}: FrontmatterGridProps) {
+function FrontmatterGrid({ onAdd, isReadonly, ...rest }: FrontmatterGridProps) {
   return (
     <>
-      <table
-        style={{
-          width: '100%',
-          borderCollapse: 'collapse',
-          border: BORDER_DEFAULT,
-          borderRadius: 5,
-          overflow: 'hidden',
-          background: 'var(--wh-panel)',
-        }}
-      >
-        <FrontmatterTableHead
-          keyLabel={fmt({ id: 'settings.templates.fmKeyCol', defaultMessage: 'Key' })}
-          valueLabel={fmt({
-            id: 'settings.templates.fmValueCol',
-            defaultMessage: 'Value / Expression',
-          })}
-        />
-        <tbody>
-          {rows.map((row, i) => (
-            <FrontmatterRowItem
-              key={`${row.key}-${i}`}
-              row={row}
-              index={i}
-              isReadonly={isReadonly}
-              fmt={fmt}
-              onKeyChange={onKeyChange}
-              onValueChange={onValueChange}
-              onRemove={onRemove}
-              onInsertVariable={onInsertVariable}
-              onDragStart={onDragStart}
-              onDragOver={onDragOver}
-              onDrop={onDrop}
-            />
-          ))}
-        </tbody>
-      </table>
-      {!isReadonly ? (
-        <button
-          data-testid="fm-add-row"
-          onClick={onAdd}
-          style={{
-            alignSelf: 'flex-start',
-            background: 'transparent',
-            border: 0,
-            fontSize: 11.5,
-            color: 'var(--wh-muted)',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 4,
-            padding: '2px 0',
-          }}
-        >
-          <Plus size={11} />
-          {fmt({ id: 'settings.templates.fmAddRow', defaultMessage: 'Add Row' })}
-        </button>
-      ) : null}
+      <FrontmatterTable {...rest} isReadonly={isReadonly} />
+      {!isReadonly ? <AddRowButton fmt={rest.fmt} onAdd={onAdd} /> : null}
     </>
   );
 }
