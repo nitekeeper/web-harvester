@@ -157,4 +157,12 @@ describe('useDestinationHandlers — onSetPrimary', () => {
     });
     expect(useSettingsStore.getState().settings.defaultDestinationId).toBe('d1');
   });
+
+  it('works without a storage provider', async () => {
+    const { result } = renderHook(() => useDestinationHandlers());
+    await act(async () => {
+      await result.current.onSetPrimary('d1');
+    });
+    expect(useSettingsStore.getState().settings.defaultDestinationId).toBe('d1');
+  });
 });
