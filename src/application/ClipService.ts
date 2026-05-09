@@ -80,6 +80,8 @@ export interface Destination {
   readonly dirHandle: FileSystemDirectoryHandle;
   readonly fileNamePattern: string;
   readonly createdAt: number;
+  /** Unix milliseconds of the most recent clip saved to this destination. */
+  readonly lastUsed?: number;
 }
 
 // ── Notification payload ──────────────────────────────────────────────────────
@@ -111,10 +113,13 @@ export interface ITabAdapterPort {
 
 /**
  * Minimal destination storage port required by `ClipService`. Mirrors the
- * subset of `IDestinationStorage` that the clip flow uses (`getById`).
+ * subset of `IDestinationStorage` that the clip flow uses.
  */
 export interface IDestinationStoragePort {
+  /** Returns a destination by id, or `undefined` if no such id exists. */
   getById(id: string): Promise<Destination | undefined>;
+  /** Stamps a field on an existing destination. Silent no-op for unknown ids. */
+  update(id: string, changes: { lastUsed: number }): Promise<void>;
 }
 
 /**
@@ -302,6 +307,7 @@ export class ClipService implements IClipService {
     );
 
     const result: ClipResult = { fileName: savedName, destination: destination.label };
+    await this.destinationStorage.update(destination.id, { lastUsed: Date.now() });
     await this.hooks.afterClip.call(result);
     await this.hooks.afterSave.call({ filePath: `${destination.label}/${savedName}` });
     this.notifySuccess(savedName, destination.label);

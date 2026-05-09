@@ -157,6 +157,14 @@ describe('ClipService — save flow', () => {
       expect.objectContaining({ filePath: expect.any(String) }),
     );
   });
+
+  it('stamps lastUsed on the destination after a successful save', async () => {
+    await service.clip(defaultRequest);
+    expect(destinationStorage.update).toHaveBeenCalledWith(
+      'dest-1',
+      expect.objectContaining({ lastUsed: expect.any(Number) }),
+    );
+  });
 });
 
 describe('ClipService — filename sanitization', () => {
