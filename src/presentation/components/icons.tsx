@@ -37,19 +37,21 @@ export function WarnIcon() {
   );
 }
 
-/** Folder glyph — 14 × 14 px. Used in destination picker trigger and settings nav. */
+/** Folder-plus glyph — 14 × 14 px. Used in destination picker trigger and settings nav. */
 export function FolderIcon() {
   return (
     <IconSvg strokeWidth={2} joinRound>
       <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+      <line x1="12" y1="11" x2="12" y2="17" />
+      <line x1="9" y1="14" x2="15" y2="14" />
     </IconSvg>
   );
 }
 
-/** File glyph — 14 × 14 px. Used in template picker trigger and settings nav. */
+/** File glyph — 13 × 13 px. Used in template picker trigger and settings nav. */
 export function FileIcon() {
   return (
-    <IconSvg strokeWidth={2} joinRound>
+    <IconSvg strokeWidth={2} joinRound size={13}>
       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
       <polyline points="14 2 14 8 20 8" />
     </IconSvg>
@@ -86,5 +88,59 @@ export function AboutIcon() {
       <line x1="12" y1="16" x2="12" y2="12" />
       <line x1="12" y1="8" x2="12.01" y2="8" />
     </IconSvg>
+  );
+}
+
+/** Props for icon components that need external className (e.g. for rotation). */
+interface ClassedIconProps {
+  /** Optional CSS class names applied to the SVG element. */
+  readonly className?: string;
+  /** Optional test-id forwarded to the SVG element. */
+  readonly 'data-testid'?: string;
+}
+
+/** Chevron-down disclosure arrow — 11 × 11 px, stroke 2.5. Dropdown section toggle. */
+export function ChevIcon({ className, 'data-testid': testId }: ClassedIconProps = {}) {
+  return (
+    <svg
+      width="11"
+      height="11"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className={className}
+      data-testid={testId}
+    >
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  );
+}
+
+/** Plus cross — 12 × 12 px, stroke 2.5. "New" / "Add" inline buttons. */
+export function PlusIcon() {
+  return (
+    <IconSvg strokeWidth={2.5} size={12}>
+      <path d="M12 5v14M5 12h14" />
+    </IconSvg>
+  );
+}
+
+/** Filled downward triangle — 9 × 9 px. Compact menus and select triggers. */
+export function CaretDownIcon({ className }: { readonly className?: string } = {}) {
+  return (
+    <svg
+      width="9"
+      height="9"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+      className={className}
+    >
+      <path d="M7 10l5 5 5-5z" />
+    </svg>
   );
 }

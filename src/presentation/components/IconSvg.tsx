@@ -16,21 +16,23 @@ export interface IconSvgProps {
   readonly joinRound?: boolean;
   /** Optional inline style — used by the spinner for its rotation animation. */
   readonly style?: CSSProperties;
+  /** Rendered pixel size for width and height; defaults to 14. */
+  readonly size?: number;
   /** SVG body — `<path>`, `<polyline>`, `<line>`, etc. */
   readonly children: ReactNode;
 }
 
 /**
- * Shared 14 × 14 SVG wrapper with the attributes common to every inline glyph
- * rendered in the popup chrome. Sets viewBox to `0 0 24 24`, `fill="none"`,
- * `stroke="currentColor"`, and rounded line caps; consumers pass `strokeWidth`
- * and the path body via `children`.
+ * Shared SVG wrapper with the attributes common to every inline glyph rendered
+ * in the popup chrome. Sets viewBox to `0 0 24 24`, `fill="none"`,
+ * `stroke="currentColor"`, and rounded line caps; consumers pass `strokeWidth`,
+ * optional `size` (default 14), and the path body via `children`.
  */
-export function IconSvg({ strokeWidth, joinRound, style, children }: IconSvgProps) {
+export function IconSvg({ strokeWidth, joinRound, style, size = 14, children }: IconSvgProps) {
   return (
     <svg
-      width="14"
-      height="14"
+      width={size}
+      height={size}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"

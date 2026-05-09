@@ -42,10 +42,10 @@ export interface ActionFooterProps {
   readonly saveDestinationLabel: string | null;
 }
 
-/** Section-picker glyph — 4-cell grid pattern. */
+/** Section-picker glyph — 4-cell grid pattern, 13 × 13 px. */
 function PickerIcon() {
   return (
-    <IconSvg strokeWidth={2} joinRound>
+    <IconSvg strokeWidth={2} joinRound size={13}>
       <rect x="3" y="3" width="18" height="18" rx="2" />
       <line x1="3" y1="12" x2="21" y2="12" />
       <line x1="12" y1="3" x2="12" y2="21" />
@@ -53,20 +53,20 @@ function PickerIcon() {
   );
 }
 
-/** Highlight-mode glyph — marker-pen outline. */
+/** Highlight-mode glyph — marker-pen outline, 13 × 13 px. */
 function HighlightIcon() {
   return (
-    <IconSvg strokeWidth={2} joinRound>
+    <IconSvg strokeWidth={2} joinRound size={13}>
       <path d="M9 11l-6 6v4h4l6-6" />
       <path d="M22 6l-4-4-9 9 4 4 9-9z" />
     </IconSvg>
   );
 }
 
-/** Reader-mode glyph — open book outline. */
+/** Reader-mode glyph — open book outline, 13 × 13 px. */
 function ReaderIcon() {
   return (
-    <IconSvg strokeWidth={2} joinRound>
+    <IconSvg strokeWidth={2} joinRound size={13}>
       <path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z" />
       <path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z" />
     </IconSvg>

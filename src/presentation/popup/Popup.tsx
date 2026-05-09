@@ -1,8 +1,8 @@
 // src/presentation/popup/Popup.tsx
 
-import { ChevronDownIcon } from 'lucide-react';
 import { useCallback, useState } from 'react';
 
+import { ChevIcon } from '@presentation/components/icons';
 import { useFormatMessage } from '@presentation/hooks/useFormatMessage';
 import { parseFrontmatterFields } from '@presentation/popup/lib/parseFrontmatter';
 import { type PopupStoreState, usePopupStore } from '@presentation/stores/usePopupStore';
@@ -76,9 +76,9 @@ function PropertiesSectionHeader({
       aria-controls="properties-section-body"
     >
       <span className="flex items-center gap-1">
-        <ChevronDownIcon
+        <ChevIcon
           data-testid="properties-chevron"
-          className={`size-3 text-muted-foreground transition-transform ${isExpanded ? '' : 'rotate-180'}`}
+          className={`text-muted-foreground transition-transform ${isExpanded ? '' : 'rotate-180'}`}
         />
         <span id="popup-properties-label" className={LABEL_CLASS}>
           {fmt({ id: 'popup.propertiesLabel', defaultMessage: 'PROPERTIES' })}
