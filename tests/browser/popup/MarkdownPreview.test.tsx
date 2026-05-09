@@ -33,4 +33,9 @@ describe('MarkdownPreview', () => {
     render(<MarkdownPreview markdown="" isPreviewing={false} />);
     expect(screen.getByText('Preview will appear here')).not.toBeNull();
   });
+
+  it('applies preview-scroll class to the pre element for custom scrollbar styling', () => {
+    render(<MarkdownPreview markdown="# Hello" />);
+    expect(screen.getByTestId('markdown-preview').classList.contains('preview-scroll')).toBe(true);
+  });
 });

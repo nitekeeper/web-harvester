@@ -237,3 +237,21 @@
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* Thin, styled scrollbar for the markdown preview — consistent on Windows and macOS in Chromium */
+.preview-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+
+.preview-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.preview-scroll::-webkit-scrollbar-thumb {
+  background: oklch(0.556 0 0 / 40%);
+  border-radius: 9999px;
+}
+
+.preview-scroll::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.556 0 0 / 70%);
+}
