@@ -146,3 +146,15 @@ describe('useDestinationHandlers — onRename', () => {
     expect(useSettingsStore.getState().destinations).toHaveLength(1);
   });
 });
+
+describe('useDestinationHandlers — onSetPrimary', () => {
+  it('updates defaultDestinationId in the settings store', async () => {
+    useSettingsStore.getState().updateSettings({ defaultDestinationId: null });
+    const storage = makeStorage();
+    const { result } = renderHook(() => useDestinationHandlers(), { wrapper: wrapper(storage) });
+    await act(async () => {
+      await result.current.onSetPrimary('d1');
+    });
+    expect(useSettingsStore.getState().settings.defaultDestinationId).toBe('d1');
+  });
+});

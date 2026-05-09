@@ -1,7 +1,7 @@
 // src/presentation/settings/useDestinationHandlers.ts
 //
 // Hook that composes the FSA picker, the destination storage facade, and
-// the global settings store into the three async handlers consumed by
+// the global settings store into the four async handlers consumed by
 // `DestinationsSection`. The storage facade is read from
 // `DestinationStorageContext` so the settings composition root can plug it
 // in once at boot time (see ADR-022).
@@ -17,9 +17,8 @@ const logger = createLogger('use-destination-handlers');
 
 /**
  * Async handlers used by `DestinationsSection` — one each for the Add,
- * Remove, and Rename flows. Every handler refreshes the destinations slice
- * in the global settings store after its mutation completes so the UI stays
- * in sync with the IDB-backed truth.
+ * Remove, Rename, and SetPrimary flows. Every storage-mutating handler
+ * refreshes the destinations slice in the global settings store afterward.
  */
 export interface DestinationHandlers {
   /** Opens the FSA picker, persists the selection, refreshes the store. */
@@ -28,11 +27,13 @@ export interface DestinationHandlers {
   onRemove: (id: string) => Promise<void>;
   /** Renames the destination identified by `id` to `label`, refreshes the store. */
   onRename: (id: string, label: string) => Promise<void>;
+  /** Sets the destination identified by `id` as the primary destination. */
+  onSetPrimary: (id: string) => Promise<void>;
 }
 
 /**
  * Refreshes the `destinations` slice of the settings store from the supplied
- * storage facade. Extracted so the three handlers below stay short and the
+ * storage facade. Extracted so the handlers below stay short and the
  * post-mutation reload step is named explicitly.
  */
 async function refresh(storage: IDestinationPort): Promise<void> {
@@ -48,9 +49,6 @@ async function refresh(storage: IDestinationPort): Promise<void> {
  * named `AbortError`). Any other rejection is re-thrown.
  */
 async function pickAndAdd(storage: IDestinationPort): Promise<void> {
-  // `showDirectoryPicker` is a standard browser API but is not yet in the
-  // TypeScript DOM lib; reach for it via `Reflect.get` so the call does not
-  // require an ambient declaration.
   const picker = Reflect.get(window, 'showDirectoryPicker') as
     | ((opts: { mode: 'readwrite' }) => Promise<FileSystemDirectoryHandle>)
     | undefined;
@@ -74,10 +72,9 @@ async function pickAndAdd(storage: IDestinationPort): Promise<void> {
 
 /**
  * Returns memoised destination handlers wired to the storage facade in
- * `DestinationStorageContext`. When no provider is mounted the handlers
- * log a warning and return without mutating state, so render trees that do
- * not need destination management (e.g. unit tests that mount only one
- * section) stay safe to use.
+ * `DestinationStorageContext`. When no provider is mounted the storage-
+ * dependent handlers log a warning and return without mutating state, so
+ * render trees that do not need destination management stay safe to use.
  */
 export function useDestinationHandlers(): DestinationHandlers {
   const storage = useContext(DestinationStorageContext);
@@ -114,5 +111,9 @@ export function useDestinationHandlers(): DestinationHandlers {
     [storage],
   );
 
-  return { onAdd, onRemove, onRename };
+  const onSetPrimary = useCallback(async (id: string): Promise<void> => {
+    useSettingsStore.getState().updateSettings({ defaultDestinationId: id });
+  }, []);
+
+  return { onAdd, onRemove, onRename, onSetPrimary };
 }
