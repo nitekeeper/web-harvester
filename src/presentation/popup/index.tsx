@@ -24,7 +24,13 @@ import { useReaderStore } from '@presentation/stores/useReaderStore';
 import { useSettingsStore } from '@presentation/stores/useSettingsStore';
 import { bootstrapTheme } from '@presentation/theme/bootstrapTheme';
 import { createLogger } from '@shared/logger';
-import { MSG_START_HIGHLIGHT, MSG_STOP_HIGHLIGHT, MSG_TOGGLE_READER } from '@shared/messages';
+import {
+  MSG_START_HIGHLIGHT,
+  MSG_START_PICKER,
+  MSG_STOP_HIGHLIGHT,
+  MSG_STOP_PICKER,
+  MSG_TOGGLE_READER,
+} from '@shared/messages';
 
 import { Popup } from './Popup';
 import { triggerPreview } from './triggerPreview';
@@ -57,6 +63,20 @@ function makeHighlightToggleHandler(adapter: ChromeAdapter): () => void {
   };
 }
 
+/** Builds the picker-toggle handler wired to the given adapter. */
+function makePickerToggleHandler(adapter: ChromeAdapter): () => void {
+  return (): void => {
+    const current = usePopupStore.getState().isPickerActive;
+    usePopupStore.getState().setPickerActive(!current);
+    const msg = current
+      ? { type: MSG_STOP_PICKER }
+      : { type: MSG_START_PICKER, mode: 'exclude' as const };
+    adapter.sendMessage(msg).catch((err: unknown) => {
+      logger.error('picker toggle message failed', err);
+    });
+  };
+}
+
 /** Mounts the React tree into `rootEl` and fires the initial preview. */
 function mountPopup(rootEl: HTMLElement, adapter: ChromeAdapter, onSave: () => void): void {
   bootstrapTheme().catch((err: unknown) => {
@@ -71,6 +91,7 @@ function mountPopup(rootEl: HTMLElement, adapter: ChromeAdapter, onSave: () => v
         }}
         onReaderToggle={makeReaderToggleHandler(adapter)}
         onHighlightToggle={makeHighlightToggleHandler(adapter)}
+        onPickerToggle={makePickerToggleHandler(adapter)}
         onTemplateChange={() => {
           triggerPreview(adapter, logger).catch((err: unknown) => {
             logger.error('template-change preview failed', err);

@@ -155,3 +155,46 @@ export function isHighlightModeExitedMessage(msg: unknown): msg is HighlightMode
     (msg as Record<string, unknown>)['type'] === MSG_HIGHLIGHT_MODE_EXITED
   );
 }
+
+/** Type discriminant for the start-picker IPC message. */
+export const MSG_START_PICKER = 'start-picker' as const;
+
+/** Type discriminant for the stop-picker IPC message. */
+export const MSG_STOP_PICKER = 'stop-picker' as const;
+
+/**
+ * Message sent from the popup to the background to activate the section
+ * picker on the active tab. Always uses exclude mode from the popup.
+ */
+export interface StartPickerMessage {
+  readonly type: typeof MSG_START_PICKER;
+  readonly mode: 'exclude' | 'include';
+}
+
+/**
+ * Message sent from the popup to the background to deactivate the section
+ * picker on the active tab.
+ */
+export interface StopPickerMessage {
+  readonly type: typeof MSG_STOP_PICKER;
+}
+
+/** Type guard for {@link StartPickerMessage}. */
+export function isStartPickerMessage(msg: unknown): msg is StartPickerMessage {
+  return (
+    typeof msg === 'object' &&
+    msg !== null &&
+    (msg as Record<string, unknown>)['type'] === MSG_START_PICKER &&
+    ((msg as Record<string, unknown>)['mode'] === 'exclude' ||
+      (msg as Record<string, unknown>)['mode'] === 'include')
+  );
+}
+
+/** Type guard for {@link StopPickerMessage}. */
+export function isStopPickerMessage(msg: unknown): msg is StopPickerMessage {
+  return (
+    typeof msg === 'object' &&
+    msg !== null &&
+    (msg as Record<string, unknown>)['type'] === MSG_STOP_PICKER
+  );
+}

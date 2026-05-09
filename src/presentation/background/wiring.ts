@@ -21,11 +21,14 @@ import {
   isHighlightModeExitedMessage,
   isPreviewPageMessage,
   isStartHighlightMessage,
+  isStartPickerMessage,
   isStopHighlightMessage,
+  isStopPickerMessage,
   isToggleReaderMessage,
   type ClipPageMessage,
   type PreviewPageMessage,
   type PreviewPageResponse,
+  type StartPickerMessage,
   type ToggleReaderMessage,
 } from '@shared/messages';
 import { normalizeError } from '@shared/normalizeError';
@@ -201,21 +204,37 @@ export interface IWiringStoragePort {
   setLocal(key: string, value: unknown): Promise<void>;
 }
 
+/** Storage key for the shared popup state persisted by the background. */
+const POPUP_STATE_KEY = 'popup-state';
+
 /**
- * Sends a highlight control message to the active tab. Returns false immediately
- * (calling `sendResponse({ ok: false })`) when there is no active tab id.
+ * Resolves the id of the currently active tab. Calls `sendResponse({ ok: false })`
+ * and returns `undefined` when there is no active tab or its id is missing.
  */
-async function sendHighlightCommandToTab(
-  adapter: Pick<ITabAdapter, 'getActiveTab' | 'sendMessageToTab'>,
-  msgType: 'START_HIGHLIGHT' | 'STOP_HIGHLIGHT',
+async function resolveActiveTabId(
+  adapter: Pick<ITabAdapter, 'getActiveTab'>,
   sendResponse: (r: unknown) => void,
-): Promise<void> {
+): Promise<number | undefined> {
   const tab = await adapter.getActiveTab();
   if (tab?.id === undefined) {
     sendResponse({ ok: false });
-    return;
+    return undefined;
   }
-  await adapter.sendMessageToTab(tab.id, { type: msgType });
+  return tab.id;
+}
+
+/**
+ * Sends a typed command message to the active tab. Responds `ok: false` when
+ * there is no active tab id, or `ok: true` after the message is delivered.
+ */
+async function sendCommandToTab(
+  adapter: Pick<ITabAdapter, 'getActiveTab' | 'sendMessageToTab'>,
+  msgType: string,
+  sendResponse: (r: unknown) => void,
+): Promise<void> {
+  const tabId = await resolveActiveTabId(adapter, sendResponse);
+  if (tabId === undefined) return;
+  await adapter.sendMessageToTab(tabId, { type: msgType });
   sendResponse({ ok: true });
 }
 
@@ -227,7 +246,7 @@ export async function handleStartHighlightMessage(
   adapter: Pick<ITabAdapter, 'getActiveTab' | 'sendMessageToTab'>,
   sendResponse: (r: unknown) => void,
 ): Promise<void> {
-  await sendHighlightCommandToTab(adapter, 'START_HIGHLIGHT', sendResponse);
+  await sendCommandToTab(adapter, 'START_HIGHLIGHT', sendResponse);
 }
 
 /**
@@ -238,7 +257,7 @@ export async function handleStopHighlightMessage(
   adapter: Pick<ITabAdapter, 'getActiveTab' | 'sendMessageToTab'>,
   sendResponse: (r: unknown) => void,
 ): Promise<void> {
-  await sendHighlightCommandToTab(adapter, 'STOP_HIGHLIGHT', sendResponse);
+  await sendCommandToTab(adapter, 'STOP_HIGHLIGHT', sendResponse);
 }
 
 /**
@@ -251,11 +270,57 @@ export async function handleHighlightModeExitedMessage(
   storage: IWiringStoragePort,
   sendResponse: (r: unknown) => void,
 ): Promise<void> {
-  const raw = await storage.getLocal('popup-state');
+  const raw = await storage.getLocal(POPUP_STATE_KEY);
   const current: Record<string, unknown> =
     typeof raw === 'object' && raw !== null ? (raw as Record<string, unknown>) : {};
-  await storage.setLocal('popup-state', { ...current, isHighlightActive: false });
+  await storage.setLocal(POPUP_STATE_KEY, { ...current, isHighlightActive: false });
   sendResponse({ ok: true });
+}
+
+/**
+ * Sends START_PICKER to the active tab's content script. The picker result is
+ * handled asynchronously — the background responds to the popup immediately
+ * and stores the result when the user confirms or cancels.
+ */
+export async function handleStartPickerMessage(
+  adapter: Pick<ITabAdapter, 'getActiveTab' | 'sendMessageToTab'>,
+  storage: IWiringStoragePort,
+  msg: StartPickerMessage,
+  sendResponse: (r: unknown) => void,
+): Promise<void> {
+  const tabId = await resolveActiveTabId(adapter, sendResponse);
+  if (tabId === undefined) return;
+  // Fire the picker command and handle result async so we don't hold the
+  // popup message channel open for the full duration of picker interaction.
+  adapter
+    .sendMessageToTab(tabId, { type: 'START_PICKER', mode: msg.mode })
+    .then(async (response) => {
+      const r = response as { type: string; result?: unknown };
+      const raw = await storage.getLocal(POPUP_STATE_KEY);
+      const current: Record<string, unknown> =
+        typeof raw === 'object' && raw !== null ? (raw as Record<string, unknown>) : {};
+      const updates: Record<string, unknown> = { ...current, isPickerActive: false };
+      if (r.type === 'PICKER_DONE') {
+        const result = r.result as { excludedXPaths?: string[]; includedXPaths?: string[] };
+        updates['pickerResult'] = { excludedXPaths: result.excludedXPaths ?? [] };
+      }
+      await storage.setLocal(POPUP_STATE_KEY, updates);
+    })
+    .catch((err: unknown) => {
+      logger.error('picker result handling failed', err);
+    });
+  sendResponse({ ok: true });
+}
+
+/**
+ * Sends STOP_PICKER to the active tab's content script, tearing down any
+ * active picker overlay.
+ */
+export async function handleStopPickerMessage(
+  adapter: Pick<ITabAdapter, 'getActiveTab' | 'sendMessageToTab'>,
+  sendResponse: (r: unknown) => void,
+): Promise<void> {
+  await sendCommandToTab(adapter, 'STOP_PICKER', sendResponse);
 }
 
 /**
@@ -302,6 +367,31 @@ function dispatchHighlightMessage(
 }
 
 /**
+ * Dispatches picker-related messages to their handlers. Returns `true` if the
+ * message was handled, `false` otherwise.
+ */
+function dispatchPickerMessage(
+  msg: unknown,
+  sendResponse: (r: unknown) => void,
+  adapter: MessageDispatchAdapter,
+  storageAdapter: IWiringStoragePort,
+): boolean {
+  if (isStartPickerMessage(msg)) {
+    handleStartPickerMessage(adapter, storageAdapter, msg, sendResponse).catch((err: unknown) => {
+      logger.error('start-picker handler failed', err);
+    });
+    return true;
+  }
+  if (isStopPickerMessage(msg)) {
+    handleStopPickerMessage(adapter, sendResponse).catch((err: unknown) => {
+      logger.error('stop-picker handler failed', err);
+    });
+    return true;
+  }
+  return false;
+}
+
+/**
  * Dispatches a single incoming message to the appropriate handler.
  * Extracted from {@link wireMessageListenerDeferred} to keep each function
  * within the 40-line limit.
@@ -333,7 +423,8 @@ function dispatchMessage(
     });
     return;
   }
-  dispatchHighlightMessage(msg, sendResponse, adapter, storageAdapter);
+  if (dispatchHighlightMessage(msg, sendResponse, adapter, storageAdapter)) return;
+  dispatchPickerMessage(msg, sendResponse, adapter, storageAdapter);
 }
 
 /**

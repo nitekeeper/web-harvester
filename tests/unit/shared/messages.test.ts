@@ -11,6 +11,10 @@ import {
   MSG_START_HIGHLIGHT,
   MSG_STOP_HIGHLIGHT,
   MSG_HIGHLIGHT_MODE_EXITED,
+  isStartPickerMessage,
+  isStopPickerMessage,
+  MSG_START_PICKER,
+  MSG_STOP_PICKER,
 } from '@shared/messages';
 import { defaultReaderSettings } from '@shared/reader-settings';
 
@@ -19,7 +23,7 @@ describe('isClipPageMessage', () => {
     expect(isClipPageMessage({ type: MSG_CLIP, destinationId: 'dest-1' })).toBe(true);
   });
 
-  it('returns false for null', () => {
+  it(NULL_TEST, () => {
     expect(isClipPageMessage(null)).toBe(false);
   });
 
@@ -91,6 +95,7 @@ describe('isToggleReaderMessage — invalid messages', () => {
 
 const OTHER_TYPE = 'other';
 const INVALID_TYPE_TEST = 'returns false for other types';
+const NULL_TEST = 'returns false for null';
 
 describe('isStartHighlightMessage', () => {
   it('returns true for a valid start-highlight message', () => {
@@ -101,7 +106,7 @@ describe('isStartHighlightMessage', () => {
     expect(isStartHighlightMessage({ type: OTHER_TYPE })).toBe(false);
   });
 
-  it('returns false for null', () => {
+  it(NULL_TEST, () => {
     expect(isStartHighlightMessage(null)).toBe(false);
   });
 });
@@ -123,5 +128,41 @@ describe('isHighlightModeExitedMessage', () => {
 
   it(INVALID_TYPE_TEST, () => {
     expect(isHighlightModeExitedMessage({ type: OTHER_TYPE })).toBe(false);
+  });
+});
+
+describe('isStartPickerMessage', () => {
+  it('returns true for a valid start-picker message with mode exclude', () => {
+    expect(isStartPickerMessage({ type: MSG_START_PICKER, mode: 'exclude' })).toBe(true);
+  });
+
+  it('returns true for a valid start-picker message with mode include', () => {
+    expect(isStartPickerMessage({ type: MSG_START_PICKER, mode: 'include' })).toBe(true);
+  });
+
+  it('returns false when mode is missing', () => {
+    expect(isStartPickerMessage({ type: MSG_START_PICKER })).toBe(false);
+  });
+
+  it('returns false when type is wrong', () => {
+    expect(isStartPickerMessage({ type: OTHER_TYPE, mode: 'exclude' })).toBe(false);
+  });
+
+  it(NULL_TEST, () => {
+    expect(isStartPickerMessage(null)).toBe(false);
+  });
+});
+
+describe('isStopPickerMessage', () => {
+  it('returns true for { type: MSG_STOP_PICKER }', () => {
+    expect(isStopPickerMessage({ type: MSG_STOP_PICKER })).toBe(true);
+  });
+
+  it('returns false when type is wrong', () => {
+    expect(isStopPickerMessage({ type: OTHER_TYPE })).toBe(false);
+  });
+
+  it(NULL_TEST, () => {
+    expect(isStopPickerMessage(null)).toBe(false);
   });
 });

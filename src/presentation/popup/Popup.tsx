@@ -29,6 +29,8 @@ export interface PopupProps {
   readonly onReaderToggle?: () => void;
   /** Called when the user clicks the highlight toggle; triggers IPC to background. Defaults to no-op. */
   readonly onHighlightToggle?: () => void;
+  /** Called when the user clicks the picker toggle; triggers IPC to background. Defaults to no-op. */
+  readonly onPickerToggle?: () => void;
   /** Called when the selected template changes; triggers a live-preview re-fetch. Defaults to no-op. */
   readonly onTemplateChange?: () => void;
 }
@@ -125,12 +127,7 @@ function DestinationTemplateGroups({ popup, onTemplateChange }: DestinationTempl
 /** Reads the slice of {@link usePopupStore} that the popup root cares about. */
 function usePopupBindings() {
   const popup = usePopupStore();
-  const { isPickerActive, setPickerActive } = popup;
-  const handlePickerToggle = useCallback(
-    () => setPickerActive(!isPickerActive),
-    [isPickerActive, setPickerActive],
-  );
-  return { popup, handlePickerToggle };
+  return { popup };
 }
 
 /** Props for the {@link PopupScrollBody} sub-component. */
@@ -188,10 +185,11 @@ export function Popup({
   onSettings,
   onReaderToggle = NOOP_TOGGLE,
   onHighlightToggle = NOOP_TOGGLE,
+  onPickerToggle = NOOP_TOGGLE,
   onTemplateChange,
 }: PopupProps) {
   const { theme, handleTheme } = useSettingsBindings();
-  const { popup, handlePickerToggle } = usePopupBindings();
+  const { popup } = usePopupBindings();
 
   return (
     <div className="w-80 min-h-48 bg-background text-foreground flex flex-col">
@@ -204,7 +202,7 @@ export function Popup({
         isPickerActive={popup.isPickerActive}
         isHighlightActive={popup.isHighlightActive}
         isReaderActive={popup.isReaderActive}
-        onPickerToggle={handlePickerToggle}
+        onPickerToggle={onPickerToggle}
         onHighlightToggle={onHighlightToggle}
         onReaderToggle={onReaderToggle}
         saveStatus={popup.saveStatus}
