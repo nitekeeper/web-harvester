@@ -10,6 +10,7 @@ import { TemplateSelector } from '@presentation/popup/components/TemplateSelecto
 import type { TemplateConfig } from '@shared/types';
 
 const NOOP = (): void => undefined;
+const TESTID = 'template-selector';
 
 const sampleTemplates: readonly TemplateConfig[] = [
   {
@@ -45,13 +46,25 @@ describe('TemplateSelector', () => {
 
   it('renders the trigger without justify-between so the selected value is left-aligned', () => {
     render(<TemplateSelector templates={sampleTemplates} selectedId="t1" onSelect={NOOP} />);
-    const trigger = screen.getByTestId('template-selector');
+    const trigger = screen.getByTestId(TESTID);
     expect(trigger.classList.contains('justify-between')).toBe(false);
   });
 
   it('renders the trigger with rounded-xs for the small-input-shell radius', () => {
     render(<TemplateSelector templates={sampleTemplates} selectedId="t1" onSelect={NOOP} />);
-    const trigger = screen.getByTestId('template-selector');
+    const trigger = screen.getByTestId(TESTID);
     expect(trigger.classList.contains('rounded-xs')).toBe(true);
+  });
+
+  it('select trigger carries dark:bg-wh-panel for the panel background in dark mode', () => {
+    render(<TemplateSelector templates={sampleTemplates} selectedId="t1" onSelect={NOOP} />);
+    const trigger = screen.getByTestId(TESTID);
+    expect(trigger.className).toContain('dark:bg-wh-panel');
+  });
+
+  it('select trigger carries dark:hover:bg-wh-hover for hover state in dark mode', () => {
+    render(<TemplateSelector templates={sampleTemplates} selectedId="t1" onSelect={NOOP} />);
+    const trigger = screen.getByTestId(TESTID);
+    expect(trigger.className).toContain('dark:hover:bg-wh-hover');
   });
 });
