@@ -74,7 +74,7 @@ function ReaderIcon() {
 }
 
 /** Shared Tailwind class string for the three footer mode-toggle icon buttons. */
-const TOGGLE_BTN_CLASS = 'shrink-0';
+const TOGGLE_BTN_CLASS = 'shrink-0 rounded';
 
 /** Props for {@link ToggleIconButton}. */
 interface ToggleIconButtonProps {
@@ -173,7 +173,7 @@ function ClipButton({ isSaving, isDisabled, onSave, fmt }: ClipButtonProps) {
   return (
     <Button
       data-testid="save-button"
-      className="flex-1"
+      className="flex-1 rounded"
       disabled={isDisabled || isSaving}
       onClick={onSave}
     >

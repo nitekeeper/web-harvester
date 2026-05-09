@@ -91,10 +91,14 @@ function handleHighlighterMessage(
   sendResponse: (response: unknown) => void,
 ): boolean {
   if (message.type === 'START_HIGHLIGHT') {
-    activateHighlighter().catch((err: unknown) => {
-      logger.error('highlight activate failed', err);
-      sendResponse({ ok: false });
-    });
+    activateHighlighter()
+      .then(() => {
+        sendResponse({ ok: true });
+      })
+      .catch((err: unknown) => {
+        logger.error('highlight activate failed', err);
+        sendResponse({ ok: false });
+      });
     return true; // async response
   }
 

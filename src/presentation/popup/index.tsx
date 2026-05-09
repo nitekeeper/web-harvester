@@ -117,6 +117,14 @@ async function init(): Promise<void> {
     bootstrapStore(adapter, 'popup-state', usePopupStore),
   ]);
 
+  const { selectedTemplateId } = usePopupStore.getState();
+  if (selectedTemplateId === null) {
+    const { settings } = useSettingsStore.getState();
+    if (settings.defaultTemplateId) {
+      usePopupStore.setState({ selectedTemplateId: settings.defaultTemplateId });
+    }
+  }
+
   const idbStorage = await createDestinationStorage();
   const destinations = await idbStorage.getAll();
   useSettingsStore.setState({ destinations });
