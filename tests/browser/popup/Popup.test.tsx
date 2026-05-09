@@ -22,9 +22,9 @@ afterEach(() => {
 });
 
 describe('Popup — structure', () => {
-  it('renders the toolbar slot', () => {
+  it('does not render the toolbar slot when no plugins are registered', () => {
     render(<Popup onSave={() => undefined} onSettings={() => undefined} />);
-    expect(document.querySelector('[data-testid="toolbar-slot"]')).not.toBeNull();
+    expect(document.querySelector('[data-testid="toolbar-slot"]')).toBeNull();
   });
 
   it('renders the destination selector', () => {
