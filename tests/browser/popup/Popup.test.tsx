@@ -79,6 +79,15 @@ describe('Popup — accessibility', () => {
       expect(group?.getAttribute('aria-labelledby')).toBe(span.id);
     }
   });
+
+  it('properties toggle button has aria-controls pointing to the section body', () => {
+    render(<Popup onSave={() => undefined} onSettings={() => undefined} />);
+    const btn = document.querySelector('[data-testid="properties-toggle"]');
+    expect(btn).not.toBeNull();
+    expect(btn?.getAttribute('aria-controls')).toBe('properties-section-body');
+    const body = document.getElementById('properties-section-body');
+    expect(body).not.toBeNull();
+  });
 });
 
 describe('Popup — interactions', () => {

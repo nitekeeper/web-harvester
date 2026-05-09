@@ -257,11 +257,11 @@ Settings state slice — global settings record, destinations list, templates li
 
 Synchronous i18n stub for the popup and settings React trees. Returns the descriptor's `defaultMessage` when supplied, otherwise the `id` verbatim — so component layouts can render human-readable English before the real `formatMessage` from `@domain/i18n/i18n` is wired by the composition root (see ADR-018). Components call it as `fmt({ id: 'foo', defaultMessage: 'Foo' })`, matching react-intl's descriptor shape one-to-one.
 
-| Name                 | Kind      | Description                                                                                                                                                                                                               |
-| -------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `MessageDescriptor`  | Interface | `{ readonly id: string; readonly defaultMessage?: string }` — minimal descriptor accepted by the stub. Mirrors a subset of react-intl's descriptor shape; `defaultMessage` is optional and used by the stub when present. |
-| `FormatMessageFn`    | Type      | `(descriptor: MessageDescriptor) => string` — return type of `useFormatMessage`.                                                                                                                                          |
-| `useFormatMessage()` | Hook      | Returns the stub formatter. Returns `defaultMessage` when supplied, otherwise the descriptor's `id` verbatim, so component layouts can be built and tested before locale wiring lands.                                    |
+| Name                 | Kind      | Description                                                                                                                                                                                      |
+| -------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `MessageDescriptor`  | Interface | `{ readonly id: string; readonly defaultMessage?: string; readonly values?: Record<string, string \| number> }` — minimal descriptor; `values` carries interpolation variables like `{ count }`. |
+| `FormatMessageFn`    | Type      | `(descriptor: MessageDescriptor) => string` — return type of `useFormatMessage`.                                                                                                                 |
+| `useFormatMessage()` | Hook      | Returns the stub formatter. Returns `defaultMessage` when supplied, otherwise the descriptor's `id` verbatim, so layouts can be built and tested before locale wiring lands.                     |
 
 ### `src/presentation/hooks/usePluginSlot.tsx`
 

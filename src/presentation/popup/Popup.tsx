@@ -73,6 +73,7 @@ function PropertiesSectionHeader({
       className="flex items-center justify-between w-full text-left"
       aria-expanded={isExpanded}
       aria-labelledby="popup-properties-label"
+      aria-controls="properties-section-body"
     >
       <span className="flex items-center gap-1">
         <ChevronDownIcon
@@ -122,7 +123,7 @@ function PropertiesSection({ markdown, onMarkdownChange, isPreviewing }: Propert
         onToggle={handleToggle}
       />
       {isExpanded && (
-        <div data-testid="properties-body">
+        <div id="properties-section-body" data-testid="properties-body">
           <PropertiesEditor
             markdown={markdown}
             onMarkdownChange={onMarkdownChange}
