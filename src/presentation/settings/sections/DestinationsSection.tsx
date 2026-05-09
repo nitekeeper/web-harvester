@@ -43,15 +43,34 @@ const MONTHS = [
   'Dec',
 ] as const;
 
-function formatLastUsed(lastUsed: number, now: number): string {
+function formatLastUsed(
+  lastUsed: number,
+  now: number,
+  fmt: (msg: {
+    id: string;
+    defaultMessage: string;
+    values?: Record<string, string | number>;
+  }) => string,
+): string {
   const diffMs = now - lastUsed;
   const diffSec = Math.floor(diffMs / 1000);
   const diffMin = Math.floor(diffSec / 60);
   const diffHour = Math.floor(diffMin / 60);
 
-  if (diffSec < 60) return 'last used just now';
-  if (diffMin < 60) return `last used ${diffMin} min ago`;
-  if (diffHour < 24) return `last used ${diffHour} hour${diffHour === 1 ? '' : 's'} ago`;
+  if (diffSec < 60)
+    return fmt({ id: 'destinations.lastUsed.justNow', defaultMessage: 'last used just now' });
+  if (diffMin < 60)
+    return fmt({
+      id: 'destinations.lastUsed.minAgo',
+      defaultMessage: `last used ${diffMin} min ago`,
+      values: { n: diffMin },
+    });
+  if (diffHour < 24)
+    return fmt({
+      id: 'destinations.lastUsed.hourAgo',
+      defaultMessage: `last used ${diffHour} hour${diffHour === 1 ? '' : 's'} ago`,
+      values: { n: diffHour },
+    });
 
   const date = new Date(lastUsed);
   const nowDate = new Date(now);
@@ -63,14 +82,22 @@ function formatLastUsed(lastUsed: number, now: number): string {
     date.getMonth() === yesterday.getMonth() &&
     date.getDate() === yesterday.getDate()
   ) {
-    return 'last used yesterday';
+    return fmt({ id: 'destinations.lastUsed.yesterday', defaultMessage: 'last used yesterday' });
   }
 
-  const monthName = MONTHS[date.getMonth()];
+  const monthName = MONTHS[date.getMonth()] as string;
   if (date.getFullYear() === nowDate.getFullYear()) {
-    return `last used ${monthName} ${date.getDate()}`;
+    return fmt({
+      id: 'destinations.lastUsed.sameYear',
+      defaultMessage: `last used ${monthName} ${date.getDate()}`,
+      values: { month: monthName as string, day: date.getDate() },
+    });
   }
-  return `last used ${monthName} ${date.getDate()}, ${date.getFullYear()}`;
+  return fmt({
+    id: 'destinations.lastUsed.olderYear',
+    defaultMessage: `last used ${monthName} ${date.getDate()}, ${date.getFullYear()}`,
+    values: { month: monthName as string, day: date.getDate(), year: date.getFullYear() },
+  });
 }
 
 /** Props for {@link IconTile}. */
@@ -129,12 +156,13 @@ interface TimestampProps {
 }
 
 function Timestamp({ lastUsed }: TimestampProps) {
+  const fmt = useFormatMessage();
   if (lastUsed === undefined) return null;
   return (
     <span
       style={{ fontSize: 11, color: 'var(--wh-subtle)', marginRight: 10, whiteSpace: 'nowrap' }}
     >
-      {formatLastUsed(lastUsed, Date.now())}
+      {formatLastUsed(lastUsed, Date.now(), fmt)}
     </span>
   );
 }
