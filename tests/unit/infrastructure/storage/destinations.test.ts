@@ -90,3 +90,19 @@ describe('DestinationStorage update + remove', () => {
     await expect(storage.update('nonexistent-id', { label: 'Ghost' })).resolves.toBeUndefined();
   });
 });
+
+describe('DestinationStorage — lastUsed', () => {
+  it('add() returns a record where lastUsed is undefined', async () => {
+    const h = { name: 'A' } as unknown as FileSystemDirectoryHandle;
+    const dest = await storage.add('A', h);
+    expect(dest.lastUsed).toBeUndefined();
+  });
+
+  it('update() persists a lastUsed value', async () => {
+    const h = { name: 'B' } as unknown as FileSystemDirectoryHandle;
+    const dest = await storage.add('B', h);
+    await storage.update(dest.id, { lastUsed: 1700000000000 });
+    const updated = await storage.getById(dest.id);
+    expect(updated?.lastUsed).toBe(1700000000000);
+  });
+});

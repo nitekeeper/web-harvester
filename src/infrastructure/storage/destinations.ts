@@ -1,7 +1,5 @@
-// src/infrastructure/storage/destinations.ts
-
 const DB_NAME = 'web-harvester';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE_NAME = 'destinations';
 
 /**
@@ -21,6 +19,8 @@ export interface Destination {
   readonly fileNamePattern: string;
   /** Unix milliseconds when the destination was first added. */
   readonly createdAt: number;
+  /** Unix milliseconds of the most recent clip saved to this destination. */
+  readonly lastUsed?: number;
 }
 
 /**
@@ -48,7 +48,7 @@ export interface IDestinationStorage {
    */
   update(
     id: string,
-    changes: Partial<Pick<Destination, 'label' | 'fileNamePattern'>>,
+    changes: Partial<Pick<Destination, 'label' | 'fileNamePattern' | 'lastUsed'>>,
   ): Promise<void>;
   /** Deletes the destination with the given id. */
   remove(id: string): Promise<void>;
@@ -67,6 +67,7 @@ function openDB(idb: IDBFactory = indexedDB): Promise<IDBDatabase> {
       if (!db.objectStoreNames.contains(STORE_NAME)) {
         db.createObjectStore(STORE_NAME, { keyPath: 'id' });
       }
+      // v1 → v2: lastUsed is optional — existing rows are compatible as-is.
     };
     req.onsuccess = (e): void => {
       resolve((e.target as IDBOpenDBRequest).result);
