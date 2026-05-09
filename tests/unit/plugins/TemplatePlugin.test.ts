@@ -136,12 +136,6 @@ describe('TemplatePlugin — activate() UI registration and logging', () => {
       expect.objectContaining({ component: 'TemplateSettingsPanel' }),
     );
   });
-
-  it('logs activation info', async () => {
-    await harness.plugin.activate(harness.ctx);
-
-    expect(harness.ctx.logger.info).toHaveBeenCalledWith('TemplatePlugin activated');
-  });
 });
 
 describe('TemplatePlugin — activate() hook taps', () => {

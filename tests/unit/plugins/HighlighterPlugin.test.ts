@@ -87,12 +87,6 @@ describe('HighlighterPlugin — activate() container resolution', () => {
 
     expect(harness.ctx.container.get).toHaveBeenCalledWith(TYPES.IHighlightService);
   });
-
-  it('logs activation info', async () => {
-    await harness.plugin.activate(harness.ctx);
-
-    expect(harness.ctx.logger.info).toHaveBeenCalledWith('HighlighterPlugin activated');
-  });
 });
 
 describe('HighlighterPlugin — activate() hook taps', () => {

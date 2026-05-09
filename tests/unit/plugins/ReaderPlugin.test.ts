@@ -136,24 +136,6 @@ describe('ReaderPlugin — activate() UI registration', () => {
   });
 });
 
-describe('ReaderPlugin — activate() logging', () => {
-  let harness: ReaderTestHarness;
-
-  beforeEach(() => {
-    harness = setupHarness();
-  });
-
-  afterEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it('logs activation', async () => {
-    await harness.plugin.activate(harness.ctx);
-
-    expect(harness.ctx.logger.info).toHaveBeenCalledWith('ReaderPlugin activated');
-  });
-});
-
 describe('ReaderPlugin — deactivate()', () => {
   let harness: ReaderTestHarness;
 

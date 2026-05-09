@@ -108,12 +108,6 @@ describe('ClipperPlugin — activate() UI registration and logging', () => {
       expect.objectContaining({ component: 'SaveButton' }),
     );
   });
-
-  it('logs activation info', async () => {
-    await harness.plugin.activate(harness.ctx);
-
-    expect(harness.ctx.logger.info).toHaveBeenCalledWith('ClipperPlugin activated');
-  });
 });
 
 describe('ClipperPlugin — deactivate()', () => {

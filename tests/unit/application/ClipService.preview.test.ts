@@ -34,7 +34,7 @@ function createMockDestinationStorage() {
       fileNamePattern: '{date} {title}.md',
       createdAt: Date.now(),
     }),
-    update: vi.fn(),
+    update: vi.fn().mockResolvedValue(undefined),
     remove: vi.fn(),
   };
 }
