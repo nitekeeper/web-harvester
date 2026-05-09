@@ -134,6 +134,7 @@ function SidebarNav({ activeTab, onTab }: SidebarNavProps) {
 /** Renders the destinations and templates tab panels with their wired props. */
 function DataPanels() {
   const destinations = useSettingsStore((s) => s.destinations);
+  const primaryId = useSettingsStore((s) => s.settings.defaultDestinationId);
   const templates = useSettingsStore((s) => s.templates);
   const destHandlers = useDestinationHandlers();
   const templateHandlers = useTemplateHandlers();
@@ -142,9 +143,10 @@ function DataPanels() {
       <TabsContent value="destinations">
         <DestinationsSection
           destinations={destinations}
+          primaryId={primaryId}
           onAdd={destHandlers.onAdd}
           onRemove={destHandlers.onRemove}
-          onRename={destHandlers.onRename}
+          onSetPrimary={destHandlers.onSetPrimary}
         />
       </TabsContent>
       <TabsContent value="templates">

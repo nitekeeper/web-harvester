@@ -1,89 +1,157 @@
 // tests/browser/settings/DestinationsSection.test.tsx
 //
-// Browser-mode tests for the settings destinations section. Asserts the
-// empty-state, list rendering, remove handler, and rename interaction.
+// Browser-mode tests for the redesigned DestinationsSection.
 
 import { render, cleanup, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, it, expect, afterEach } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { DestinationsSection } from '@presentation/settings/sections/DestinationsSection';
 import type { DestinationView } from '@presentation/stores/useSettingsStore';
 
+const NOOP_ADD: () => Promise<void> = async () => undefined;
 const NOOP_REMOVE: (id: string) => Promise<void> = async () => undefined;
-const NOOP_RENAME: (id: string, label: string) => Promise<void> = async () => undefined;
+const NOOP_SET_PRIMARY: (id: string) => Promise<void> = async () => undefined;
 
-const emptyProps = {
-  destinations: [] as readonly DestinationView[],
-  onAdd: async (): Promise<void> => undefined,
-  onRemove: NOOP_REMOVE,
-  onRename: NOOP_RENAME,
-};
-
-const sampleDestinations: readonly DestinationView[] = [
-  {
+function makeDestination(overrides: Partial<DestinationView> = {}): DestinationView {
+  return {
     id: 'd1',
     label: 'Research',
     dirHandle: {} as FileSystemDirectoryHandle,
     fileNamePattern: '{title}.md',
     createdAt: 0,
-  },
-];
+    ...overrides,
+  };
+}
 
-describe('DestinationsSection — rendering', () => {
-  afterEach(() => {
-    cleanup();
+const emptyProps = {
+  destinations: [] as readonly DestinationView[],
+  primaryId: null,
+  onAdd: NOOP_ADD,
+  onRemove: NOOP_REMOVE,
+  onSetPrimary: NOOP_SET_PRIMARY,
+};
+
+afterEach(() => {
+  cleanup();
+});
+
+describe('DestinationsSection — header', () => {
+  it('renders the section heading', () => {
+    render(<DestinationsSection {...emptyProps} />);
+    expect(screen.getByText('Destinations')).toBeDefined();
   });
 
-  it('shows empty state when no destinations exist', () => {
+  it('renders the subtitle', () => {
+    render(<DestinationsSection {...emptyProps} />);
+    expect(screen.getByText(/local folders/i)).toBeDefined();
+  });
+
+  it('renders the add destination button', () => {
+    render(<DestinationsSection {...emptyProps} />);
+    expect(screen.getByTestId('add-destination')).toBeDefined();
+  });
+});
+
+describe('DestinationsSection — empty state', () => {
+  it('shows the empty notice when no destinations exist', () => {
     render(<DestinationsSection {...emptyProps} />);
     expect(screen.getByText(/no destinations/i)).toBeDefined();
   });
+});
 
-  it('renders a destination row with label', () => {
-    render(<DestinationsSection {...emptyProps} destinations={sampleDestinations} />);
+describe('DestinationsSection — row rendering', () => {
+  it('renders the destination label', () => {
+    render(
+      <DestinationsSection
+        {...emptyProps}
+        destinations={[makeDestination({ label: 'Research' })]}
+      />,
+    );
     expect(screen.getByText('Research')).toBeDefined();
+  });
+
+  it('shows PRIMARY badge on the primary row only', () => {
+    render(
+      <DestinationsSection
+        {...emptyProps}
+        destinations={[
+          makeDestination({ id: 'd1', label: 'Main Folder' }),
+          makeDestination({ id: 'd2', label: 'Other Dest' }),
+        ]}
+        primaryId="d1"
+      />,
+    );
+    const badges = screen.queryAllByText(/primary/i);
+    expect(badges).toHaveLength(1);
+  });
+
+  it('shows no PRIMARY badge when primaryId does not match any row', () => {
+    render(
+      <DestinationsSection
+        {...emptyProps}
+        destinations={[makeDestination({ id: 'd1' })]}
+        primaryId="other"
+      />,
+    );
+    expect(screen.queryByText(/primary/i)).toBeNull();
+  });
+});
+
+describe('DestinationsSection — row rendering (timestamps)', () => {
+  it('renders the last-used timestamp when lastUsed is set', () => {
+    const oneHourAgo = Date.now() - 60 * 60 * 1000;
+    render(
+      <DestinationsSection
+        {...emptyProps}
+        destinations={[makeDestination({ lastUsed: oneHourAgo })]}
+      />,
+    );
+    expect(screen.getByText(/last used/i)).toBeDefined();
+  });
+
+  it('does not render a timestamp when lastUsed is absent', () => {
+    render(
+      <DestinationsSection
+        {...emptyProps}
+        destinations={[makeDestination({ lastUsed: undefined })]}
+      />,
+    );
+    expect(screen.queryByText(/last used/i)).toBeNull();
+  });
+
+  it('does not render a Rename button', () => {
+    render(<DestinationsSection {...emptyProps} destinations={[makeDestination()]} />);
+    expect(screen.queryByText(/rename/i)).toBeNull();
   });
 });
 
 describe('DestinationsSection — interactions', () => {
-  afterEach(() => {
-    cleanup();
-  });
-
-  it('calls onRemove when remove button is clicked', async () => {
+  it('calls onSetPrimary with the destination id when the star is clicked', async () => {
     const user = userEvent.setup();
-    let removedId: string | null = null;
+    const onSetPrimary = vi.fn().mockResolvedValue(undefined);
     render(
       <DestinationsSection
         {...emptyProps}
-        destinations={sampleDestinations}
-        onRemove={async (id) => {
-          removedId = id;
-        }}
+        destinations={[makeDestination({ id: 'd1' })]}
+        onSetPrimary={onSetPrimary}
+      />,
+    );
+    await user.click(screen.getByTestId('set-primary-d1'));
+    expect(onSetPrimary).toHaveBeenCalledWith('d1');
+  });
+
+  it('calls onRemove with the destination id when Remove is clicked', async () => {
+    const user = userEvent.setup();
+    const onRemove = vi.fn().mockResolvedValue(undefined);
+    render(
+      <DestinationsSection
+        {...emptyProps}
+        destinations={[makeDestination({ id: 'd1' })]}
+        onRemove={onRemove}
       />,
     );
     await user.click(screen.getByTestId('remove-destination-d1'));
-    expect(removedId).toBe('d1');
-  });
-
-  it('calls onRename when a label is edited and confirmed', async () => {
-    const user = userEvent.setup();
-    let renamedTo: string | null = null;
-    render(
-      <DestinationsSection
-        {...emptyProps}
-        destinations={sampleDestinations}
-        onRename={async (_id, label) => {
-          renamedTo = label;
-        }}
-      />,
-    );
-    await user.click(screen.getByTestId('rename-destination-d1'));
-    const input = screen.getByTestId('rename-input-d1');
-    await user.clear(input);
-    await user.type(input, 'Notes');
-    await user.keyboard('{Enter}');
-    expect(renamedTo).toBe('Notes');
+    expect(onRemove).toHaveBeenCalledWith('d1');
   });
 });
