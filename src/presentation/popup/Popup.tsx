@@ -84,7 +84,7 @@ function PropertiesSectionHeader({
           {fmt({ id: 'popup.propertiesLabel', defaultMessage: 'PROPERTIES' })}
         </span>
       </span>
-      <span className="text-[10px] text-muted-foreground">
+      <span className="text-[10px] tabular-nums text-muted-foreground">
         {fmt({
           id: 'popup.propertiesFieldCount',
           defaultMessage: '{count} fields',
@@ -251,7 +251,7 @@ export function Popup({
   const { popup } = usePopupBindings();
 
   return (
-    <div className="w-80 min-h-48 bg-background text-foreground flex flex-col">
+    <div className="w-80 min-h-48 bg-background text-foreground flex flex-col leading-[1.45]">
       <PopupHeader theme={theme} onTheme={handleTheme} onSettings={onSettings} />
       <PopupScrollBody onTemplateChange={onTemplateChange} />
       <ActionFooter

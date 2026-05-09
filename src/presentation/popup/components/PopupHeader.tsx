@@ -166,7 +166,7 @@ export function PopupHeader({ theme, onTheme, onSettings }: PopupHeaderProps) {
       className="flex items-center gap-2 px-2.5 py-2 border-b border-border bg-card"
     >
       <WHLogo size={22} className="text-primary shrink-0" />
-      <span className="text-[12.5px] font-semibold tracking-tight">
+      <span className="text-[12.5px] font-semibold tracking-[-0.01em]">
         {fmt({ id: 'popup.header.title', defaultMessage: 'Web Harvester' })}
       </span>
 

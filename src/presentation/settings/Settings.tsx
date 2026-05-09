@@ -84,7 +84,7 @@ function SidebarBranding() {
     <div className="flex items-center gap-2 px-4 py-5 border-b border-border">
       <WHLogo size={26} className="text-primary shrink-0" />
       <div>
-        <div className="text-[13px] font-semibold tracking-tight">
+        <div className="text-[12.5px] font-semibold tracking-[-0.01em]">
           {fmt({ id: 'settings.header.title', defaultMessage: 'Web Harvester' })}
         </div>
         <div className="text-[10.5px] text-muted-foreground">

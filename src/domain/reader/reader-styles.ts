@@ -35,15 +35,15 @@ const SEPIA: ThemePalette = {
 
 function buildPaletteRules(p: ThemePalette, fontStack: string): string {
   return `body,html{margin:0;padding:0;background:${p.bg}}
-#wh-reader-content{max-width:var(--wh-reader-max-width,38em);margin:0 auto;padding:2rem 1rem;font-family:${fontStack};font-size:var(--wh-reader-font-size,16px);line-height:var(--wh-reader-line-height,1.6);color:${p.fg};background:${p.bg}}
+#wh-reader-content{max-width:var(--wh-reader-max-width,38em);margin:0 auto;padding:2rem 1rem;font-family:${fontStack};font-size:var(--wh-reader-font-size,16px);line-height:var(--wh-reader-line-height,1.65);color:${p.fg};background:${p.bg}}
 #wh-reader-header{margin-bottom:2rem}
-#wh-reader-title{font-size:2em;line-height:1.2;margin:0 0 0.5rem}
+#wh-reader-title{font-size:2em;line-height:1.15;margin:0 0 0.5rem}
 #wh-reader-byline{color:${p.blockquoteFg};margin:0}
 #wh-reader-article p{margin:0 0 1.25em}
-#wh-reader-article h1,#wh-reader-article h2,#wh-reader-article h3,#wh-reader-article h4{line-height:1.3;margin:1.5em 0 0.5em}
+#wh-reader-article h1,#wh-reader-article h2,#wh-reader-article h3,#wh-reader-article h4{line-height:1.2;margin:1.5em 0 0.5em}
 #wh-reader-article a{color:${p.link}}
 #wh-reader-article blockquote{border-left:3px solid ${p.blockquoteBorder};margin:1.5em 0;padding:0.5em 1em;color:${p.blockquoteFg}}
-#wh-reader-article code,#wh-reader-article pre{font-family:'Courier New',monospace;font-size:0.9em}
+#wh-reader-article code,#wh-reader-article pre{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:0.9em}
 #wh-reader-article img{max-width:100%;height:auto}`;
 }
 
@@ -55,7 +55,9 @@ function buildPaletteRules(p: ThemePalette, fontStack: string): string {
  */
 export function generateReaderCSS(settings: ReaderSettings): string {
   const fontStack =
-    settings.fontFamily === 'default' ? "Georgia,'Times New Roman',serif" : settings.fontFamily;
+    settings.fontFamily === 'default'
+      ? "Charter,Georgia,'Times New Roman',serif"
+      : settings.fontFamily;
 
   if (settings.theme === 'dark') return buildPaletteRules(DARK, fontStack);
   if (settings.theme === 'sepia') return buildPaletteRules(SEPIA, fontStack);

@@ -79,7 +79,7 @@ export function StatusBar({ status, destinationLabel, errorMessage }: StatusBarP
   return (
     <div
       data-testid="status-bar"
-      className={`flex items-center gap-1.5 text-[11px] min-h-4 ${view.className}`}
+      className={`flex items-center gap-1.5 text-[11px] tabular-nums min-h-4 ${view.className}`}
     >
       {view.icon}
       <span>{view.text}</span>
