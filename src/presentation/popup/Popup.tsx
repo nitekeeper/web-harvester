@@ -72,6 +72,7 @@ function PropertiesSectionHeader({
       onClick={onToggle}
       className="flex items-center justify-between w-full text-left"
       aria-expanded={isExpanded}
+      aria-labelledby="popup-properties-label"
     >
       <span className="flex items-center gap-1">
         <ChevronDownIcon
