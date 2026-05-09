@@ -37,7 +37,7 @@ function createMockDestinationStorage() {
       fileNamePattern: '{date} {title}.md',
       createdAt: Date.now(),
     }),
-    update: vi.fn(),
+    update: vi.fn().mockResolvedValue(undefined),
     remove: vi.fn(),
   };
 }
@@ -164,6 +164,22 @@ describe('ClipService — save flow', () => {
       'dest-1',
       expect.objectContaining({ lastUsed: expect.any(Number) }),
     );
+  });
+});
+
+describe('ClipService — lastUsed ordering', () => {
+  it('stamps lastUsed before afterClip fires', async () => {
+    const callOrder: string[] = [];
+    destinationStorage.update.mockImplementation(async () => {
+      callOrder.push('update');
+    });
+    hooks.afterClip.call.mockImplementation(async () => {
+      callOrder.push('afterClip');
+    });
+    await service.clip(defaultRequest);
+    // Flush microtasks so the fire-and-forget update promise resolves
+    await Promise.resolve();
+    expect(callOrder).toEqual(['update', 'afterClip']);
   });
 });
 

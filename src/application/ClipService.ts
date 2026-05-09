@@ -270,16 +270,7 @@ export class ClipService implements IClipService {
    */
   async clip(request: ClipRequest): Promise<ClipResult | ClipAborted> {
     const tab = await this.tabAdapter.getActiveTab();
-
-    let content: ClipContent;
-    if (request.previewMarkdown !== undefined && request.previewMarkdown !== '') {
-      // Use pre-compiled preview — skips extraction + beforeClip
-      content = { url: tab.url, html: request.previewMarkdown, title: tab.title };
-    } else {
-      const { html, markdown } = await this.extractPageContent(tab.id);
-      const initialContent: ClipContent = { url: tab.url, html, title: tab.title, markdown };
-      content = await this.hooks.beforeClip.call(initialContent);
-    }
+    const content = await this.resolveContent(request, tab);
 
     const destination = await this.destinationStorage.getById(request.destinationId);
     if (!destination) {
@@ -307,13 +298,30 @@ export class ClipService implements IClipService {
     );
 
     const result: ClipResult = { fileName: savedName, destination: destination.label };
-    await this.destinationStorage.update(destination.id, { lastUsed: Date.now() });
+    this.destinationStorage
+      .update(destination.id, { lastUsed: Date.now() })
+      .catch((err: unknown) => this.logger.warn('lastUsed stamp failed', err));
     await this.hooks.afterClip.call(result);
     await this.hooks.afterSave.call({ filePath: `${destination.label}/${savedName}` });
     this.notifySuccess(savedName, destination.label);
 
     this.logger.info(`Clip saved: ${savedName} → ${destination.label}`);
     return result;
+  }
+
+  /**
+   * Builds the `ClipContent` for a clip request. When `previewMarkdown` is
+   * present, returns it directly (skipping extraction and the `beforeClip`
+   * hook). Otherwise extracts the page HTML via the content script and runs
+   * the `beforeClip` waterfall.
+   */
+  private async resolveContent(request: ClipRequest, tab: Tab): Promise<ClipContent> {
+    if (request.previewMarkdown !== undefined && request.previewMarkdown !== '') {
+      return { url: tab.url, html: request.previewMarkdown, title: tab.title };
+    }
+    const { html, markdown } = await this.extractPageContent(tab.id);
+    const initialContent: ClipContent = { url: tab.url, html, title: tab.title, markdown };
+    return this.hooks.beforeClip.call(initialContent);
   }
 
   /**
