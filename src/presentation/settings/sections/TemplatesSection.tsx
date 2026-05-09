@@ -107,7 +107,7 @@ function RowFields({ template, onUpdate }: RowFieldsProps) {
 /** One editable template row. */
 function TemplateRow({ template, onRemove, onUpdate }: TemplateRowProps) {
   return (
-    <div className="flex flex-col gap-2 rounded-lg border border-border p-3">
+    <div className="flex flex-col gap-2 rounded-md border border-border p-3">
       <RowHeader template={template} onRemove={onRemove} />
       <RowFields template={template} onUpdate={onUpdate} />
     </div>

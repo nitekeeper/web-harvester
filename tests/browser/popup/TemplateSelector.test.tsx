@@ -48,4 +48,10 @@ describe('TemplateSelector', () => {
     const trigger = screen.getByTestId('template-selector');
     expect(trigger.classList.contains('justify-between')).toBe(false);
   });
+
+  it('renders the trigger with rounded-xs for the small-input-shell radius', () => {
+    render(<TemplateSelector templates={sampleTemplates} selectedId="t1" onSelect={NOOP} />);
+    const trigger = screen.getByTestId('template-selector');
+    expect(trigger.classList.contains('rounded-xs')).toBe(true);
+  });
 });

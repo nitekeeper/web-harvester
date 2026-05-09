@@ -8,6 +8,8 @@ import { describe, it, expect, afterEach } from 'vitest';
 
 import { MarkdownPreview } from '@presentation/popup/components/MarkdownPreview';
 
+const TESTID_PREVIEW = 'markdown-preview';
+
 describe('MarkdownPreview', () => {
   afterEach(() => {
     cleanup();
@@ -20,7 +22,7 @@ describe('MarkdownPreview', () => {
 
   it('renders pre-formatted content when markdown is non-empty', () => {
     render(<MarkdownPreview markdown="# Hello" />);
-    expect(screen.getByTestId('markdown-preview').textContent).toBe('# Hello');
+    expect(screen.getByTestId(TESTID_PREVIEW).textContent).toBe('# Hello');
   });
 
   it('renders a loading indicator when isPreviewing is true', () => {
@@ -36,6 +38,11 @@ describe('MarkdownPreview', () => {
 
   it('applies preview-scroll class to the pre element for custom scrollbar styling', () => {
     render(<MarkdownPreview markdown="# Hello" />);
-    expect(screen.getByTestId('markdown-preview').classList.contains('preview-scroll')).toBe(true);
+    expect(screen.getByTestId(TESTID_PREVIEW).classList.contains('preview-scroll')).toBe(true);
+  });
+
+  it('applies rounded-sm to the pre element for medium-container radius', () => {
+    render(<MarkdownPreview markdown="# Hello" />);
+    expect(screen.getByTestId(TESTID_PREVIEW).classList.contains('rounded-sm')).toBe(true);
   });
 });

@@ -128,3 +128,23 @@ describe('PropertiesEditor — compact 2-column grid layout', () => {
     expect(input.className).toMatch(/bg-transparent/);
   });
 });
+
+describe('PropertiesEditor — radius classes', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  it('renders the container with rounded-sm for medium-container radius', () => {
+    render(<PropertiesEditor markdown={WITH_FM} onMarkdownChange={vi.fn()} />);
+    const editor = document.querySelector(`[data-testid="${TESTID_EDITOR}"]`);
+    expect(editor?.classList.contains('rounded-sm')).toBe(true);
+  });
+
+  it('renders value inputs with rounded-xs for small-input-shell radius', () => {
+    render(<PropertiesEditor markdown={WITH_FM} onMarkdownChange={vi.fn()} />);
+    const input = document.querySelector(
+      `[data-testid="${TESTID_TITLE_INPUT}"]`,
+    ) as HTMLInputElement;
+    expect(input?.classList.contains('rounded-xs')).toBe(true);
+  });
+});

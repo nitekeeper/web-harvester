@@ -12,7 +12,7 @@ import {
  * Transparent and borderless at rest; gains a subtle ring on focus.
  */
 const VALUE_INPUT_CLASS =
-  'bg-transparent border-0 px-1 py-0.5 text-xs text-foreground w-full focus:outline-none focus:ring-1 focus:ring-ring rounded';
+  'bg-transparent border-0 px-1 py-0.5 text-xs text-foreground w-full focus:outline-none focus:ring-1 focus:ring-ring rounded-xs';
 
 /** Props for {@link PropertiesEditor}. */
 export interface PropertiesEditorProps {
@@ -129,7 +129,7 @@ export function PropertiesEditor({
   return (
     <div
       data-testid="properties-editor"
-      className="border border-border rounded-md bg-card px-2 py-1 flex flex-col divide-y divide-border"
+      className="border border-border rounded-sm bg-card px-2 py-1 flex flex-col divide-y divide-border"
     >
       {fields.map((field, index) => (
         <FieldItem key={field.key} index={index} field={field} onFieldChange={handleChange} />

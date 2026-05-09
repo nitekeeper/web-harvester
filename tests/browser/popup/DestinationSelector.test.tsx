@@ -51,6 +51,12 @@ describe('DestinationSelector', () => {
     );
     expect(document.querySelector('[data-testid="destination-path-hint"]')).toBeNull();
   });
+});
+
+describe('DestinationSelector — trigger appearance', () => {
+  afterEach(() => {
+    cleanup();
+  });
 
   it('renders the trigger without justify-between so the selected value is left-aligned', () => {
     render(
@@ -58,5 +64,13 @@ describe('DestinationSelector', () => {
     );
     const trigger = screen.getByTestId('destination-selector');
     expect(trigger.classList.contains('justify-between')).toBe(false);
+  });
+
+  it('renders the trigger with rounded-xs for the small-input-shell radius', () => {
+    render(
+      <DestinationSelector destinations={sampleDestinations} selectedId="d1" onSelect={NOOP} />,
+    );
+    const trigger = screen.getByTestId('destination-selector');
+    expect(trigger.classList.contains('rounded-xs')).toBe(true);
   });
 });
