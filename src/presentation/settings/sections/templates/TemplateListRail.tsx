@@ -1,6 +1,7 @@
 // src/presentation/settings/sections/templates/TemplateListRail.tsx
 
 import { FileText } from 'lucide-react';
+import type React from 'react';
 import { useState } from 'react';
 
 import { useFormatMessage } from '@presentation/hooks/useFormatMessage';
@@ -245,6 +246,53 @@ function TemplateList({ visible, selectedId, onSelect, systemBadgeLabel }: Templ
   );
 }
 
+/** Props for {@link RailBody}. */
+interface RailBodyProps {
+  readonly visible: readonly TemplateView[];
+  readonly selectedId: string | null;
+  readonly showFilter: boolean;
+  readonly filter: string;
+  readonly filterPlaceholder: string;
+  readonly systemBadgeLabel: string;
+  readonly onSelect: (id: string) => void;
+  readonly onFilterChange: (value: string) => void;
+}
+
+/** Renders the filter input (when visible) and the template list. */
+function RailBody({
+  visible,
+  selectedId,
+  showFilter,
+  filter,
+  filterPlaceholder,
+  systemBadgeLabel,
+  onSelect,
+  onFilterChange,
+}: RailBodyProps) {
+  return (
+    <>
+      {showFilter ? (
+        <FilterInput value={filter} placeholder={filterPlaceholder} onChange={onFilterChange} />
+      ) : null}
+      <TemplateList
+        visible={visible}
+        selectedId={selectedId}
+        onSelect={onSelect}
+        systemBadgeLabel={systemBadgeLabel}
+      />
+    </>
+  );
+}
+
+const RAIL_STYLE: React.CSSProperties = {
+  width: 240,
+  flexShrink: 0,
+  borderRight: BORDER,
+  display: 'flex',
+  flexDirection: 'column',
+  overflow: 'hidden',
+};
+
 /**
  * Left-rail component for the Templates split-pane. Shows a sorted list of
  * templates, an optional filter input (auto-shown when ≥4 templates), and a
@@ -258,24 +306,15 @@ export function TemplateListRail({
 }: TemplateListRailProps) {
   const fmt = useFormatMessage();
   const [filter, setFilter] = useState('');
-  const showFilter = templates.length >= FILTER_MIN;
   const systemBadgeLabel = fmt({ id: SYSTEM_BADGE_ID, defaultMessage: SYSTEM_BADGE_DEFAULT });
   const visible = filter.trim()
     ? templates.filter((t) => t.name.toLowerCase().includes(filter.toLowerCase()))
     : templates;
-
   return (
     <div
       role="listbox"
       aria-label={fmt({ id: 'settings.templates.listLabel', defaultMessage: 'Templates' })}
-      style={{
-        width: 240,
-        flexShrink: 0,
-        borderRight: BORDER,
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-      }}
+      style={RAIL_STYLE}
     >
       <RailHeader
         headingLabel={fmt({ id: 'settings.templates.railLabel', defaultMessage: 'Templates' })}
@@ -283,21 +322,18 @@ export function TemplateListRail({
         newAriaLabel={fmt({ id: 'settings.templates.newLabel', defaultMessage: 'New template' })}
         onNew={onNew}
       />
-      {showFilter ? (
-        <FilterInput
-          value={filter}
-          placeholder={fmt({
-            id: 'settings.templates.filter',
-            defaultMessage: 'Filter templates…',
-          })}
-          onChange={setFilter}
-        />
-      ) : null}
-      <TemplateList
+      <RailBody
         visible={visible}
         selectedId={selectedId}
-        onSelect={onSelect}
+        showFilter={templates.length >= FILTER_MIN}
+        filter={filter}
+        filterPlaceholder={fmt({
+          id: 'settings.templates.filter',
+          defaultMessage: 'Filter templates…',
+        })}
         systemBadgeLabel={systemBadgeLabel}
+        onSelect={onSelect}
+        onFilterChange={setFilter}
       />
     </div>
   );

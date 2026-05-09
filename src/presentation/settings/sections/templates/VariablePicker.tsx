@@ -1,5 +1,6 @@
 // src/presentation/settings/sections/templates/VariablePicker.tsx
 
+import type React from 'react';
 import { useRef, useState } from 'react';
 
 import { useFormatMessage, type FormatMessageFn } from '@presentation/hooks/useFormatMessage';
@@ -189,6 +190,20 @@ interface PickerPopoverProps {
   readonly containerRef: React.RefObject<HTMLDivElement | null>;
 }
 
+const POPOVER_STYLE: React.CSSProperties = {
+  position: 'absolute',
+  zIndex: 1000,
+  width: 280,
+  maxHeight: 360,
+  background: 'var(--wh-panel)',
+  border: `1px solid ${WH_BORDER}`,
+  borderRadius: 6,
+  boxShadow: '0 4px 12px rgba(0,0,0,.15)',
+  display: 'flex',
+  flexDirection: 'column',
+  overflow: 'hidden',
+};
+
 /** The popover panel containing the search input and grouped variable list. */
 function PickerPopover({
   fmt,
@@ -199,27 +214,16 @@ function PickerPopover({
   onClose,
   containerRef,
 }: PickerPopoverProps) {
+  const ariaLabel = fmt({
+    id: 'settings.templates.variablePicker',
+    defaultMessage: 'Variable picker',
+  });
   return (
     <div
       ref={containerRef}
       role="listbox"
-      aria-label={fmt({
-        id: 'settings.templates.variablePicker',
-        defaultMessage: 'Variable picker',
-      })}
-      style={{
-        position: 'absolute',
-        zIndex: 1000,
-        width: 280,
-        maxHeight: 360,
-        background: 'var(--wh-panel)',
-        border: `1px solid ${WH_BORDER}`,
-        borderRadius: 6,
-        boxShadow: '0 4px 12px rgba(0,0,0,.15)',
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-      }}
+      aria-label={ariaLabel}
+      style={POPOVER_STYLE}
       onKeyDown={(e) => {
         if (e.key === 'Escape') onClose();
       }}
