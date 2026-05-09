@@ -12,7 +12,7 @@ import {
  * Transparent and borderless at rest; gains a subtle ring on focus.
  */
 const VALUE_INPUT_CLASS =
-  'bg-transparent border-0 px-1 py-0 text-xs text-foreground w-full focus:outline-none focus:ring-1 focus:ring-ring rounded';
+  'bg-transparent border-0 px-1 py-0.5 text-xs text-foreground w-full focus:outline-none focus:ring-1 focus:ring-ring rounded';
 
 /** Props for {@link PropertiesEditor}. */
 export interface PropertiesEditorProps {
