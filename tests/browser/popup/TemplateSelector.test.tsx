@@ -42,4 +42,10 @@ describe('TemplateSelector', () => {
     const trigger = document.querySelector('[data-testid="template-selector"]');
     expect(trigger?.querySelector('svg')).not.toBeNull();
   });
+
+  it('renders the trigger without justify-between so the selected value is left-aligned', () => {
+    render(<TemplateSelector templates={sampleTemplates} selectedId="t1" onSelect={NOOP} />);
+    const trigger = screen.getByTestId('template-selector');
+    expect(trigger.classList.contains('justify-between')).toBe(false);
+  });
 });

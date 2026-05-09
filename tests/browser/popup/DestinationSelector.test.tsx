@@ -51,4 +51,12 @@ describe('DestinationSelector', () => {
     );
     expect(document.querySelector('[data-testid="destination-path-hint"]')).toBeNull();
   });
+
+  it('renders the trigger without justify-between so the selected value is left-aligned', () => {
+    render(
+      <DestinationSelector destinations={sampleDestinations} selectedId="d1" onSelect={NOOP} />,
+    );
+    const trigger = screen.getByTestId('destination-selector');
+    expect(trigger.classList.contains('justify-between')).toBe(false);
+  });
 });
