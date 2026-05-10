@@ -407,3 +407,54 @@
 .preview-scroll::-webkit-scrollbar-thumb:hover {
   background: oklch(0.556 0 0 / 70%);
 }
+
+/* Custom range slider for the Appearance font-size field */
+.wh-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: linear-gradient(
+    to right,
+    var(--wh-accent) 0%,
+    var(--wh-accent) var(--slider-fill, 0%),
+    var(--wh-border) var(--slider-fill, 0%),
+    var(--wh-border) 100%
+  );
+  border-radius: 2px;
+  cursor: pointer;
+  outline: none;
+  display: block;
+  width: 100%;
+}
+
+.wh-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  background: #ffffff;
+  border: 1px solid var(--wh-border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+}
+
+.wh-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  background: #ffffff;
+  border: 1px solid var(--wh-border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  border: 1px solid var(--wh-border);
+}
+
+.wh-slider:focus-visible::-webkit-slider-thumb {
+  outline: 2px solid var(--wh-accent);
+  outline-offset: 2px;
+}
+
+.wh-slider:focus-visible::-moz-range-thumb {
+  outline: 2px solid var(--wh-accent);
+  outline-offset: 2px;
+}

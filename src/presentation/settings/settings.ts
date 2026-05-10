@@ -21,7 +21,7 @@ import type { IDestinationPort } from '@presentation/ports/IDestinationPort';
 import '@presentation/styles/global.css';
 import { bootstrapStore } from '@presentation/stores/bootstrapStore';
 import { useSettingsStore } from '@presentation/stores/useSettingsStore';
-import { bootstrapTheme } from '@presentation/theme/bootstrapTheme';
+import { applyThemeToDocument } from '@presentation/theme/applyTheme';
 import { createLogger } from '@shared/logger';
 import { isPluginStatusPayload, PLUGIN_STATUS_STORAGE_KEY } from '@shared/pluginStatus';
 
@@ -76,9 +76,7 @@ async function init(): Promise<void> {
   useSettingsStore.setState({ destinations });
   hydratePluginStatus(adapter);
 
-  bootstrapTheme().catch((err: unknown) => {
-    logger.error('theme bootstrap failed', err);
-  });
+  applyThemeToDocument(useSettingsStore.getState().settings.theme);
   createRoot(rootEl).render(
     createElement(
       StrictMode,
