@@ -10,8 +10,9 @@ import type { TemplateConfig } from './types';
  */
 export const DEFAULT_TEMPLATE: TemplateConfig = {
   id: 'default',
-  name: 'Default',
-  frontmatterTemplate: '---\ntitle: {{title}}\nurl: {{url}}\ndate: {{date}}\n---',
+  name: 'Obsidian Style',
+  frontmatterTemplate:
+    'title: {{title}}\nsource: {{url}}\nauthor: {{author}}\npublished: {{published}}\ncreated: {{date}}\ndescription: {{description}}\ntags: {{tags}}',
   bodyTemplate: '{{content}}',
   noteNameTemplate: '{{date|date:YYYY-MM-DD}} {{title|safe_name}}',
 };

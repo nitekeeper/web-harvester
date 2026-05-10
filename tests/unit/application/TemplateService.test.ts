@@ -76,7 +76,7 @@ describe('TemplateService — getDefault()', () => {
     storage.getAll.mockResolvedValue([]);
     const template = await service.getDefault();
     expect(template.id).toBe('default');
-    expect(template.name).toBe('Default');
+    expect(template.name).toBe('Obsidian Style');
     expect(template.frontmatterTemplate).toContain('title:');
     expect(template.bodyTemplate).toContain(CONTENT_PLACEHOLDER);
     expect(template.noteNameTemplate).toContain('{{title');
