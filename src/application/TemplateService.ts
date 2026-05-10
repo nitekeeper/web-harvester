@@ -137,15 +137,17 @@ export class TemplateNotFoundError extends Error {
 
 /**
  * Combines a template's frontmatter and body sections into a single source
- * string for the compiler. The frontmatter (when present) is prefixed and
- * separated from the body by a blank line so the compiler can detect and
- * split the YAML fence at the start of the rendered output.
+ * string for the compiler. The frontmatter (when present) is wrapped with
+ * `---` fences when not already fenced (new-format templates store raw YAML
+ * lines; legacy DEFAULT_TEMPLATE includes fences directly).
  */
 function combineTemplateSource(template: TemplateConfig): string {
   if (template.frontmatterTemplate.length === 0) {
     return template.bodyTemplate;
   }
-  return `${template.frontmatterTemplate}\n\n${template.bodyTemplate}`;
+  const fm = template.frontmatterTemplate;
+  const fenced = fm.startsWith('---') ? fm : `---\n${fm}\n---`;
+  return `${fenced}\n\n${template.bodyTemplate}`;
 }
 
 /**
@@ -223,7 +225,8 @@ export class TemplateService implements ITemplateService {
    *      and the compiler's error list unchanged.
    */
   async render(id: string, variables: TemplateVariables): Promise<CompileResult> {
-    let template = await this.storage.get(id);
+    const systemTemplate = SYSTEM_TEMPLATES.find((t) => t.id === id);
+    let template: TemplateConfig | undefined = systemTemplate ?? (await this.storage.get(id));
     if (!template) {
       if (id === DEFAULT_TEMPLATE.id) {
         this.logger.debug('render: id matches built-in default — using DEFAULT_TEMPLATE');

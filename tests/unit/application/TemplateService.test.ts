@@ -52,6 +52,9 @@ const testVariables = {
 
 const TMPL_ID = 'tmpl';
 const CONTENT_PLACEHOLDER = '{{content}}';
+const FENCED_FM = '---\ntitle: {{title}}\n---';
+const SYS_DEFAULT_ARTICLE_ID = 'sys-default-article';
+const SYS_QUICK_CAPTURE_ID = 'sys-quick-capture';
 
 // ── Test setup ────────────────────────────────────────────────────────────────
 
@@ -83,7 +86,7 @@ describe('TemplateService — getDefault()', () => {
     const custom: TemplateConfig = {
       id: 'my-template',
       name: 'My Template',
-      frontmatterTemplate: '---\ntitle: {{title}}\n---',
+      frontmatterTemplate: FENCED_FM,
       bodyTemplate: CONTENT_PLACEHOLDER,
       noteNameTemplate: '{{title}}',
     };
@@ -130,16 +133,16 @@ describe('TemplateService — getById()', () => {
   });
 
   it('returns a system template by its id without hitting storage', async () => {
-    const result = await service.getById('sys-default-article');
+    const result = await service.getById(SYS_DEFAULT_ARTICLE_ID);
     expect(result).toBeDefined();
-    expect(result?.id).toBe('sys-default-article');
+    expect(result?.id).toBe(SYS_DEFAULT_ARTICLE_ID);
     expect(result?.name).toBe('Default Article');
     expect(storage.get).not.toHaveBeenCalled();
   });
 
   it('returns sys-quick-capture system template by id', async () => {
-    const result = await service.getById('sys-quick-capture');
-    expect(result?.id).toBe('sys-quick-capture');
+    const result = await service.getById(SYS_QUICK_CAPTURE_ID);
+    expect(result?.id).toBe(SYS_QUICK_CAPTURE_ID);
   });
 });
 
@@ -169,7 +172,7 @@ describe('TemplateService — render() — happy path', () => {
     const t: TemplateConfig = {
       id: TMPL_ID,
       name: 'T',
-      frontmatterTemplate: '---\ntitle: {{title}}\n---',
+      frontmatterTemplate: FENCED_FM,
       bodyTemplate: CONTENT_PLACEHOLDER,
       noteNameTemplate: '{{date}} {{title}}',
     };
@@ -204,6 +207,58 @@ describe('TemplateService — render() — happy path', () => {
       expect.stringContaining(CONTENT_PLACEHOLDER),
       expect.objectContaining({ title: testVariables.title }),
     );
+  });
+});
+
+describe('TemplateService — render() — system template ids', () => {
+  it('renders sys-default-article without requiring storage', async () => {
+    storage.get.mockResolvedValue(undefined);
+    const result = await service.render(SYS_DEFAULT_ARTICLE_ID, testVariables);
+    expect(result.ok).toBe(true);
+    expect(mockCompileTemplate).toHaveBeenCalledWith(
+      expect.stringContaining('page.title'),
+      expect.any(Object),
+    );
+  });
+
+  it('renders sys-quick-capture without requiring storage', async () => {
+    storage.get.mockResolvedValue(undefined);
+    const result = await service.render(SYS_QUICK_CAPTURE_ID, testVariables);
+    expect(result.ok).toBe(true);
+  });
+});
+
+describe('TemplateService — render() — frontmatter fence wrapping', () => {
+  it('wraps new-format frontmatter with --- fences before compilation', async () => {
+    const t: TemplateConfig = {
+      id: TMPL_ID,
+      name: 'T',
+      frontmatterTemplate: 'title: {{title}}\nurl: {{url}}',
+      bodyTemplate: CONTENT_PLACEHOLDER,
+      noteNameTemplate: '{{title}}',
+    };
+    storage.get.mockResolvedValue(t);
+    await service.render(TMPL_ID, testVariables);
+    const firstCall = mockCompileTemplate.mock.calls[0] as [string, ...unknown[]];
+    const source = firstCall[0];
+    expect(source).toMatch(/^---\n/);
+    expect(source).toContain('\n---\n');
+  });
+
+  it('does not double-wrap old-format frontmatter that already has --- fences', async () => {
+    const t: TemplateConfig = {
+      id: TMPL_ID,
+      name: 'T',
+      frontmatterTemplate: FENCED_FM,
+      bodyTemplate: CONTENT_PLACEHOLDER,
+      noteNameTemplate: '{{title}}',
+    };
+    storage.get.mockResolvedValue(t);
+    await service.render(TMPL_ID, testVariables);
+    const firstCall = mockCompileTemplate.mock.calls[0] as [string, ...unknown[]];
+    const source = firstCall[0];
+    const fenceCount = (source.match(/^---$/gm) ?? []).length;
+    expect(fenceCount).toBe(2);
   });
 });
 
