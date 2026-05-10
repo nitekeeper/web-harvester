@@ -98,5 +98,45 @@
   "highlight-count": {
     "message": "{count, plural, one {# highlight} other {# highlights}}",
     "description": "Number of highlights on the page"
+  },
+  "settings.about.resources": {
+    "message": "RESOURCES",
+    "description": "About page section eyebrow"
+  },
+  "settings.about.diagnostics": {
+    "message": "DIAGNOSTICS",
+    "description": "About page section eyebrow"
+  },
+  "settings.about.legal": {
+    "message": "LEGAL",
+    "description": "About page section eyebrow"
+  },
+  "settings.about.copy": {
+    "message": "Copy",
+    "description": "About diagnostics copy button default label"
+  },
+  "settings.about.copied": {
+    "message": "Copied",
+    "description": "About diagnostics copy button success label"
+  },
+  "settings.about.link.gh": {
+    "message": "Source & docs on GitHub",
+    "description": "About resources row label"
+  },
+  "settings.about.link.issues": {
+    "message": "Report an issue",
+    "description": "About resources row label"
+  },
+  "settings.about.link.change": {
+    "message": "Changelog",
+    "description": "About resources row label"
+  },
+  "settings.about.link.licenses": {
+    "message": "Open-source licenses",
+    "description": "About legal link label"
+  },
+  "settings.about.copyright": {
+    "message": "© 2026 Web Harvester. Made for people who read on the web.",
+    "description": "About page copyright line"
   }
 }

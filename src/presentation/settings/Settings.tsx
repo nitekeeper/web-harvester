@@ -14,6 +14,7 @@ import { WHLogo } from '@presentation/components/WHLogo';
 import { useFormatMessage } from '@presentation/hooks/useFormatMessage';
 import { useSettingsStore } from '@presentation/stores/useSettingsStore';
 
+import { AboutSection } from './sections/AboutSection';
 import { AppearanceSection } from './sections/AppearanceSection';
 import { DestinationsSection } from './sections/DestinationsSection';
 import { PluginsSection } from './sections/PluginsSection';
@@ -151,16 +152,6 @@ function DataPanels() {
         />
       </TabsContent>
     </>
-  );
-}
-
-/** Stub content for the About tab. */
-function AboutSection() {
-  const fmt = useFormatMessage();
-  return (
-    <div className="p-6 text-sm text-muted-foreground">
-      {fmt({ id: 'settings.about.version', defaultMessage: 'Web Harvester · v0.1.0' })}
-    </div>
   );
 }
 
