@@ -10,6 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppearanceSection } from '@presentation/settings/sections/AppearanceSection';
 import { useSettingsStore } from '@presentation/stores/useSettingsStore';
 import type { SettingsStoreState } from '@presentation/stores/useSettingsStore';
+import { applyThemeToDocument } from '@presentation/theme/applyTheme';
 import type { AppSettings } from '@shared/types';
 
 vi.mock('@presentation/stores/useSettingsStore', () => ({
@@ -83,5 +84,40 @@ describe('AppearanceSection — language field', () => {
     render(<AppearanceSection />);
     await user.selectOptions(screen.getByRole('combobox'), 'ko');
     expect(mockUpdateSettings).toHaveBeenCalledWith({ locale: 'ko' });
+  });
+});
+
+describe('AppearanceSection — theme field', () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
+  it('renders three theme tiles', () => {
+    setupStore({ theme: 'dark' });
+    render(<AppearanceSection />);
+    const tiles = screen.getAllByRole('button');
+    expect(tiles.length).toBeGreaterThanOrEqual(3);
+    expect(screen.getByText('Light')).toBeDefined();
+    expect(screen.getByText('Dark')).toBeDefined();
+    expect(screen.getByText('System')).toBeDefined();
+  });
+
+  it('marks the current theme tile as pressed', () => {
+    setupStore({ theme: 'dark' });
+    render(<AppearanceSection />);
+    const darkBtn = screen.getByRole('button', { name: /dark/i });
+    expect(darkBtn.getAttribute('aria-pressed')).toBe('true');
+    const lightBtn = screen.getByRole('button', { name: /light/i });
+    expect(lightBtn.getAttribute('aria-pressed')).toBe('false');
+  });
+
+  it('calls updateSettings and applyThemeToDocument on tile click', async () => {
+    setupStore({ theme: 'dark' });
+    const user = userEvent.setup();
+    render(<AppearanceSection />);
+    await user.click(screen.getByRole('button', { name: /light/i }));
+    expect(mockUpdateSettings).toHaveBeenCalledWith({ theme: 'light' });
+    expect(vi.mocked(applyThemeToDocument)).toHaveBeenCalledWith('light');
   });
 });
