@@ -1,6 +1,7 @@
 // tests/browser/settings/AboutSection.test.tsx
-import { render, cleanup, screen } from '@testing-library/react';
+import { render, cleanup, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { act } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { AboutSection } from '@presentation/settings/sections/AboutSection';
@@ -70,6 +71,20 @@ describe('AboutSection — Diagnostics', () => {
     const user = userEvent.setup();
     await user.click(screen.getByText('Copy'));
     expect(screen.getByText('Copied')).toBeTruthy();
+    clipSpy.mockRestore();
+  });
+
+  it('reverts Copy button back to default after 1800ms', () => {
+    vi.useFakeTimers();
+    const clipSpy = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue(undefined);
+    render(<AboutSection />);
+    fireEvent.click(screen.getByText('Copy'));
+    expect(screen.getByText('Copied')).toBeTruthy();
+    act(() => {
+      vi.advanceTimersByTime(1800);
+    });
+    expect(screen.getByText('Copy')).toBeTruthy();
+    vi.useRealTimers();
     clipSpy.mockRestore();
   });
 });
