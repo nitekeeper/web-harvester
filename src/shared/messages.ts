@@ -225,3 +225,83 @@ export function isPickerResultMessage(msg: unknown): msg is PickerResultMessage 
     (msg as Record<string, unknown>)['type'] === MSG_PICKER_RESULT
   );
 }
+
+/** Type discriminant for the extractSelectors message sent to the content script. */
+export const MSG_EXTRACT_SELECTORS = 'extractSelectors' as const;
+
+/**
+ * Message sent from `TemplatePlugin` (background) to the content script to
+ * resolve CSS selector expressions against the live DOM. The response is a
+ * `Record<string, string>` mapping each expression to its extracted value.
+ */
+export interface ExtractSelectorsMessage {
+  readonly type: typeof MSG_EXTRACT_SELECTORS;
+  /** Selector expressions without braces, e.g. `['selector:.byline']`. */
+  readonly selectors: readonly string[];
+}
+
+/** Type guard for {@link ExtractSelectorsMessage}. */
+export function isExtractSelectorsMessage(msg: unknown): msg is ExtractSelectorsMessage {
+  return (
+    typeof msg === 'object' &&
+    msg !== null &&
+    (msg as Record<string, unknown>)['type'] === MSG_EXTRACT_SELECTORS &&
+    Array.isArray((msg as Record<string, unknown>)['selectors'])
+  );
+}
+
+/** Type discriminant for the start-css-picker message. */
+export const MSG_START_CSS_PICKER = 'START_CSS_PICKER' as const;
+
+/** Message sent from the settings page to activate the CSS selector picker on the active tab. */
+export interface StartCssPickerMessage {
+  readonly type: typeof MSG_START_CSS_PICKER;
+}
+
+/** Type guard for {@link StartCssPickerMessage}. */
+export function isStartCssPickerMessage(msg: unknown): msg is StartCssPickerMessage {
+  return (
+    typeof msg === 'object' &&
+    msg !== null &&
+    (msg as Record<string, unknown>)['type'] === MSG_START_CSS_PICKER
+  );
+}
+
+/** Type discriminant for the stop-css-picker message. */
+export const MSG_STOP_CSS_PICKER = 'STOP_CSS_PICKER' as const;
+
+/** Message sent from the settings page to deactivate the CSS selector picker. */
+export interface StopCssPickerMessage {
+  readonly type: typeof MSG_STOP_CSS_PICKER;
+}
+
+/** Type guard for {@link StopCssPickerMessage}. */
+export function isStopCssPickerMessage(msg: unknown): msg is StopCssPickerMessage {
+  return (
+    typeof msg === 'object' &&
+    msg !== null &&
+    (msg as Record<string, unknown>)['type'] === MSG_STOP_CSS_PICKER
+  );
+}
+
+/** Type discriminant for the css-picker-result notification from the content script. */
+export const MSG_CSS_PICKER_RESULT = 'css-picker-result' as const;
+
+/** Message sent from the content script when the user clicks an element during CSS picking. */
+export interface CssPickerResultMessage {
+  readonly type: typeof MSG_CSS_PICKER_RESULT;
+  readonly selector: string;
+}
+
+/** Type guard for {@link CssPickerResultMessage}. */
+export function isCssPickerResultMessage(msg: unknown): msg is CssPickerResultMessage {
+  return (
+    typeof msg === 'object' &&
+    msg !== null &&
+    (msg as Record<string, unknown>)['type'] === MSG_CSS_PICKER_RESULT &&
+    typeof (msg as Record<string, unknown>)['selector'] === 'string'
+  );
+}
+
+/** Storage key written by the background when a CSS picker session completes. */
+export const CSS_PICKER_RESULT_KEY = 'cssPickerResult';
