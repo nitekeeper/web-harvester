@@ -92,7 +92,7 @@ function handleStartPicker(
 /**
  * Extracts article markdown and page metadata from the live document using
  * Defuddle (browser bundle) + TurndownService, then calls `sendResponse` with
- * `{ html, markdown, description, author, published, tags, image, site, wordCount }`.
+ * `{ html, markdown, description, author, published, tags, image, site, wordCount, schemaOrgData, allMetaTags }`.
  * Runs in the page context where native DOM APIs are always available.
  */
 async function extractPageContent(sendResponse: (r: unknown) => void): Promise<void> {
@@ -107,14 +107,18 @@ async function extractPageContent(sendResponse: (r: unknown) => void): Promise<v
     site: '',
     wordCount: 0,
   };
+  let schemaOrgData: Record<string, unknown> = {};
+  let allMetaTags: unknown[] = [];
   try {
     const result = defuddleParseAll(document, window.location.href);
     markdown = result.markdown;
     meta = result.meta;
+    schemaOrgData = result.schemaOrgData;
+    allMetaTags = result.allMetaTags as unknown[];
   } catch (err: unknown) {
     logger.error('Defuddle extraction failed', err);
   }
-  sendResponse({ html, markdown, ...meta });
+  sendResponse({ html, markdown, ...meta, schemaOrgData, allMetaTags });
 }
 
 /** Handles highlighter control messages. */
