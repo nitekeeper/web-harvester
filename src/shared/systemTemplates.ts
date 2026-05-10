@@ -16,7 +16,7 @@ export interface TemplateView extends TemplateConfig {
 
 const SEEDED_BODY = `# {{page.title}}
 
-> Clipped {{ now | date("MMMM D, YYYY") }} from [{{page.domain}}]({{page.url}})
+> Clipped {{ now | date:"MMMM D, YYYY" }} from [{{page.domain}}]({{page.url}})
 
 {{ content | markdown }}`;
 
@@ -34,7 +34,7 @@ export const SYSTEM_TEMPLATES: readonly TemplateView[] = [
     isSystem: true,
     noteNameTemplate: SEEDED_NOTE_NAME,
     frontmatterTemplate:
-      'title: {{page.title}}\nurl: {{page.url}}\nauthor: {{meta.author | "unknown"}}\npublished: {{page.published_date | date("YYYY-MM-DD")}}\ntags: {{[page.tags].longform}}\nreadtime: {{page.reading_time}}',
+      'title: {{page.title}}\nurl: {{page.url}}\nauthor: {{meta.author ?? "unknown"}}\npublished: {{page.published_date | date:"YYYY-MM-DD"}}\ntags: {{page.tags}}\nreadtime: {{page.reading_time}}',
     bodyTemplate: SEEDED_BODY,
   },
   {
@@ -43,7 +43,7 @@ export const SYSTEM_TEMPLATES: readonly TemplateView[] = [
     isSystem: true,
     noteNameTemplate: '{{date}}-{{title|safe_name}}',
     frontmatterTemplate:
-      'title: {{page.title}}\nurl: {{page.url}}\ndate: {{now | date("YYYY-MM-DD")}}',
+      'title: {{page.title}}\nurl: {{page.url}}\ndate: {{now | date:"YYYY-MM-DD"}}',
     bodyTemplate: '{{content | markdown}}',
   },
   {

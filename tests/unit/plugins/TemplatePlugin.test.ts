@@ -179,39 +179,51 @@ describe('TemplatePlugin — beforeClip service calls', () => {
     vi.clearAllMocks();
   });
 
-  it('calls templateService.getDefault() then render(template.id, explicit variables)', async () => {
+  it('calls getDefault() then render() with flat page.* variables', async () => {
     await harness.plugin.activate(harness.ctx);
     await harness.ctx.hooks.beforeClip.call(baseContent);
 
     expect(harness.templateService.getDefault).toHaveBeenCalledTimes(1);
-    expect(harness.templateService.render).toHaveBeenCalledWith('default', {
-      content: expect.any(String),
-      title: 'Hello',
-      url: EXAMPLE_URL,
-      date: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
-      selectedText: '',
-    });
+    expect(harness.templateService.render).toHaveBeenCalledWith(
+      'default',
+      expect.objectContaining({
+        title: 'Hello',
+        url: EXAMPLE_URL,
+        selectedText: '',
+        now: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+        'page.title': 'Hello',
+        'page.url': EXAMPLE_URL,
+        'page.domain': 'example.com',
+      }),
+    );
+  });
+});
+
+describe('TemplatePlugin — beforeClip body extraction', () => {
+  let harness: TemplateTestHarness;
+
+  beforeEach(() => {
+    harness = setupHarness();
   });
 
-  it('calls extractArticleMarkdown with the content body and URL when markdown is not pre-extracted', async () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('calls extractArticleMarkdown when markdown is not pre-extracted', async () => {
     await harness.plugin.activate(harness.ctx);
     await harness.ctx.hooks.beforeClip.call(baseContent);
-
     expect(extractArticleMarkdown).toHaveBeenCalledWith(baseContent.body, baseContent.url);
   });
 
-  it('skips extractArticleMarkdown and uses content.markdown directly when pre-extracted', async () => {
+  it('uses content.markdown directly when pre-extracted', async () => {
     await harness.plugin.activate(harness.ctx);
-    const contentWithMarkdown: ClipContent = {
-      ...baseContent,
-      markdown: 'pre-extracted article markdown',
-    };
+    const contentWithMarkdown: ClipContent = { ...baseContent, markdown: 'pre-extracted' };
     await harness.ctx.hooks.beforeClip.call(contentWithMarkdown);
 
     expect(extractArticleMarkdown).not.toHaveBeenCalled();
-    const renderArgs = harness.templateService.render.mock.calls[0];
-    const variables = renderArgs?.[1] as { content: string };
-    expect(variables.content).toBe('pre-extracted article markdown');
+    const variables = harness.templateService.render.mock.calls[0]?.[1] as { content: string };
+    expect(variables.content).toBe('pre-extracted');
   });
 });
 

@@ -55,12 +55,23 @@ export class TemplatePlugin implements IPlugin {
             (await templateService.getDefault()))
           : await templateService.getDefault();
         const markdownBody = await extractBody(content, logger);
+        const today = new Date().toISOString().slice(0, 10);
+        let domain = '';
+        try {
+          domain = new URL(content.url).hostname;
+        } catch {
+          // non-parseable URL — domain stays empty
+        }
         const variables = {
           content: markdownBody,
           title: content.title,
           url: content.url,
-          date: new Date().toISOString().slice(0, 10),
+          date: today,
           selectedText: content.selectedText,
+          now: today,
+          'page.title': content.title,
+          'page.url': content.url,
+          'page.domain': domain,
         };
         const result: CompileResult = await templateService.render(template.id, variables);
         if (result.ok) {
