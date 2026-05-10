@@ -95,14 +95,30 @@ function addSchemaVariables(
   variables: Record<string, unknown>,
 ): void {
   if (!schemaOrgData) return;
-  flattenSchemaOrg(schemaOrgData, variables as Record<string, string>);
+  flattenSchemaOrg(schemaOrgData, variables);
+}
+
+/**
+ * Merges resolved selector key/value pairs into the variables dictionary.
+ * Returns early if the IPC response is absent or not a plain object.
+ *
+ * @param raw - Raw IPC response from the content script.
+ * @param variables - Mutable variables dictionary to populate.
+ */
+function mergeResolvedSelectors(raw: unknown, variables: Record<string, unknown>): void {
+  if (raw === null || raw === undefined || typeof raw !== 'object') return;
+  const resolved = raw as Record<string, string>;
+  for (const [k, v] of Object.entries(resolved)) {
+    Reflect.set(variables, k, v);
+  }
 }
 
 /**
  * Pre-scans the template source for `selector:` / `selectorHtml:` variables,
  * resolves them via a single IPC call to the content script, and merges the
  * results into `variables`. No-ops when `tabId` is absent or no selector
- * expressions are found.
+ * expressions are found. IPC errors are caught and treated as non-fatal so
+ * that selector variables are simply absent rather than aborting the clip.
  */
 async function resolveSelectorVariables(
   templateSource: string,
@@ -113,12 +129,14 @@ async function resolveSelectorVariables(
   if (!tabId || !tabAdapter) return;
   const exprs = scanForSelectors(templateSource);
   if (exprs.length === 0) return;
-  const resolved = (await tabAdapter.sendMessageToTab(tabId, {
-    type: 'extractSelectors',
-    selectors: exprs,
-  })) as Record<string, string>;
-  for (const [k, v] of Object.entries(resolved)) {
-    Reflect.set(variables, k, v);
+  try {
+    const raw = await tabAdapter.sendMessageToTab(tabId, {
+      type: 'extractSelectors',
+      selectors: exprs,
+    });
+    mergeResolvedSelectors(raw, variables);
+  } catch {
+    // IPC failure is non-fatal; selector variables will be absent
   }
 }
 
@@ -148,7 +166,7 @@ export class TemplatePlugin implements IPlugin {
     const { container, hooks, ui, logger } = context;
 
     const templateService = container.get<ITemplateService>(TYPES.ITemplateService);
-    this.tabAdapter = container.get<ISelectorPort>(Symbol.for('ITabAdapter'));
+    this.tabAdapter = container.get<ISelectorPort>(TYPES.ITabAdapter);
 
     ui.addToSlot('popup-properties', { component: 'TemplateSelector', order: 100 });
     ui.addToSlot('settings-section', { component: 'TemplateSettingsPanel', order: 20 });

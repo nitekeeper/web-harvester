@@ -17,7 +17,7 @@ function isPrimitive(value: unknown): value is string | number | boolean {
  * @param variables - Mutable variables dictionary to populate.
  * @param prefix - Current prefix for nested paths.
  */
-function processArray(arr: unknown[], variables: Record<string, string>, prefix: string): void {
+function processArray(arr: unknown[], variables: Record<string, unknown>, prefix: string): void {
   if (prefix === '') {
     for (const item of arr) {
       flattenSchemaOrg(item, variables, '');
@@ -40,7 +40,7 @@ function processArray(arr: unknown[], variables: Record<string, string>, prefix:
  */
 function processObject(
   obj: Record<string, unknown>,
-  variables: Record<string, string>,
+  variables: Record<string, unknown>,
   prefix: string,
 ): void {
   const rawType = Reflect.get(obj, '@type');
@@ -70,7 +70,7 @@ function processObject(
  */
 export function flattenSchemaOrg(
   data: unknown,
-  variables: Record<string, string>,
+  variables: Record<string, unknown>,
   prefix = '',
 ): void {
   if (data === null || data === undefined) return;
