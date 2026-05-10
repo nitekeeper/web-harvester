@@ -2,7 +2,14 @@
 import type { CompileResult, ITemplateService } from '@application/TemplateService';
 import { TYPES } from '@core/types';
 import { extractArticleMarkdown } from '@domain/extractor/content-extractor';
+import { flattenSchemaOrg, scanForSelectors } from '@domain/template/dynamicVariables';
 import type { ClipContent, ILogger, IPlugin, IPluginContext, IPluginManifest } from '@domain/types';
+import type { MetaTag } from '@shared/types';
+
+/** Minimal port used to send selector queries to the content script. */
+interface ISelectorPort {
+  sendMessageToTab(tabId: number, msg: unknown): Promise<unknown>;
+}
 
 /**
  * Returns the article body as markdown. Uses `content.markdown` when the
@@ -65,6 +72,57 @@ function buildTemplateVariables(
 }
 
 /**
+ * Iterates `allMetaTags` and writes `meta:name:*` / `meta:property:*` keys
+ * into `variables`. Skips entries with null content.
+ */
+function addMetaTagVariables(
+  allMetaTags: readonly MetaTag[],
+  variables: Record<string, unknown>,
+): void {
+  for (const tag of allMetaTags) {
+    if (tag.content === null) continue;
+    if (tag.name) Reflect.set(variables, `meta:name:${tag.name}`, tag.content);
+    if (tag.property) Reflect.set(variables, `meta:property:${tag.property}`, tag.content);
+  }
+}
+
+/**
+ * Flattens schema.org data into `schema:@Type:field` variable keys.
+ * No-ops when `schemaOrgData` is empty or undefined.
+ */
+function addSchemaVariables(
+  schemaOrgData: Record<string, unknown> | undefined,
+  variables: Record<string, unknown>,
+): void {
+  if (!schemaOrgData) return;
+  flattenSchemaOrg(schemaOrgData, variables as Record<string, string>);
+}
+
+/**
+ * Pre-scans the template source for `selector:` / `selectorHtml:` variables,
+ * resolves them via a single IPC call to the content script, and merges the
+ * results into `variables`. No-ops when `tabId` is absent or no selector
+ * expressions are found.
+ */
+async function resolveSelectorVariables(
+  templateSource: string,
+  tabId: number | undefined,
+  tabAdapter: ISelectorPort | null,
+  variables: Record<string, unknown>,
+): Promise<void> {
+  if (!tabId || !tabAdapter) return;
+  const exprs = scanForSelectors(templateSource);
+  if (exprs.length === 0) return;
+  const resolved = (await tabAdapter.sendMessageToTab(tabId, {
+    type: 'extractSelectors',
+    selectors: exprs,
+  })) as Record<string, string>;
+  for (const [k, v] of Object.entries(resolved)) {
+    Reflect.set(variables, k, v);
+  }
+}
+
+/**
  * Plugin that wires the user's active clip template into the `beforeClip`
  * waterfall, taps the `onTemplateRender` hook for downstream transformations,
  * and contributes UI affordances for selecting/managing templates.
@@ -79,6 +137,7 @@ export class TemplatePlugin implements IPlugin {
 
   private beforeClipUnsubscribe: (() => void) | null = null;
   private onTemplateRenderUnsubscribe: (() => void) | null = null;
+  private tabAdapter: ISelectorPort | null = null;
 
   /**
    * Resolves `ITemplateService` from the container, registers the template
@@ -89,6 +148,7 @@ export class TemplatePlugin implements IPlugin {
     const { container, hooks, ui, logger } = context;
 
     const templateService = container.get<ITemplateService>(TYPES.ITemplateService);
+    this.tabAdapter = container.get<ISelectorPort>(Symbol.for('ITabAdapter'));
 
     ui.addToSlot('popup-properties', { component: 'TemplateSelector', order: 100 });
     ui.addToSlot('settings-section', { component: 'TemplateSettingsPanel', order: 20 });
@@ -101,6 +161,10 @@ export class TemplatePlugin implements IPlugin {
           : await templateService.getDefault();
         const markdownBody = await extractBody(content, logger);
         const variables = buildTemplateVariables(content, markdownBody);
+        addMetaTagVariables(content.allMetaTags ?? [], variables);
+        addSchemaVariables(content.schemaOrgData, variables);
+        const templateSource = template.frontmatterTemplate + '\n' + template.bodyTemplate;
+        await resolveSelectorVariables(templateSource, content.tabId, this.tabAdapter, variables);
         const result: CompileResult = await templateService.render(template.id, variables);
         if (result.ok) {
           return { ...content, body: result.output };
@@ -120,5 +184,6 @@ export class TemplatePlugin implements IPlugin {
     this.onTemplateRenderUnsubscribe?.();
     this.beforeClipUnsubscribe = null;
     this.onTemplateRenderUnsubscribe = null;
+    this.tabAdapter = null;
   }
 }
