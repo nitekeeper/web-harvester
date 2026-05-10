@@ -57,14 +57,41 @@ describe('Settings — layout', () => {
     const user = userEvent.setup();
     render(<Settings />);
     const buttons = getSidebarButtons();
-
     expect(document.querySelector('[data-testid="theme-section"]')).toBeNull();
-
     const appearanceButton = Array.from(buttons).find((b) => b.textContent === 'Appearance');
     if (!appearanceButton) throw new Error('Appearance button not found in sidebar');
     await user.click(appearanceButton);
-
     expect(document.querySelector('[data-testid="theme-section"]')).not.toBeNull();
+  });
+});
+
+describe('Settings — plugins tab', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  it('renders a Plugins navigation button', () => {
+    render(<Settings />);
+    const buttons = getSidebarButtons();
+    const found = Array.from(buttons).some((b) => b.textContent?.trim() === 'Plugins');
+    expect(found).toBe(true);
+  });
+
+  it('does not render a Debug navigation button', () => {
+    render(<Settings />);
+    const buttons = getSidebarButtons();
+    const found = Array.from(buttons).some((b) => b.textContent?.trim() === 'Debug');
+    expect(found).toBe(false);
+  });
+
+  it('switches to the Plugins panel when clicked', async () => {
+    const user = userEvent.setup();
+    render(<Settings />);
+    const buttons = getSidebarButtons();
+    const pluginsButton = Array.from(buttons).find((b) => b.textContent?.trim() === 'Plugins');
+    if (!pluginsButton) throw new Error('Plugins button not found');
+    await user.click(pluginsButton);
+    expect(document.querySelector('[data-testid="plugins-section"]')).not.toBeNull();
   });
 });
 

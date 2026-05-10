@@ -8,22 +8,23 @@ import {
   MetadataIcon,
   AppearanceIcon,
   AboutIcon,
+  PluginIcon,
 } from '@presentation/components/icons';
 import { Tabs, TabsContent } from '@presentation/components/ui/tabs';
 import { WHLogo } from '@presentation/components/WHLogo';
 import { useFormatMessage } from '@presentation/hooks/useFormatMessage';
 import { useSettingsStore } from '@presentation/stores/useSettingsStore';
 
-import { DebugSection } from './sections/DebugSection';
 import { DestinationsSection } from './sections/DestinationsSection';
 import { GeneralSection } from './sections/GeneralSection';
+import { PluginsSection } from './sections/PluginsSection';
 import { TemplatesSection } from './sections/TemplatesSection';
 import { ThemeSection } from './sections/ThemeSection';
 import { useDestinationHandlers } from './useDestinationHandlers';
 import { useTemplateHandlers } from './useTemplateHandlers';
 
 /** Names of the six tabs surfaced by the settings SPA. */
-type Tab = 'destinations' | 'templates' | 'metadata' | 'appearance' | 'about' | 'debug';
+type Tab = 'destinations' | 'templates' | 'metadata' | 'appearance' | 'plugins' | 'about';
 
 const TAB_DEFS: readonly {
   value: Tab;
@@ -56,16 +57,16 @@ const TAB_DEFS: readonly {
     icon: <AppearanceIcon />,
   },
   {
+    value: 'plugins',
+    labelId: 'settings.nav.plugins',
+    defaultLabel: 'Plugins',
+    icon: <PluginIcon />,
+  },
+  {
     value: 'about',
     labelId: 'settings.nav.about',
     defaultLabel: 'About',
     icon: <AboutIcon />,
-  },
-  {
-    value: 'debug',
-    labelId: 'settings.nav.debug',
-    defaultLabel: 'Debug',
-    icon: null,
   },
 ];
 
@@ -173,6 +174,7 @@ function AboutSection() {
 
 /** Renders all six tab content panels. */
 function SectionPanels() {
+  const plugins = useSettingsStore((s) => s.plugins);
   return (
     <>
       <DataPanels />
@@ -182,11 +184,11 @@ function SectionPanels() {
       <TabsContent value="appearance">
         <ThemeSection />
       </TabsContent>
+      <TabsContent value="plugins">
+        <PluginsSection plugins={plugins} />
+      </TabsContent>
       <TabsContent value="about">
         <AboutSection />
-      </TabsContent>
-      <TabsContent value="debug">
-        <DebugSection />
       </TabsContent>
     </>
   );
@@ -196,10 +198,10 @@ function SectionPanels() {
  * Root component for the extension's options page. Uses a two-column layout:
  * a fixed 200 px left sidebar with WHLogo branding and vertical tab navigation,
  * and a scrollable right column hosting the active section panel. Pulls the
- * destinations and templates slices from the singleton settings store and the
- * section handlers from `useDestinationHandlers` and `useTemplateHandlers`
- * (via `SectionPanels`); the singleton itself is hydrated by the settings
- * composition root before the React tree mounts (see ADR-022).
+ * destinations, templates, and plugins slices from the singleton settings store
+ * and the section handlers from `useDestinationHandlers` and
+ * `useTemplateHandlers` (via `SectionPanels`); the singleton itself is hydrated
+ * by the settings composition root before the React tree mounts (see ADR-022).
  */
 export function Settings() {
   const [activeTab, setActiveTab] = useState<Tab>('destinations');
