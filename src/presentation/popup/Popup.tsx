@@ -7,6 +7,7 @@ import { useFormatMessage } from '@presentation/hooks/useFormatMessage';
 import { parseFrontmatterFields } from '@presentation/popup/lib/parseFrontmatter';
 import { type PopupStoreState, usePopupStore } from '@presentation/stores/usePopupStore';
 import { useSettingsStore } from '@presentation/stores/useSettingsStore';
+import { mergeTemplates } from '@shared/systemTemplates';
 
 import { ActionFooter } from './components/ActionFooter';
 import { DestinationSelector } from './components/DestinationSelector';
@@ -150,6 +151,7 @@ interface DestinationTemplateGroupsProps {
 function DestinationTemplateGroups({ popup, onTemplateChange }: DestinationTemplateGroupsProps) {
   const fmt = useFormatMessage();
   const { destinations, templates } = useSettingsStore();
+  const allTemplates = mergeTemplates(templates);
   const handleTemplateSelect = useCallback(
     (id: string) => {
       popup.setSelectedTemplateId(id);
@@ -174,7 +176,7 @@ function DestinationTemplateGroups({ popup, onTemplateChange }: DestinationTempl
           {fmt({ id: 'popup.templateLabel', defaultMessage: 'TEMPLATE' })}
         </span>
         <TemplateSelector
-          templates={templates}
+          templates={allTemplates}
           selectedId={popup.selectedTemplateId}
           onSelect={handleTemplateSelect}
         />
