@@ -38,6 +38,10 @@ export interface AppSettings {
   readonly defaultDestinationId: string | null;
   /** Default template id used when the user does not pick one explicitly. */
   readonly defaultTemplateId: string | null;
+  /** User-authored CSS injected into every Web Harvestor surface. Empty string means none. */
+  readonly customCss: string;
+  /** Base font size (px) for preview surfaces. */
+  readonly fontSize: 11 | 12 | 13 | 14 | 15;
 }
 
 /**

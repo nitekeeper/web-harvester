@@ -60,10 +60,12 @@ export interface SettingsStoreState {
 
 const DEFAULT_SETTINGS: AppSettings = {
   version: 1,
-  theme: 'dark',
+  theme: 'system',
   locale: 'en',
   defaultDestinationId: null,
   defaultTemplateId: 'default',
+  customCss: '',
+  fontSize: 13,
 };
 
 const STORAGE_KEY = 'settings-state';

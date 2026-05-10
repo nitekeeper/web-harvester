@@ -26,6 +26,8 @@ const DEFAULT_SETTINGS: AppSettings = {
   locale: 'en',
   defaultDestinationId: null,
   defaultTemplateId: null,
+  customCss: '',
+  fontSize: 13,
 };
 
 const NOOP_UPDATE: (partial: Partial<AppSettings>) => void = () => undefined;

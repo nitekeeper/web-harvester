@@ -14,6 +14,8 @@ const defaultSettings: AppSettings = {
   locale: 'en',
   defaultDestinationId: null,
   defaultTemplateId: null,
+  customCss: '',
+  fontSize: 13,
 };
 
 const sampleTemplate: TemplateConfig = {
