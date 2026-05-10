@@ -60,7 +60,7 @@ export interface SettingsStoreState {
 
 const DEFAULT_SETTINGS: AppSettings = {
   version: 1,
-  theme: 'system',
+  theme: 'dark',
   locale: 'en',
   defaultDestinationId: null,
   defaultTemplateId: 'default',
