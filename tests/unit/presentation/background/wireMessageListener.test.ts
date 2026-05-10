@@ -107,7 +107,12 @@ function makeStorageAdapter() {
 
 describe('wireMessageListener', () => {
   it('registers exactly one onMessage handler', () => {
-    const adapter = { onMessage: vi.fn(), getActiveTab: vi.fn(), sendMessageToTab: vi.fn() };
+    const adapter = {
+      onMessage: vi.fn(),
+      getActiveTab: vi.fn(),
+      getWebPageTab: vi.fn(),
+      sendMessageToTab: vi.fn(),
+    };
     wireMessageListener(adapter, makeClipService(), makeStorageAdapter());
     expect(adapter.onMessage).toHaveBeenCalledTimes(1);
   });
@@ -119,6 +124,7 @@ describe('wireMessageListener', () => {
         capturedHandler = h;
       }),
       getActiveTab: vi.fn(),
+      getWebPageTab: vi.fn(),
       sendMessageToTab: vi.fn(),
     };
     const clipService = makeClipService();

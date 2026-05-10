@@ -347,12 +347,11 @@ export async function handleStopPickerMessage(
  * service-worker message channel open for the full duration of the interaction.
  */
 export async function handleStartCssPickerMessage(
-  adapter: Pick<ITabAdapter, 'getActiveTab' | 'sendMessageToTab'>,
+  adapter: Pick<ITabAdapter, 'getWebPageTab' | 'sendMessageToTab'>,
   sendResponse: (r: unknown) => void,
 ): Promise<void> {
-  const tabId = await resolveActiveTabId(adapter, sendResponse);
-  if (tabId === undefined) return;
-  adapter.sendMessageToTab(tabId, { type: 'START_CSS_PICKER' }).catch((err: unknown) => {
+  const tab = await adapter.getWebPageTab();
+  adapter.sendMessageToTab(tab.id, { type: 'START_CSS_PICKER' }).catch((err: unknown) => {
     logger.warn('START_CSS_PICKER delivery failed', err);
   });
   sendResponse({ ok: true });
@@ -384,7 +383,10 @@ export interface MessageListenerServices {
 }
 
 /** Adapter shape used internally by the message dispatcher. */
-type MessageDispatchAdapter = Pick<ITabAdapter, 'getActiveTab' | 'sendMessageToTab'>;
+type MessageDispatchAdapter = Pick<
+  ITabAdapter,
+  'getActiveTab' | 'getWebPageTab' | 'sendMessageToTab'
+>;
 
 /**
  * Dispatches highlight-related messages to their handlers. Returns `true` if
@@ -525,7 +527,7 @@ function dispatchMessage(
  */
 export function wireMessageListenerDeferred(
   adapter: Pick<IRuntimeAdapter, 'onMessage'> &
-    Pick<ITabAdapter, 'getActiveTab' | 'sendMessageToTab'>,
+    Pick<ITabAdapter, 'getActiveTab' | 'getWebPageTab' | 'sendMessageToTab'>,
   servicesPromise: Promise<MessageListenerServices>,
 ): void {
   adapter.onMessage((msg, sendResponse) => {
@@ -547,7 +549,7 @@ export function wireMessageListenerDeferred(
  */
 export function wireMessageListener(
   adapter: Pick<IRuntimeAdapter, 'onMessage'> &
-    Pick<ITabAdapter, 'getActiveTab' | 'sendMessageToTab'>,
+    Pick<ITabAdapter, 'getActiveTab' | 'getWebPageTab' | 'sendMessageToTab'>,
   clipService: IClipService,
   storageAdapter: IWiringStoragePort,
 ): void {

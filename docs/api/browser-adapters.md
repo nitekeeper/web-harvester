@@ -23,6 +23,13 @@ tab lifecycle events.
 
 Returns the active tab in the current window. Resolves to `{ id, url, title }`.
 
+#### `getWebPageTab(): Promise<Tab>`
+
+Returns the first http/https tab found in the current window, falling back to any open window.
+Used by the CSS picker, which is initiated from the settings page — making the active tab the
+extension page itself rather than a web page. Throws `'No web page tab found'` if no
+http/https tab exists.
+
 #### `executeScript(tabId: number, fn: () => void): Promise<void>`
 
 Executes `fn` in the context of the given tab.

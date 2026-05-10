@@ -16,6 +16,12 @@ import type { ITabAdapter, Tab } from '../interfaces/ITabAdapter.js';
 
 const logger = createLogger('chrome-adapter');
 
+function isWebPageTab(t: chrome.tabs.Tab): t is chrome.tabs.Tab & { id: number; url: string } {
+  return (
+    t.id !== undefined && !!t.url && (t.url.startsWith('http://') || t.url.startsWith('https://'))
+  );
+}
+
 /**
  * ChromeAdapter — single seam through which the application interacts with
  * `chrome.*` extension APIs. Implements all 9 browser adapter interfaces so
@@ -46,6 +52,21 @@ export class ChromeAdapter
     });
     if (!tab?.id || !tab.url) throw new Error('No active tab found');
     return { id: tab.id, url: tab.url, title: tab.title ?? '' };
+  }
+
+  async getWebPageTab(): Promise<Tab> {
+    // The url filter in chrome.tabs.query requires the `tabs` permission, which
+    // this extension does not declare. Instead we query all tabs in the current
+    // window and filter the results ourselves — chrome populates tab.url for
+    // http/https tabs via the <all_urls> host_permission grant.
+    const windowTabs = await chrome.tabs.query({ currentWindow: true });
+    const webTab = windowTabs.find(isWebPageTab);
+    if (webTab) return { id: webTab.id, url: webTab.url, title: webTab.title ?? '' };
+    // Fall back to any window (e.g. settings page opened in a separate window).
+    const allTabs = await chrome.tabs.query({});
+    const fallback = allTabs.find(isWebPageTab);
+    if (!fallback) throw new Error('No web page tab found');
+    return { id: fallback.id, url: fallback.url, title: fallback.title ?? '' };
   }
 
   async executeScript(tabId: number, fn: () => void): Promise<void> {

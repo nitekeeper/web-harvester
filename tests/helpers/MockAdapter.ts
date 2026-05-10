@@ -44,6 +44,12 @@ export class MockAdapter
     return { id: 1, url: 'https://example.com', title: 'Example' };
   }
 
+  getWebPageTab = vi.fn().mockResolvedValue({
+    id: 1,
+    url: 'https://example.com',
+    title: 'Example',
+  } satisfies Tab);
+
   executeScript = vi.fn().mockResolvedValue(undefined);
   evaluateOnTab = vi.fn().mockResolvedValue(undefined);
   insertCSS = vi.fn().mockResolvedValue(undefined);

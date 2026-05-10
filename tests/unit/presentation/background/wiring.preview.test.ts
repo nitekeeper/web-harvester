@@ -164,6 +164,7 @@ describe('wireMessageListener MSG_PREVIEW routing', () => {
         capturedHandler = h;
       }),
       getActiveTab: vi.fn(),
+      getWebPageTab: vi.fn(),
       sendMessageToTab: vi.fn(),
     };
     const clipService = makeClipService();
@@ -184,6 +185,7 @@ describe('wireMessageListener MSG_PREVIEW routing', () => {
         capturedHandler = h;
       }),
       getActiveTab: vi.fn(),
+      getWebPageTab: vi.fn(),
       sendMessageToTab: vi.fn(),
     };
     const clipService = makeClipService();
@@ -207,6 +209,7 @@ describe('wireMessageListenerDeferred — routes MSG_PREVIEW to preview handler'
         capturedHandler = h;
       }),
       getActiveTab: vi.fn(),
+      getWebPageTab: vi.fn(),
       sendMessageToTab: vi.fn(),
     };
     const clipService = makeClipService();
@@ -229,6 +232,7 @@ describe('wireMessageListenerDeferred — does not clip for MSG_PREVIEW', () => 
         capturedHandler = h;
       }),
       getActiveTab: vi.fn(),
+      getWebPageTab: vi.fn(),
       sendMessageToTab: vi.fn(),
     };
     const clipService = makeClipService();
@@ -251,6 +255,7 @@ describe('wireMessageListenerDeferred — deferred services', () => {
         capturedHandler = h;
       }),
       getActiveTab: vi.fn(),
+      getWebPageTab: vi.fn(),
       sendMessageToTab: vi.fn(),
     };
     const clipService = makeClipService();

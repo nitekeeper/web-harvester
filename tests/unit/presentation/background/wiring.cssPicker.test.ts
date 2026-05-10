@@ -9,7 +9,7 @@ import { CSS_PICKER_RESULT_KEY, MSG_CSS_PICKER_RESULT } from '@shared/messages';
 
 function makeTabAdapter() {
   return {
-    getActiveTab: vi.fn().mockResolvedValue({ id: 42, url: 'https://example.com' }),
+    getWebPageTab: vi.fn().mockResolvedValue({ id: 42, url: 'https://example.com' }),
     sendMessageToTab: vi.fn().mockResolvedValue(undefined),
   };
 }
@@ -25,7 +25,7 @@ function makeStorageAdapter() {
 }
 
 describe('handleStartCssPickerMessage', () => {
-  it('sends START_CSS_PICKER to the resolved active tab', async () => {
+  it('sends START_CSS_PICKER to the web page tab (not the active/settings tab)', async () => {
     const adapter = makeTabAdapter();
     const sendResponse = vi.fn();
     await handleStartCssPickerMessage(adapter, sendResponse);
@@ -39,14 +39,15 @@ describe('handleStartCssPickerMessage', () => {
     expect(sendResponse).toHaveBeenCalledWith({ ok: true });
   });
 
-  it('does not call sendMessageToTab and returns early when tab id is undefined', async () => {
+  it('propagates errors from getWebPageTab when no web tab is available', async () => {
     const adapter = {
-      getActiveTab: vi.fn().mockResolvedValue({ id: undefined }),
+      getWebPageTab: vi.fn().mockRejectedValue(new Error('No web page tab found')),
       sendMessageToTab: vi.fn(),
     };
     const sendResponse = vi.fn();
-    await handleStartCssPickerMessage(adapter, sendResponse);
-    expect(sendResponse).toHaveBeenCalledWith({ ok: false });
+    await expect(handleStartCssPickerMessage(adapter, sendResponse)).rejects.toThrow(
+      'No web page tab found',
+    );
     expect(adapter.sendMessageToTab).not.toHaveBeenCalled();
   });
 });

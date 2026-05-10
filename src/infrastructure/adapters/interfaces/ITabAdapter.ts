@@ -16,6 +16,13 @@ export interface Tab {
  */
 export interface ITabAdapter {
   getActiveTab(): Promise<Tab>;
+  /**
+   * Returns the most recently accessible http/https tab in the current window,
+   * falling back to any window. Used by the CSS picker, which is invoked from
+   * the settings page — so the "active" tab is the extension page itself, not
+   * the web page the picker should run on.
+   */
+  getWebPageTab(): Promise<Tab>;
   executeScript(tabId: number, fn: () => void): Promise<void>;
   /** Runs {@link fn} in the context of the given tab and returns its return value. */
   evaluateOnTab<T>(tabId: number, fn: () => T): Promise<T>;
