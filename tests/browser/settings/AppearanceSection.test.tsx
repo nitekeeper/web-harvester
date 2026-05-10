@@ -177,3 +177,32 @@ describe('AppearanceSection — custom CSS field — autosave', () => {
     vi.useRealTimers();
   });
 });
+
+describe('AppearanceSection — font size field', () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
+  it('renders a range input with current fontSize value', () => {
+    setupStore({ fontSize: 13 });
+    render(<AppearanceSection />);
+    const slider = screen.getByRole('slider') as HTMLInputElement;
+    expect(slider.value).toBe('13');
+  });
+
+  it('displays the live value label', () => {
+    setupStore({ fontSize: 13 });
+    render(<AppearanceSection />);
+    expect(screen.getByText('13px')).toBeDefined();
+  });
+
+  it('calls updateSettings on slider change', () => {
+    setupStore({ fontSize: 13 });
+    render(<AppearanceSection />);
+    const slider = screen.getByRole('slider');
+    // fireEvent.change simulates the user moving the slider to 14
+    fireEvent.change(slider, { target: { value: '14' } });
+    expect(mockUpdateSettings).toHaveBeenCalledWith({ fontSize: 14 });
+  });
+});
