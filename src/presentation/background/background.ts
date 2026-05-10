@@ -36,6 +36,7 @@ import { ReaderPlugin } from '@plugins/reader/ReaderPlugin';
 import { SettingsPlugin } from '@plugins/settings/SettingsPlugin';
 import { TemplatePlugin } from '@plugins/template/TemplatePlugin';
 import { createLogger } from '@shared/logger';
+import { PLUGIN_STATUS_STORAGE_KEY } from '@shared/pluginStatus';
 
 import {
   buildClipHooksPort,
@@ -208,6 +209,12 @@ export async function bootstrap(): Promise<BackgroundContext> {
 
   registerPlugins(registry);
   await registry.activateAll();
+
+  adapter
+    .setLocal(PLUGIN_STATUS_STORAGE_KEY, { plugins: registry.getPluginRows() })
+    .catch((err: unknown) => {
+      logger.error('failed to write plugin status', err);
+    });
 
   // Resolve after plugins are active so message handlers have the full hook
   // system available before processing the first preview request.

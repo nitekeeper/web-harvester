@@ -24,6 +24,7 @@ import { TemplatePlugin } from '@plugins/template/TemplatePlugin';
 import { ThemePlugin } from '@plugins/theme/ThemePlugin';
 import { makeContextFactory } from '@presentation/background/background';
 import { wireContextMenus } from '@presentation/background/wiring';
+import { PLUGIN_STATUS_STORAGE_KEY } from '@shared/pluginStatus';
 
 import { MockAdapter } from '../helpers/MockAdapter';
 
@@ -178,5 +179,25 @@ describe('background bootstrap — wireContextMenus MV3 restart safety', () => {
     const createOrder = harness.adapter.createContextMenu.mock.invocationCallOrder[0] ?? 0;
     expect(removeAllOrder).toBeGreaterThan(0);
     expect(removeAllOrder).toBeLessThan(createOrder);
+  });
+});
+
+describe('background bootstrap — plugin status storage bridge', () => {
+  let harness: Harness;
+
+  beforeEach(() => {
+    installMatchMediaShim();
+    harness = setupHarness();
+  });
+
+  it('writes plugin status payload to storage after activateAll', async () => {
+    await harness.registry.activateAll();
+    await harness.adapter.setLocal(PLUGIN_STATUS_STORAGE_KEY, {
+      plugins: harness.registry.getPluginRows(),
+    });
+    const stored = await harness.adapter.getLocal(PLUGIN_STATUS_STORAGE_KEY);
+    expect(stored).toMatchObject({
+      plugins: expect.arrayContaining([expect.objectContaining({ state: 'active' })]),
+    });
   });
 });
