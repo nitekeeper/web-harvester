@@ -69,14 +69,16 @@ describe('Settings — layout', () => {
 });
 
 describe('Settings store — plugins slice', () => {
+  afterEach(() => {
+    useSettingsStore.getState().setPlugins([]);
+  });
+
   it('has an empty plugins array by default', () => {
     expect(useSettingsStore.getState().plugins).toEqual([]);
   });
 
   it('setPlugins replaces the plugins array', () => {
     useSettingsStore.getState().setPlugins([{ id: 'x', name: 'X', state: 'active' }]);
-    expect(useSettingsStore.getState().plugins).toHaveLength(1);
-    // Reset
-    useSettingsStore.getState().setPlugins([]);
+    expect(useSettingsStore.getState().plugins).toEqual([{ id: 'x', name: 'X', state: 'active' }]);
   });
 });
