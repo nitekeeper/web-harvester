@@ -19,13 +19,15 @@ function isPrimitive(value: unknown): value is string | number | boolean {
  */
 function processArray(arr: unknown[], variables: Record<string, string>, prefix: string): void {
   if (prefix === '') {
-    arr.forEach((item) => {
+    for (const item of arr) {
       flattenSchemaOrg(item, variables, '');
-    });
+    }
   } else {
-    arr.forEach((item, index) => {
+    let index = 0;
+    for (const item of arr) {
       flattenSchemaOrg(item, variables, `${prefix}[${index}]`);
-    });
+      index++;
+    }
   }
 }
 
@@ -41,7 +43,8 @@ function processObject(
   variables: Record<string, string>,
   prefix: string,
 ): void {
-  const type = typeof obj['@type'] === 'string' ? (obj['@type'] as string) : '';
+  const type =
+    typeof Reflect.get(obj, '@type') === 'string' ? (Reflect.get(obj, '@type') as string) : '';
   const thisPrefix = prefix === '' && type ? `@${type}` : prefix;
   for (const key of Object.keys(obj)) {
     if (key.startsWith('@')) continue;
@@ -92,6 +95,7 @@ export function flattenSchemaOrg(
  * expressions referenced as variables. Matches `{{selector:...}}` and
  * `{{selectorHtml:...}}`, stopping at `|` (filter separator) or `}}`.
  *
+ * @param templateSource - The full template source string to scan.
  * @returns Array of expressions without braces, e.g. `['selector:.byline']`.
  */
 export function scanForSelectors(templateSource: string): string[] {
