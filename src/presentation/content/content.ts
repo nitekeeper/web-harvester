@@ -301,7 +301,19 @@ function onMessage(msg: unknown, _sender: unknown, sendResponse: (r: unknown) =>
   if (message.type === 'getHtml') {
     extractPageContent(sendResponse).catch((err: unknown) => {
       logger.error('getHtml handler failed', err);
-      sendResponse({ html: document.documentElement.outerHTML, markdown: '' });
+      sendResponse({
+        html: document.documentElement.outerHTML,
+        markdown: '',
+        description: '',
+        author: '',
+        published: '',
+        tags: '',
+        image: '',
+        site: '',
+        wordCount: 0,
+        schemaOrgData: {},
+        allMetaTags: [],
+      });
     });
     return true;
   }
