@@ -8,6 +8,8 @@ import { useSettingsStore } from '@presentation/stores/useSettingsStore';
 import { applyThemeToDocument } from '@presentation/theme/applyTheme';
 import type { AppSettings } from '@shared/types';
 
+import { CustomCssField } from './CustomCssField';
+
 /** BCP-47 locale codes supported by the application UI. */
 type SupportedLocale = 'en' | 'ko' | 'ja';
 
@@ -163,9 +165,9 @@ function ThemeTile({
 }) {
   // eslint-disable-next-line security/detect-object-injection
   const s = Object.prototype.hasOwnProperty.call(SWATCHES, theme) ? SWATCHES[theme] : SWATCHES.dark;
-  // eslint-disable-next-line security/detect-object-injection
   const label = Object.prototype.hasOwnProperty.call(THEME_LABELS, theme)
-    ? THEME_LABELS[theme]
+    ? // eslint-disable-next-line security/detect-object-injection
+      THEME_LABELS[theme]
     : theme;
   return (
     <button
@@ -273,6 +275,10 @@ export function AppearanceSection() {
           updateSettings({ theme });
           applyThemeToDocument(theme);
         }}
+      />
+      <CustomCssField
+        value={settings.customCss}
+        onChange={(customCss) => updateSettings({ customCss })}
       />
     </div>
   );

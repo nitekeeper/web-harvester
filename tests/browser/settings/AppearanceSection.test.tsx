@@ -3,7 +3,7 @@
 // vi.mock calls are hoisted by Vitest before import resolution, so
 // AppearanceSection and useSettingsStore both see the mocked versions.
 
-import { render, cleanup, screen } from '@testing-library/react';
+import { render, cleanup, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -119,5 +119,61 @@ describe('AppearanceSection — theme field', () => {
     await user.click(screen.getByRole('button', { name: /light/i }));
     expect(mockUpdateSettings).toHaveBeenCalledWith({ theme: 'light' });
     expect(vi.mocked(applyThemeToDocument)).toHaveBeenCalledWith('light');
+  });
+});
+
+describe('AppearanceSection — custom CSS field — initial state', () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
+  it('shows default seed when customCss is empty', () => {
+    setupStore({ customCss: '' });
+    render(<AppearanceSection />);
+    expect(screen.getByRole('textbox')).toBeDefined();
+    const ta = screen.getByRole('textbox') as HTMLTextAreaElement;
+    expect(ta.value).toContain('--color-primary');
+  });
+
+  it('shows saved customCss when not empty', () => {
+    setupStore({ customCss: ':root { --my-var: red; }' });
+    render(<AppearanceSection />);
+    const ta = screen.getByRole('textbox') as HTMLTextAreaElement;
+    expect(ta.value).toBe(':root { --my-var: red; }');
+  });
+
+  it('resets textarea to seed content on Reset click', () => {
+    setupStore({ customCss: 'body { color: red; }' });
+    render(<AppearanceSection />);
+    fireEvent.click(screen.getByRole('button', { name: /reset to default/i }));
+    const ta = screen.getByRole('textbox') as HTMLTextAreaElement;
+    expect(ta.value).toContain('--color-primary');
+  });
+});
+
+describe('AppearanceSection — custom CSS field — autosave', () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
+  it('shows "saving…" indicator while typing', () => {
+    setupStore({ customCss: '' });
+    vi.useFakeTimers();
+    render(<AppearanceSection />);
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'a' } });
+    expect(screen.getByText(/saving/i)).toBeDefined();
+    vi.useRealTimers();
+  });
+
+  it('calls updateSettings after debounce', () => {
+    setupStore({ customCss: '' });
+    vi.useFakeTimers();
+    render(<AppearanceSection />);
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'a' } });
+    vi.advanceTimersByTime(600);
+    expect(mockUpdateSettings).toHaveBeenCalled();
+    vi.useRealTimers();
   });
 });
