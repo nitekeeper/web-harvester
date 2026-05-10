@@ -3,6 +3,7 @@
 import { safe_name } from '@domain/filters/safe_name';
 import type { ILogger } from '@domain/types';
 import { createLogger } from '@shared/logger';
+import type { MetaTag } from '@shared/types';
 
 // ── Domain types (mirrored locally to keep application/ free of @core/ imports) ─
 
@@ -39,6 +40,12 @@ export interface ClipContent {
   readonly image?: string;
   readonly site?: string;
   readonly wordCount?: number;
+  /** Browser tab ID — forwarded to `TemplatePlugin` for selector IPC calls. */
+  readonly tabId?: number;
+  /** Raw schema.org / JSON-LD data extracted by Defuddle from the page. */
+  readonly schemaOrgData?: Record<string, unknown>;
+  /** All `<meta>` elements from the page, as parsed by Defuddle. */
+  readonly allMetaTags?: readonly MetaTag[];
 }
 
 /**
@@ -91,6 +98,8 @@ interface ExtractedContent {
   image: string;
   site: string;
   wordCount: number;
+  schemaOrgData: Record<string, unknown>;
+  allMetaTags: readonly MetaTag[];
 }
 
 const EMPTY_EXTRACTED_CONTENT: ExtractedContent = {
@@ -103,6 +112,8 @@ const EMPTY_EXTRACTED_CONTENT: ExtractedContent = {
   image: '',
   site: '',
   wordCount: 0,
+  schemaOrgData: {},
+  allMetaTags: [],
 };
 
 /**
@@ -363,8 +374,19 @@ export class ClipService implements IClipService {
     tab: Tab,
     selectedTemplateId?: string,
   ): Promise<ClipContent> {
-    const { html, markdown, description, author, published, tags, image, site, wordCount } =
-      await this.extractPageContent(tabId);
+    const {
+      html,
+      markdown,
+      description,
+      author,
+      published,
+      tags,
+      image,
+      site,
+      wordCount,
+      schemaOrgData,
+      allMetaTags,
+    } = await this.extractPageContent(tabId);
     return {
       url: tab.url,
       html,
@@ -378,6 +400,9 @@ export class ClipService implements IClipService {
       image,
       site,
       wordCount,
+      tabId,
+      schemaOrgData,
+      allMetaTags,
     };
   }
 
@@ -428,7 +453,10 @@ export class ClipService implements IClipService {
   private async extractPageContent(tabId: number): Promise<ExtractedContent> {
     try {
       const r = (await this.tabAdapter.sendMessageToTab(tabId, { type: 'getHtml' })) as
-        | Partial<ExtractedContent>
+        | (Partial<Omit<ExtractedContent, 'schemaOrgData' | 'allMetaTags'>> & {
+            schemaOrgData?: unknown;
+            allMetaTags?: unknown;
+          })
         | null
         | undefined;
       return {
@@ -441,6 +469,13 @@ export class ClipService implements IClipService {
         image: r?.image ?? '',
         site: r?.site ?? '',
         wordCount: r?.wordCount ?? 0,
+        schemaOrgData:
+          r?.schemaOrgData !== null &&
+          typeof r?.schemaOrgData === 'object' &&
+          !Array.isArray(r?.schemaOrgData)
+            ? (r.schemaOrgData as Record<string, unknown>)
+            : {},
+        allMetaTags: Array.isArray(r?.allMetaTags) ? (r.allMetaTags as readonly MetaTag[]) : [],
       };
     } catch (err: unknown) {
       this.logger.warn('Page not scriptable — using empty content', err);

@@ -14,9 +14,11 @@ import {
   MSG_EXTRACT_SELECTORS,
   MSG_START_CSS_PICKER,
   MSG_STOP_CSS_PICKER,
+  MSG_CSS_PICKER_RESULT,
 } from '@shared/messages';
 
 import { defuddleParseAll } from './defuddleParse';
+import { generateSelector } from './generateSelector';
 import { activateHighlighter, deactivateHighlighter } from './highlighter';
 import { startPicker } from './picker';
 import { activateReader, deactivateReader } from './reader';
@@ -43,6 +45,16 @@ function stopActivePicker(): void {
   if (activePicker) {
     activePicker();
     activePicker = null;
+  }
+}
+
+let cssPickerCleanup: (() => void) | null = null;
+
+/** Tears down any running CSS picker overlay. */
+function stopCssPicker(): void {
+  if (cssPickerCleanup) {
+    cssPickerCleanup();
+    cssPickerCleanup = null;
   }
 }
 
@@ -173,25 +185,78 @@ function handleExtractSelectors(
   return false;
 }
 
-chrome.runtime.onMessage.addListener((msg: unknown, _sender, sendResponse): boolean => {
-  const message = msg as IncomingMessage;
+/**
+ * Builds the three event handlers used by the CSS picker overlay and returns
+ * a teardown function that removes them and restores the page to its prior state.
+ */
+function mountCssPickerOverlay(tooltip: HTMLDivElement): () => void {
+  let highlighted: Element | null = null;
 
-  if (message.type === 'START_PICKER') {
-    return handleStartPicker(message, sendResponse);
+  function onMouseOver(e: MouseEvent): void {
+    if (!(e.target instanceof Element)) return;
+    if (highlighted) (highlighted as HTMLElement).style.outline = '';
+    highlighted = e.target;
+    (highlighted as HTMLElement).style.outline = '2px solid #4f8ef7';
+    const sel = generateSelector(highlighted);
+    tooltip.textContent = `{{selector:${sel}}}`;
+    tooltip.style.top = `${Math.min(e.clientY + 14, window.innerHeight - 40)}px`;
+    tooltip.style.left = `${Math.min(e.clientX + 14, window.innerWidth - 340)}px`;
   }
 
-  if (message.type === 'STOP_PICKER') {
-    return handleStopPicker(sendResponse);
+  function onClick(e: MouseEvent): void {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!(e.target instanceof Element)) return;
+    const sel = generateSelector(e.target);
+    chrome.runtime
+      .sendMessage({ type: MSG_CSS_PICKER_RESULT, selector: sel })
+      .catch((err: unknown) => {
+        logger.error('css-picker-result send failed', err);
+      });
+    stopCssPicker();
   }
 
-  if (message.type === 'getHtml') {
-    extractPageContent(sendResponse).catch((err: unknown) => {
-      logger.error('getHtml handler failed', err);
-      sendResponse({ html: document.documentElement.outerHTML, markdown: '' });
-    });
-    return true;
+  function onKeyDown(e: KeyboardEvent): void {
+    if (e.key === 'Escape') stopCssPicker();
   }
 
+  document.addEventListener('mouseover', onMouseOver, true);
+  document.addEventListener('click', onClick, true);
+  document.addEventListener('keydown', onKeyDown, true);
+
+  return () => {
+    document.removeEventListener('mouseover', onMouseOver, true);
+    document.removeEventListener('click', onClick, true);
+    document.removeEventListener('keydown', onKeyDown, true);
+    if (highlighted) (highlighted as HTMLElement).style.outline = '';
+    tooltip.remove();
+  };
+}
+
+/**
+ * Mounts a hover overlay that highlights elements and shows their generated
+ * CSS selector. On click, sends the selector to the background and tears down.
+ */
+function handleStartCssPicker(sendResponse: (r: unknown) => void): false {
+  stopCssPicker();
+
+  const tooltip = document.createElement('div');
+  tooltip.style.cssText =
+    'position:fixed;z-index:2147483647;background:#1a1a1a;color:#fff;' +
+    'padding:4px 8px;border-radius:4px;font:12px monospace;pointer-events:none;' +
+    'max-width:320px;word-break:break-all;box-shadow:0 2px 8px rgba(0,0,0,.4)';
+  document.body.appendChild(tooltip);
+
+  cssPickerCleanup = mountCssPickerOverlay(tooltip);
+  sendResponse({ ok: true });
+  return false;
+}
+
+/** Handles reader-mode messages; returns true when response is async. */
+function handleReaderMessage(
+  message: IncomingMessage,
+  sendResponse: (r: unknown) => void,
+): boolean {
   if (message.type === 'READER_ACTIVATE') {
     activateReader(message.settings)
       .then(() => {
@@ -201,22 +266,52 @@ chrome.runtime.onMessage.addListener((msg: unknown, _sender, sendResponse): bool
         logger.error('reader activate failed', err);
         sendResponse({ ok: false });
       });
-    return true; // async response
+    return true;
   }
-
   if (message.type === 'READER_DEACTIVATE') {
     return handleReaderDeactivate(sendResponse);
+  }
+  return false;
+}
+
+/**
+ * Root message dispatcher — routes each inbound message to the appropriate
+ * handler and returns the correct keep-alive boolean for MV3.
+ */
+function onMessage(msg: unknown, _sender: unknown, sendResponse: (r: unknown) => void): boolean {
+  const message = msg as IncomingMessage;
+
+  if (message.type === 'START_PICKER') return handleStartPicker(message, sendResponse);
+  if (message.type === 'STOP_PICKER') return handleStopPicker(sendResponse);
+
+  if (message.type === 'getHtml') {
+    extractPageContent(sendResponse).catch((err: unknown) => {
+      logger.error('getHtml handler failed', err);
+      sendResponse({ html: document.documentElement.outerHTML, markdown: '' });
+    });
+    return true;
+  }
+
+  if (message.type === 'READER_ACTIVATE' || message.type === 'READER_DEACTIVATE') {
+    return handleReaderMessage(message, sendResponse);
   }
 
   if (message.type === 'START_HIGHLIGHT' || message.type === 'STOP_HIGHLIGHT') {
     return handleHighlighterMessage(message, sendResponse);
   }
 
-  if (message.type === MSG_EXTRACT_SELECTORS) {
-    return handleExtractSelectors(message, sendResponse);
+  if (message.type === MSG_EXTRACT_SELECTORS) return handleExtractSelectors(message, sendResponse);
+  if (message.type === MSG_START_CSS_PICKER) return handleStartCssPicker(sendResponse);
+
+  if (message.type === MSG_STOP_CSS_PICKER) {
+    stopCssPicker();
+    sendResponse({ ok: true });
+    return false;
   }
 
   return false;
-});
+}
+
+chrome.runtime.onMessage.addListener(onMessage);
 
 logger.info('Content script loaded');

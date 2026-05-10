@@ -2,6 +2,7 @@ import type { Container } from 'inversify';
 import type React from 'react';
 
 import type { Logger } from '@shared/logger';
+import type { MetaTag } from '@shared/types';
 
 // ---------------------------------------------------------------------------
 // Domain data types used by the hook system and plugins
@@ -27,6 +28,12 @@ export interface ClipContent {
   image?: string;
   site?: string;
   wordCount?: number;
+  /** Browser tab ID — forwarded to `TemplatePlugin` for selector IPC calls. */
+  readonly tabId?: number;
+  /** Raw schema.org / JSON-LD data extracted by Defuddle from the page. */
+  readonly schemaOrgData?: Record<string, unknown>;
+  /** All `<meta>` elements from the page, as parsed by Defuddle. */
+  readonly allMetaTags?: readonly MetaTag[];
 }
 
 /** Event emitted when the user creates or modifies a highlight. */
