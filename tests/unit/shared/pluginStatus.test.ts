@@ -45,8 +45,7 @@ describe('isPluginStatusPayload', () => {
 });
 
 describe('PLUGIN_STATUS_STORAGE_KEY', () => {
-  it('is a non-empty string', () => {
-    expect(typeof PLUGIN_STATUS_STORAGE_KEY).toBe('string');
-    expect(PLUGIN_STATUS_STORAGE_KEY.length).toBeGreaterThan(0);
+  it('equals the exact storage key string', () => {
+    expect(PLUGIN_STATUS_STORAGE_KEY).toBe('wh_plugin_status');
   });
 });
