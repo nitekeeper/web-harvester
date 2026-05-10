@@ -139,6 +139,7 @@ function SplitPane({
         onNew={onNew}
       />
       <TemplateEditor
+        key={selectedTemplate.id}
         template={selectedTemplate}
         onUpdate={onUpdate}
         onDuplicate={onDuplicate}

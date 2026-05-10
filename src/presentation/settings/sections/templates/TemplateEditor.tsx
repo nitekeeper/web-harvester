@@ -96,14 +96,14 @@ function EditorFields({
         onChange={(noteNameTemplate) => onUpdateField({ noteNameTemplate })}
         onInsertVariable={onOpenNoteNamePicker}
       />
-      <PickElementButton isPicking={isPicking} onClick={onPickFrontmatter} />
+      {!isSystem ? <PickElementButton isPicking={isPicking} onClick={onPickFrontmatter} /> : null}
       <FrontmatterField
         value={draft.frontmatterTemplate}
         readonly={isSystem}
         onChange={(frontmatterTemplate) => onUpdateField({ frontmatterTemplate })}
         onInsertVariable={onOpenFrontmatterPicker}
       />
-      <PickElementButton isPicking={isPicking} onClick={onPickBody} />
+      {!isSystem ? <PickElementButton isPicking={isPicking} onClick={onPickBody} /> : null}
       <BodyEditorField
         ref={bodyEditorRef}
         value={draft.bodyTemplate}
