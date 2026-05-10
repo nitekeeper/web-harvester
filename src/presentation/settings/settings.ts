@@ -16,6 +16,7 @@ import { createRoot } from 'react-dom/client';
 import { ChromeAdapter } from '@infrastructure/adapters/chrome/ChromeAdapter';
 import type { IStorageAdapter } from '@infrastructure/adapters/interfaces/IStorageAdapter';
 import { createDestinationStorage } from '@infrastructure/storage/destinations';
+import { getRootElement } from '@presentation/lib/mountApp';
 import type { IDestinationPort } from '@presentation/ports/IDestinationPort';
 import '@presentation/styles/global.css';
 import { bootstrapStore } from '@presentation/stores/bootstrapStore';
@@ -62,9 +63,7 @@ function hydratePluginStatus(adapter: IStorageAdapter): void {
 }
 
 async function init(): Promise<void> {
-  const rootEl = document.getElementById('root');
-  if (!rootEl) throw new Error('Root element not found');
-
+  const rootEl = getRootElement();
   const adapter = new ChromeAdapter();
   await bootstrapStore(adapter, 'settings-state', useSettingsStore, {
     serialize: (s) => ({ settings: s.settings, templates: s.templates }),

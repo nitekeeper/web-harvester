@@ -14,6 +14,7 @@ import { ChromeAdapter } from '@infrastructure/adapters/chrome/ChromeAdapter';
 import { ensureWritable } from '@infrastructure/fsa/fsa';
 import { createDestinationStorage } from '@infrastructure/storage/destinations';
 import { createSaveHandler } from '@presentation/hooks/useSaveHandler';
+import { getRootElement } from '@presentation/lib/mountApp';
 import '@presentation/styles/global.css';
 import { bootstrapStore } from '@presentation/stores/bootstrapStore';
 import { useHighlightsStore } from '@presentation/stores/useHighlightsStore';
@@ -81,9 +82,7 @@ function subscribeHighlightReloads(adapter: ChromeAdapter): void {
 }
 
 async function init(): Promise<void> {
-  const rootEl = document.getElementById('root');
-  if (!rootEl) throw new Error('Root element not found');
-
+  const rootEl = getRootElement();
   const adapter = new ChromeAdapter();
   await bootstrapAllStores(adapter);
   await loadHighlights(adapter);
