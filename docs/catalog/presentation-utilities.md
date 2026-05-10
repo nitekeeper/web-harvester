@@ -38,6 +38,30 @@ Factory that creates the `onSave` callback wired into the popup and side-panel c
 
 ---
 
+## `src/presentation/settings/aboutConfig.ts`
+
+Runtime URL config for the About page.
+
+| Name                 | Kind      | Description                                                                                                                                                                                        |
+| -------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AboutLinks`         | Interface | External resource links: `gh` (GitHub repo), `issues` (issue tracker), `changelog` (releases page).                                                                                                |
+| `AboutLegal`         | Interface | Legal section links: `licenses` (in-extension open-source licenses page).                                                                                                                          |
+| `AboutConfig`        | Interface | Full config contract for the About section — combines `AboutLinks` and `AboutLegal`.                                                                                                               |
+| `buildAboutConfig()` | Function  | Builds the About page config at runtime. `links` are derived from a hard-coded GitHub base URL. `legal.licenses` is constructed from `window.location.origin` so it works across any extension ID. |
+
+---
+
+## `src/presentation/settings/getAboutDiagnostics.ts`
+
+Diagnostic snapshot for the About page and clipboard bug reports.
+
+| Name                    | Kind      | Description                                                                                                                                                                                                                         |
+| ----------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AboutDiagnostics`      | Interface | Snapshot shape: `version`, `build`, `channel`, `browser`, `platform` — all `readonly string`.                                                                                                                                       |
+| `getAboutDiagnostics()` | Function  | Returns a snapshot of version (from `EXTENSION_VERSION`), build and channel (from Vite env vars `VITE_BUILD`/`VITE_CHANNEL`), and browser/platform (from `navigator.userAgentData`, falling back to empty strings on non-Chromium). |
+
+---
+
 ## `src/presentation/popup/components/PropertiesEditor.tsx`
 
 Editable form for YAML frontmatter fields rendered in the popup.

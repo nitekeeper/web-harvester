@@ -81,3 +81,22 @@ describe('getAboutDiagnostics — browser and platform', () => {
     expect(result.platform).toBe('');
   });
 });
+
+describe('getAboutDiagnostics — pickBrand fallback', () => {
+  it('falls back to first brand when all entries match skip list', () => {
+    Object.defineProperty(navigator, 'userAgentData', {
+      value: {
+        brands: [
+          { brand: 'Not A Brand', version: '99' },
+          { brand: 'Chromium', version: '134' },
+        ],
+        platform: 'Linux',
+      },
+      configurable: true,
+    });
+    const result = getAboutDiagnostics();
+    // Falls back to first entry when no product brand is available
+    expect(result.browser).toBe('Not A Brand 99');
+    expect(result.platform).toBe('Linux');
+  });
+});
