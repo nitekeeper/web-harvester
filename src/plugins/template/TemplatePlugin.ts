@@ -20,6 +20,51 @@ async function extractBody(content: ClipContent, logger: ILogger): Promise<strin
 }
 
 /**
+ * Builds the template variable dictionary from clip content and the extracted
+ * article markdown. Supplies all page, meta, and date variables that templates
+ * can reference.
+ */
+function buildTemplateVariables(
+  content: ClipContent,
+  markdownBody: string,
+): Record<string, unknown> {
+  const today = new Date().toISOString().slice(0, 10);
+  let domain = '';
+  try {
+    domain = new URL(content.url).hostname;
+  } catch {
+    // non-parseable URL — domain stays empty
+  }
+  const readingTime =
+    content.wordCount && content.wordCount > 0 ? `${Math.ceil(content.wordCount / 200)} min` : '';
+  return {
+    content: markdownBody,
+    title: content.title,
+    url: content.url,
+    date: today,
+    today,
+    today_iso: new Date().toISOString(),
+    selectedText: content.selectedText,
+    now: today,
+    'page.title': content.title,
+    'page.url': content.url,
+    'page.domain': domain,
+    description: content.description ?? '',
+    author: content.author ?? '',
+    published: content.published ?? '',
+    tags: content.tags ?? '',
+    'page.description': content.description ?? '',
+    'page.published_date': content.published ?? '',
+    'page.tags': content.tags ?? '',
+    'page.reading_time': readingTime,
+    'meta.author': content.author ?? '',
+    'meta.description': content.description ?? '',
+    'meta.image': content.image ?? '',
+    'meta.site_name': content.site ?? '',
+  };
+}
+
+/**
  * Plugin that wires the user's active clip template into the `beforeClip`
  * waterfall, taps the `onTemplateRender` hook for downstream transformations,
  * and contributes UI affordances for selecting/managing templates.
@@ -55,24 +100,7 @@ export class TemplatePlugin implements IPlugin {
             (await templateService.getDefault()))
           : await templateService.getDefault();
         const markdownBody = await extractBody(content, logger);
-        const today = new Date().toISOString().slice(0, 10);
-        let domain = '';
-        try {
-          domain = new URL(content.url).hostname;
-        } catch {
-          // non-parseable URL — domain stays empty
-        }
-        const variables = {
-          content: markdownBody,
-          title: content.title,
-          url: content.url,
-          date: today,
-          selectedText: content.selectedText,
-          now: today,
-          'page.title': content.title,
-          'page.url': content.url,
-          'page.domain': domain,
-        };
+        const variables = buildTemplateVariables(content, markdownBody);
         const result: CompileResult = await templateService.render(template.id, variables);
         if (result.ok) {
           return { ...content, body: result.output };

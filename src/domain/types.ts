@@ -18,6 +18,15 @@ export interface ClipContent {
   markdown?: string;
   /** ID of the template to apply during the clip/preview flow. When absent, the plugin falls back to the default template. */
   selectedTemplateId?: string;
+  /** Page metadata extracted by Defuddle from the content script. */
+  description?: string;
+  author?: string;
+  published?: string;
+  /** Comma-separated keywords from `<meta name="keywords">`. */
+  tags?: string;
+  image?: string;
+  site?: string;
+  wordCount?: number;
 }
 
 /** Event emitted when the user creates or modifies a highlight. */

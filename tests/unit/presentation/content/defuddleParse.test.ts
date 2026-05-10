@@ -6,26 +6,32 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 const URL = 'https://example.com';
+const MOCK_AUTHOR = 'Author Name';
+const MOCK_PUBLISHED = '2024-01-01';
+const MOCK_DESCRIPTION = 'An article about web development';
+const MOCK_IMAGE = 'https://example.com/og-image.jpg';
+const MOCK_SITE = 'Example Site';
 
 /** Returns a mock Defuddle response. */
 function mockResponse(overrides?: Record<string, unknown>) {
   return {
     content: '<p>extracted content</p>',
     title: 'Article Title',
-    author: 'Author Name',
-    published: '2024-01-01',
+    author: MOCK_AUTHOR,
+    published: MOCK_PUBLISHED,
     domain: 'example.com',
     wordCount: 42,
-    description: '',
+    description: MOCK_DESCRIPTION,
     favicon: '',
-    image: '',
+    image: MOCK_IMAGE,
     url: '',
     source: '',
     byline: '',
     language: '',
     parseTime: 0,
-    site: '',
+    site: MOCK_SITE,
     schemaOrgData: {},
+    metaTags: [{ name: 'keywords', property: null, content: 'web, development, javascript' }],
     ...overrides,
   };
 }
@@ -53,7 +59,8 @@ vi.mock('defuddle', () => {
 });
 
 // Dynamic import after vi.mock so the mock is in place when the module loads.
-const { defuddleParse, defuddleExtract } = await import('@presentation/content/defuddleParse');
+const { defuddleParse, defuddleExtract, defuddleParseAll } =
+  await import('@presentation/content/defuddleParse');
 const { default: MockDefuddle } = await import('defuddle');
 
 describe('defuddleParse', () => {
@@ -97,8 +104,8 @@ describe('defuddleExtract', () => {
   it('returns title, author, published, domain, wordCount', () => {
     const result = defuddleExtract(document, URL);
     expect(result.title).toBe('Article Title');
-    expect(result.author).toBe('Author Name');
-    expect(result.published).toBe('2024-01-01');
+    expect(result.author).toBe(MOCK_AUTHOR);
+    expect(result.published).toBe(MOCK_PUBLISHED);
     expect(result.domain).toBe('example.com');
     expect(result.wordCount).toBe(42);
   });
@@ -116,5 +123,118 @@ describe('defuddleExtract', () => {
     expect(result.title).toBe('');
     expect(result.author).toBe('');
     expect(result.wordCount).toBe(0);
+  });
+});
+
+describe('defuddleParseAll — basic fields', () => {
+  beforeEach(() => {
+    vi.mocked(MockDefuddle).mockClear();
+  });
+
+  it('returns markdown converted from Defuddle content', () => {
+    const { markdown } = defuddleParseAll(document, URL);
+    expect(typeof markdown).toBe('string');
+  });
+
+  it('returns description from the Defuddle parse result', () => {
+    const { meta } = defuddleParseAll(document, URL);
+    expect(meta.description).toBe(MOCK_DESCRIPTION);
+  });
+
+  it('returns author from the Defuddle parse result', () => {
+    const { meta } = defuddleParseAll(document, URL);
+    expect(meta.author).toBe(MOCK_AUTHOR);
+  });
+
+  it('returns published from the Defuddle parse result', () => {
+    const { meta } = defuddleParseAll(document, URL);
+    expect(meta.published).toBe(MOCK_PUBLISHED);
+  });
+
+  it('returns image from the Defuddle parse result', () => {
+    const { meta } = defuddleParseAll(document, URL);
+    expect(meta.image).toBe(MOCK_IMAGE);
+  });
+
+  it('returns site from the Defuddle parse result', () => {
+    const { meta } = defuddleParseAll(document, URL);
+    expect(meta.site).toBe(MOCK_SITE);
+  });
+
+  it('returns wordCount from the Defuddle parse result', () => {
+    const { meta } = defuddleParseAll(document, URL);
+    expect(meta.wordCount).toBe(42);
+  });
+});
+
+describe('defuddleParseAll — tags extraction', () => {
+  beforeEach(() => {
+    vi.mocked(MockDefuddle).mockClear();
+  });
+
+  it('extracts tags from the keywords meta tag', () => {
+    const { meta } = defuddleParseAll(document, URL);
+    expect(meta.tags).toBe('web, development, javascript');
+  });
+
+  it('returns empty tags when no keywords meta tag exists', () => {
+    vi.mocked(MockDefuddle).mockImplementationOnce(
+      () =>
+        ({
+          parse: () => mockResponse({ metaTags: [] }),
+        }) as unknown as InstanceType<typeof MockDefuddle>,
+    );
+    const { meta } = defuddleParseAll(document, URL);
+    expect(meta.tags).toBe('');
+  });
+
+  it('returns empty tags when metaTags is absent', () => {
+    vi.mocked(MockDefuddle).mockImplementationOnce(
+      () =>
+        ({
+          parse: () => mockResponse({ metaTags: undefined }),
+        }) as unknown as InstanceType<typeof MockDefuddle>,
+    );
+    const { meta } = defuddleParseAll(document, URL);
+    expect(meta.tags).toBe('');
+  });
+});
+
+describe('defuddleParseAll — edge cases', () => {
+  beforeEach(() => {
+    vi.mocked(MockDefuddle).mockClear();
+  });
+
+  it('defaults empty strings for missing metadata fields', () => {
+    vi.mocked(MockDefuddle).mockImplementationOnce(
+      () =>
+        ({
+          parse: () =>
+            mockResponse({
+              description: undefined,
+              author: undefined,
+              published: undefined,
+              image: undefined,
+              site: undefined,
+              wordCount: undefined,
+              metaTags: undefined,
+            }),
+        }) as unknown as InstanceType<typeof MockDefuddle>,
+    );
+    const { meta } = defuddleParseAll(document, URL);
+    expect(meta.description).toBe('');
+    expect(meta.author).toBe('');
+    expect(meta.published).toBe('');
+    expect(meta.image).toBe('');
+    expect(meta.site).toBe('');
+    expect(meta.wordCount).toBe(0);
+    expect(meta.tags).toBe('');
+  });
+
+  it('passes a clone of the document to Defuddle, not the original', () => {
+    defuddleParseAll(document, URL);
+    const [docArg] = vi.mocked(MockDefuddle).mock.calls[0] as unknown as [Document];
+    expect(docArg.nodeType).toBe(Node.DOCUMENT_NODE);
+    expect(docArg).not.toBe(document);
   });
 });

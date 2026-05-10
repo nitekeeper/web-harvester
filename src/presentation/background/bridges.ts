@@ -93,6 +93,13 @@ export function buildClipHooksPort(hooks: CoreHookSystem): IClipHooksPort {
           selectedText: '',
           markdown: value.markdown,
           selectedTemplateId: value.selectedTemplateId,
+          description: value.description,
+          author: value.author,
+          published: value.published,
+          tags: value.tags,
+          image: value.image,
+          site: value.site,
+          wordCount: value.wordCount,
         });
         return {
           url: transformed.url,

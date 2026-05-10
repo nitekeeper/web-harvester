@@ -30,6 +30,15 @@ export interface ClipContent {
   readonly markdown?: string;
   /** ID of the template to apply during the clip/preview flow. When absent, the plugin falls back to the default template. */
   readonly selectedTemplateId?: string;
+  /** Page metadata extracted by Defuddle — forwarded to plugins via the beforeClip hook. */
+  readonly description?: string;
+  readonly author?: string;
+  readonly published?: string;
+  /** Comma-separated keywords from `<meta name="keywords">`. */
+  readonly tags?: string;
+  readonly image?: string;
+  readonly site?: string;
+  readonly wordCount?: number;
 }
 
 /**
@@ -70,6 +79,31 @@ export interface SaveRequest {
 export interface SaveResult {
   readonly filePath: string;
 }
+
+/** Content returned by the `getHtml` message to the content script. */
+interface ExtractedContent {
+  html: string;
+  markdown: string;
+  description: string;
+  author: string;
+  published: string;
+  tags: string;
+  image: string;
+  site: string;
+  wordCount: number;
+}
+
+const EMPTY_EXTRACTED_CONTENT: ExtractedContent = {
+  html: '',
+  markdown: '',
+  description: '',
+  author: '',
+  published: '',
+  tags: '',
+  image: '',
+  site: '',
+  wordCount: 0,
+};
 
 /**
  * Persisted destination folder selected by the user. Mirrors the `Destination`
@@ -319,12 +353,39 @@ export class ClipService implements IClipService {
    * hook). Otherwise extracts the page HTML via the content script and runs
    * the `beforeClip` waterfall.
    */
+  /**
+   * Extracts the page content for `tabId` and assembles a `ClipContent` object
+   * using the given `tab` metadata. `selectedTemplateId` is forwarded as-is so
+   * the same helper can serve both `preview()` and `resolveContent()`.
+   */
+  private async buildExtractedContent(
+    tabId: number,
+    tab: Tab,
+    selectedTemplateId?: string,
+  ): Promise<ClipContent> {
+    const { html, markdown, description, author, published, tags, image, site, wordCount } =
+      await this.extractPageContent(tabId);
+    return {
+      url: tab.url,
+      html,
+      title: tab.title,
+      markdown,
+      selectedTemplateId,
+      description,
+      author,
+      published,
+      tags,
+      image,
+      site,
+      wordCount,
+    };
+  }
+
   private async resolveContent(request: ClipRequest, tab: Tab): Promise<ClipContent> {
     if (request.previewMarkdown !== undefined && request.previewMarkdown !== '') {
       return { url: tab.url, html: request.previewMarkdown, title: tab.title };
     }
-    const { html, markdown } = await this.extractPageContent(tab.id);
-    const initialContent: ClipContent = { url: tab.url, html, title: tab.title, markdown };
+    const initialContent = await this.buildExtractedContent(tab.id, tab);
     return this.hooks.beforeClip.call(initialContent);
   }
 
@@ -337,14 +398,7 @@ export class ClipService implements IClipService {
   async preview(templateId?: string): Promise<string> {
     try {
       const tab = await this.tabAdapter.getActiveTab();
-      const { html, markdown } = await this.extractPageContent(tab.id);
-      const initialContent: ClipContent = {
-        url: tab.url,
-        html,
-        title: tab.title,
-        markdown,
-        selectedTemplateId: templateId,
-      };
+      const initialContent = await this.buildExtractedContent(tab.id, tab, templateId);
       const content = await this.hooks.beforeClip.call(initialContent);
       return content.html;
     } catch (err: unknown) {
@@ -367,22 +421,30 @@ export class ClipService implements IClipService {
   }
 
   /**
-   * Asks the content script for the page's outer HTML and pre-extracted article
-   * markdown by sending a `getHtml` message. Falls back to empty strings when
-   * the page is not scriptable (e.g. `chrome://` pages) so the rest of the
-   * clip flow can still proceed — `beforeClip` hooks may substitute richer
-   * content.
+   * Asks the content script for the page's outer HTML, article markdown, and
+   * page metadata by sending a `getHtml` message. Falls back to empty values
+   * when the page is not scriptable (e.g. `chrome://` pages).
    */
-  private async extractPageContent(tabId: number): Promise<{ html: string; markdown: string }> {
+  private async extractPageContent(tabId: number): Promise<ExtractedContent> {
     try {
-      const response = (await this.tabAdapter.sendMessageToTab(tabId, { type: 'getHtml' })) as
-        | { html?: string; markdown?: string }
+      const r = (await this.tabAdapter.sendMessageToTab(tabId, { type: 'getHtml' })) as
+        | Partial<ExtractedContent>
         | null
         | undefined;
-      return { html: response?.html ?? '', markdown: response?.markdown ?? '' };
+      return {
+        html: r?.html ?? '',
+        markdown: r?.markdown ?? '',
+        description: r?.description ?? '',
+        author: r?.author ?? '',
+        published: r?.published ?? '',
+        tags: r?.tags ?? '',
+        image: r?.image ?? '',
+        site: r?.site ?? '',
+        wordCount: r?.wordCount ?? 0,
+      };
     } catch (err: unknown) {
       this.logger.warn('Page not scriptable — using empty content', err);
-      return { html: '', markdown: '' };
+      return EMPTY_EXTRACTED_CONTENT;
     }
   }
 }

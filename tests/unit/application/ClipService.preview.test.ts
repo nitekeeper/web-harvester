@@ -8,7 +8,17 @@ const ARTICLE_URL = 'https://example.com/article';
 const ARTICLE_HTML = '<p>Hello world</p>';
 const COMPILED_MARKDOWN = '# Hello world\n\nSome content.';
 
-function createMockTabAdapter() {
+const MOCK_METADATA = {
+  description: 'A great article',
+  author: 'Jane Doe',
+  published: '2026-01-15',
+  tags: 'tech, web',
+  image: 'https://example.com/img.jpg',
+  site: 'Example Blog',
+  wordCount: 800,
+};
+
+function createMockTabAdapter(extraPayload: Record<string, unknown> = {}) {
   return {
     getActiveTab: vi.fn().mockResolvedValue({
       id: 1,
@@ -17,7 +27,9 @@ function createMockTabAdapter() {
     }),
     executeScript: vi.fn().mockResolvedValue(undefined),
     insertCSS: vi.fn().mockResolvedValue(undefined),
-    sendMessageToTab: vi.fn().mockResolvedValue({ html: ARTICLE_HTML, markdown: '' }),
+    sendMessageToTab: vi
+      .fn()
+      .mockResolvedValue({ html: ARTICLE_HTML, markdown: '', ...extraPayload }),
     onTabActivated: vi.fn(),
     onTabUpdated: vi.fn(),
   };
@@ -134,6 +146,37 @@ describe('ClipService.preview() — extraction and transform', () => {
     await service.preview();
     expect(hooks.beforeClip.call).toHaveBeenCalledWith(
       expect.objectContaining({ selectedTemplateId: undefined }),
+    );
+  });
+});
+
+describe('ClipService.preview() — metadata forwarding', () => {
+  it('forwards metadata fields (description, author, tags, etc.) to beforeClip', async () => {
+    tabAdapter = createMockTabAdapter(MOCK_METADATA);
+    service = new ClipService(
+      tabAdapter,
+      destinationStorage,
+      hooks,
+      notifications,
+      mockSaveTo,
+      createLogger('test'),
+    );
+    await service.preview();
+    expect(hooks.beforeClip.call).toHaveBeenCalledWith(expect.objectContaining(MOCK_METADATA));
+  });
+
+  it('passes empty strings for metadata when content script returns none', async () => {
+    await service.preview();
+    expect(hooks.beforeClip.call).toHaveBeenCalledWith(
+      expect.objectContaining({
+        description: '',
+        author: '',
+        published: '',
+        tags: '',
+        image: '',
+        site: '',
+        wordCount: 0,
+      }),
     );
   });
 });

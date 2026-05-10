@@ -11,7 +11,7 @@ import type { ReaderSettings } from '@application/ReaderService';
 import { createLogger } from '@shared/logger';
 import { MSG_PICKER_RESULT } from '@shared/messages';
 
-import { defuddleParse } from './defuddleParse';
+import { defuddleParseAll } from './defuddleParse';
 import { activateHighlighter, deactivateHighlighter } from './highlighter';
 import { startPicker } from './picker';
 import { activateReader, deactivateReader } from './reader';
@@ -70,19 +70,31 @@ function handleStartPicker(
 }
 
 /**
- * Extracts article markdown from the live document using Defuddle (browser
- * bundle) + TurndownService, then calls `sendResponse` with `{ html, markdown
- * }`. Runs in the page context where native DOM APIs are always available.
+ * Extracts article markdown and page metadata from the live document using
+ * Defuddle (browser bundle) + TurndownService, then calls `sendResponse` with
+ * `{ html, markdown, description, author, published, tags, image, site, wordCount }`.
+ * Runs in the page context where native DOM APIs are always available.
  */
 async function extractPageContent(sendResponse: (r: unknown) => void): Promise<void> {
   const html = document.documentElement.outerHTML;
   let markdown = '';
+  let meta = {
+    description: '',
+    author: '',
+    published: '',
+    tags: '',
+    image: '',
+    site: '',
+    wordCount: 0,
+  };
   try {
-    markdown = defuddleParse(document, window.location.href);
+    const result = defuddleParseAll(document, window.location.href);
+    markdown = result.markdown;
+    meta = result.meta;
   } catch (err: unknown) {
     logger.error('Defuddle extraction failed', err);
   }
-  sendResponse({ html, markdown });
+  sendResponse({ html, markdown, ...meta });
 }
 
 /** Handles highlighter control messages. */
