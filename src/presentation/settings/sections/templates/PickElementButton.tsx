@@ -28,6 +28,7 @@ export function PickElementButton({ isPicking, onClick }: PickElementButtonProps
   return (
     <button
       type="button"
+      aria-busy={isPicking}
       onClick={onClick}
       disabled={isPicking}
       style={{
