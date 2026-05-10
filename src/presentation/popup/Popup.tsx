@@ -212,7 +212,7 @@ function PopupScrollBody({ onTemplateChange }: PopupScrollBodyProps) {
         <ToolbarSlot />
         <DestinationTemplateGroups popup={popup} onTemplateChange={onTemplateChange} />
       </div>
-      <div className="overflow-y-auto max-h-[350px] px-3 pt-3 pb-3 flex flex-col gap-3">
+      <div className="preview-scroll overflow-y-auto max-h-[350px] px-3 pt-3 pb-3 flex flex-col gap-3">
         <PropertiesSection
           markdown={popup.previewMarkdown}
           onMarkdownChange={popup.setPreviewMarkdown}
