@@ -58,6 +58,18 @@ Returns an array of ids for all currently active plugins.
 
 Returns an array of `{ id, error }` records for all plugins that failed to activate.
 
+#### `getPluginRows(): PluginRow[]`
+
+Returns every registered plugin as a serialisable `PluginRow` record, suitable for writing to
+`chrome.storage.local` or displaying in the Plugins settings page. The state field reflects the
+plugin's current lifecycle:
+
+- `active` — `activate()` completed without error
+- `failed` — `activate()` threw; the normalised error message is included in `error`
+- `inactive` — registered but `activateAll()` has not run yet, or activation was skipped
+
+Imported type `PluginRow` lives in `@shared/pluginStatus`.
+
 ---
 
 ### `FailedPlugin`

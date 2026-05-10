@@ -1,6 +1,8 @@
 import { topologicalSort } from '@core/topology';
 import type { IPlugin, IPluginContext } from '@domain/types';
 import { createLogger } from '@shared/logger';
+import { normalizeError } from '@shared/normalizeError';
+import type { PluginRow } from '@shared/pluginStatus';
 
 const logger = createLogger('plugin-registry');
 
@@ -19,6 +21,8 @@ export interface PluginRegistry {
   isFailed(id: string): boolean;
   getActivePlugins(): string[];
   getFailedPlugins(): FailedPlugin[];
+  /** Returns every registered plugin as a serialisable {@link PluginRow} for diagnostic display. */
+  getPluginRows(): PluginRow[];
 }
 
 /** Internal state shared by registry operations. */
@@ -69,6 +73,18 @@ async function deactivateOne(state: RegistryState, id: string): Promise<void> {
   }
 }
 
+/** Serialises one plugin into a {@link PluginRow} based on its current lifecycle state. */
+function buildPluginRow(state: RegistryState, plugin: IPlugin): PluginRow {
+  const { id, name, version } = plugin.manifest;
+  if (state.active.has(id)) {
+    return { id, name, version, state: 'active' };
+  }
+  if (state.failed.has(id)) {
+    return { id, name, version, state: 'failed', error: normalizeError(state.failed.get(id)) };
+  }
+  return { id, name, version, state: 'inactive' };
+}
+
 /** Creates a plugin registry that orders activation by dependency graph. */
 export function createPluginRegistry(
   contextFactory: (plugin: IPlugin) => IPluginContext,
@@ -99,5 +115,6 @@ export function createPluginRegistry(
     isFailed: (id) => state.failed.has(id),
     getActivePlugins: () => [...state.active],
     getFailedPlugins: () => [...state.failed.entries()].map(([id, error]) => ({ id, error })),
+    getPluginRows: () => [...state.plugins.values()].map((plugin) => buildPluginRow(state, plugin)),
   };
 }

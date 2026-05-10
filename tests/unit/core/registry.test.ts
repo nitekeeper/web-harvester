@@ -107,3 +107,52 @@ describe('PluginRegistry — deactivation', () => {
     expect(order).toEqual(['b', 'a']);
   });
 });
+
+describe('PluginRegistry — getPluginRows', () => {
+  it('returns an empty array when no plugins are registered', async () => {
+    expect(registry.getPluginRows()).toEqual([]);
+  });
+
+  it('returns active state for a successfully activated plugin', async () => {
+    const ALPHA_ID = 'wh.test.alpha';
+    const plugin = makePlugin(ALPHA_ID);
+    registry.register(plugin);
+    await registry.activateAll();
+
+    const rows = registry.getPluginRows();
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ id: ALPHA_ID, name: ALPHA_ID, state: 'active' });
+  });
+
+  it('returns failed state and normalised error string for a plugin that threw', async () => {
+    const bad = makePlugin('wh.test.bad');
+    (bad.activate as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('init crash'));
+    registry.register(bad);
+    await registry.activateAll();
+
+    const rows = registry.getPluginRows();
+    expect(rows[0]).toMatchObject({ id: 'wh.test.bad', state: 'failed', error: 'init crash' });
+  });
+
+  it('returns inactive state for a registered-but-not-yet-activated plugin', async () => {
+    const plugin = makePlugin('wh.test.inactive');
+    registry.register(plugin);
+    // activateAll NOT called
+
+    const rows = registry.getPluginRows();
+    expect(rows[0]).toMatchObject({ id: 'wh.test.inactive', state: 'inactive' });
+  });
+
+  it('includes version from the plugin manifest', async () => {
+    const plugin: IPlugin = {
+      manifest: { id: 'wh.test.v', name: 'Versioned', version: '1.2.3' },
+      activate: vi.fn().mockResolvedValue(undefined),
+      deactivate: vi.fn().mockResolvedValue(undefined),
+    };
+    registry.register(plugin);
+    await registry.activateAll();
+
+    const rows = registry.getPluginRows();
+    expect(rows[0]).toMatchObject({ version: '1.2.3' });
+  });
+});
