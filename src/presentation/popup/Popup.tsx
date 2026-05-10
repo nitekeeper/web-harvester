@@ -253,7 +253,7 @@ export function Popup({
   const { popup } = usePopupBindings();
 
   return (
-    <div className="w-80 min-h-48 bg-background text-foreground flex flex-col leading-[1.45]">
+    <div className="w-80 min-h-48 max-h-[600px] overflow-hidden bg-background text-foreground flex flex-col leading-[1.45]">
       <PopupHeader theme={theme} onTheme={handleTheme} onSettings={onSettings} />
       <PopupScrollBody onTemplateChange={onTemplateChange} />
       <ActionFooter
