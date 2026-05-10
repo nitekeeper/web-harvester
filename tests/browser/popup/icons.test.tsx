@@ -11,6 +11,10 @@ import {
   ChevIcon,
   PlusIcon,
   CaretDownIcon,
+  GitHubIcon,
+  ExternalArrowIcon,
+  ClipboardIcon,
+  CheckIcon,
 } from '@presentation/components/icons';
 
 const SVG_SELECTOR = 'svg';
@@ -116,5 +120,60 @@ describe('CaretDownIcon', () => {
     expect(svg?.getAttribute('width')).toBe('9');
     expect(svg?.getAttribute('height')).toBe('9');
     expect(svg?.getAttribute('fill')).toBe('currentColor');
+  });
+});
+
+describe('GitHubIcon', () => {
+  afterEach(cleanup);
+
+  it('renders an aria-hidden SVG at 14px', () => {
+    render(<GitHubIcon />);
+    const svg = document.querySelector(SVG_SELECTOR);
+    expect(svg).not.toBeNull();
+    expect(svg?.getAttribute(ARIA_HIDDEN_ATTR)).toBe('true');
+    expect(svg?.getAttribute('width')).toBe('14');
+    expect(svg?.getAttribute('height')).toBe('14');
+  });
+});
+
+describe('ExternalArrowIcon', () => {
+  afterEach(cleanup);
+
+  it('renders an aria-hidden SVG at 13px by default', () => {
+    render(<ExternalArrowIcon />);
+    const svg = document.querySelector(SVG_SELECTOR);
+    expect(svg).not.toBeNull();
+    expect(svg?.getAttribute(ARIA_HIDDEN_ATTR)).toBe('true');
+    expect(svg?.getAttribute('width')).toBe('13');
+    expect(svg?.getAttribute('height')).toBe('13');
+  });
+});
+
+describe('ClipboardIcon', () => {
+  afterEach(cleanup);
+
+  it('renders an aria-hidden SVG at 12px', () => {
+    render(<ClipboardIcon />);
+    const svg = document.querySelector(SVG_SELECTOR);
+    expect(svg).not.toBeNull();
+    expect(svg?.getAttribute(ARIA_HIDDEN_ATTR)).toBe('true');
+    expect(svg?.getAttribute('width')).toBe('12');
+    expect(svg?.getAttribute('height')).toBe('12');
+  });
+});
+
+describe('CheckIcon — size prop', () => {
+  afterEach(cleanup);
+
+  it('defaults to 14px', () => {
+    render(<CheckIcon />);
+    const svg = document.querySelector(SVG_SELECTOR);
+    expect(svg?.getAttribute('width')).toBe('14');
+  });
+
+  it('respects an explicit size override', () => {
+    render(<CheckIcon size={12} />);
+    const svg = document.querySelector(SVG_SELECTOR);
+    expect(svg?.getAttribute('width')).toBe('12');
   });
 });

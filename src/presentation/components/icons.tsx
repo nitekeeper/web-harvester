@@ -17,10 +17,16 @@ export function SpinIcon() {
   );
 }
 
-/** Inline check icon — 14 × 14 px. */
-export function CheckIcon() {
+/** Props for parameterised icon size. */
+interface SizedIconProps {
+  /** Rendered pixel size; defaults to 14. */
+  readonly size?: number;
+}
+
+/** Inline check icon. Defaults to 14 × 14 px, stroke 2.5. Pass `size={12}` for the copy-success state. */
+export function CheckIcon({ size = 14 }: SizedIconProps = {}) {
   return (
-    <IconSvg strokeWidth={2.5} joinRound>
+    <IconSvg strokeWidth={2.5} joinRound size={size}>
       <polyline points="20 6 9 17 4 12" />
     </IconSvg>
   );
@@ -162,5 +168,33 @@ export function CaretDownIcon({ className }: { readonly className?: string } = {
     >
       <path d="M7 10l5 5 5-5z" />
     </svg>
+  );
+}
+
+/** GitHub octocat mark — 14 × 14 px, stroke 1.5. Resource row leading icon. */
+export function GitHubIcon() {
+  return (
+    <IconSvg strokeWidth={1.5} joinRound>
+      <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
+    </IconSvg>
+  );
+}
+
+/** Diagonal arrow into corner — 13 × 13 px, stroke 1.8. External-link trailing icon. */
+export function ExternalArrowIcon() {
+  return (
+    <IconSvg strokeWidth={1.8} joinRound size={13}>
+      <path d="M7 17L17 7M9 7h8v8" />
+    </IconSvg>
+  );
+}
+
+/** Clipboard outline — 12 × 12 px, stroke 1.8. Copy button default icon. */
+export function ClipboardIcon() {
+  return (
+    <IconSvg strokeWidth={1.8} joinRound size={12}>
+      <rect x="9" y="2" width="6" height="4" rx="1" />
+      <path d="M9 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2h-2" />
+    </IconSvg>
   );
 }
