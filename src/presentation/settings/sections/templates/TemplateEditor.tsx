@@ -1,7 +1,7 @@
 // src/presentation/settings/sections/templates/TemplateEditor.tsx
 
 import type React from 'react';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback } from 'react';
 
 import { useFormatMessage } from '@presentation/hooks/useFormatMessage';
 import type { TemplateConfig } from '@shared/types';
@@ -11,8 +11,15 @@ import { EditorHeader } from './EditorHeader';
 import { FrontmatterField } from './FrontmatterField';
 import { LivePreview } from './LivePreview';
 import { NoteNameField } from './NoteNameField';
+import { PickElementButton } from './PickElementButton';
 import type { TemplateView } from './templateTypes';
-import { useAutosave } from './useAutosave';
+import { useCssPicker } from './useCssPicker';
+import {
+  type EditorState,
+  type TemplateDraft,
+  type VarPickerTarget,
+  useEditorState,
+} from './useEditorState';
 import { VariablePicker } from './VariablePicker';
 
 /** Props for {@link TemplateEditor}. */
@@ -51,139 +58,6 @@ function exportTemplateJson(template: TemplateView): void {
   URL.revokeObjectURL(url);
 }
 
-/** Holds the pending variable-picker target (which field + row). */
-interface VarPickerTarget {
-  readonly field: 'noteName' | 'frontmatter';
-  readonly rowIndex?: number;
-}
-
-/** Local draft type mirroring template fields (excluding id). */
-type TemplateDraft = Omit<TemplateConfig, 'id'>;
-
-/** Builds a fresh draft from a TemplateView. */
-function draftFromTemplate(t: TemplateView): TemplateDraft {
-  return {
-    name: t.name,
-    frontmatterTemplate: t.frontmatterTemplate,
-    bodyTemplate: t.bodyTemplate,
-    noteNameTemplate: t.noteNameTemplate,
-  };
-}
-
-/** Inserts `variable` at the cursor position of the note-name input element. */
-function insertIntoNoteNameInput(variable: string, update: (v: string) => void): void {
-  const el = document.getElementById('note-name-input') as HTMLInputElement | null;
-  if (!el) return;
-  const start = el.selectionStart ?? el.value.length;
-  const end = el.selectionEnd ?? el.value.length;
-  const next = el.value.slice(0, start) + variable + el.value.slice(end);
-  update(next);
-}
-
-/** Return value of {@link useEditorState}. */
-interface EditorState {
-  readonly draft: TemplateDraft;
-  readonly previewOn: boolean;
-  readonly varPickerTarget: VarPickerTarget | null;
-  readonly bodyEditorRef: React.RefObject<BodyEditorHandle | null>;
-  readonly autosaveStatus: ReturnType<typeof useAutosave>['status'];
-  readonly updateField: (changes: Partial<TemplateDraft>) => void;
-  readonly handleInsertVariable: (variable: string) => void;
-  readonly handleKeyDown: (e: React.KeyboardEvent) => void;
-  readonly setPreviewOn: React.Dispatch<React.SetStateAction<boolean>>;
-  readonly setVarPickerTarget: React.Dispatch<React.SetStateAction<VarPickerTarget | null>>;
-  readonly flush: () => void;
-}
-
-/** Builds the keyboard shortcut handler for Cmd+S (flush) and Cmd+Enter (preview toggle). */
-function useEditorKeyDown(
-  flush: () => void,
-  setPreviewOn: React.Dispatch<React.SetStateAction<boolean>>,
-): (e: React.KeyboardEvent) => void {
-  return useCallback(
-    (e: React.KeyboardEvent): void => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
-        e.preventDefault();
-        flush();
-      }
-      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-        setPreviewOn((v) => !v);
-      }
-    },
-    [flush, setPreviewOn],
-  );
-}
-
-/** Builds the save callback and autosave integration for the editor. */
-function useEditorSave(
-  template: TemplateView,
-  draft: TemplateDraft,
-  onUpdate: (id: string, changes: Partial<TemplateConfig>) => Promise<void>,
-): { status: ReturnType<typeof useAutosave>['status']; trigger: () => void; flush: () => void } {
-  const save = useCallback(async (): Promise<void> => {
-    if (template.isSystem) return;
-    await onUpdate(template.id, draft);
-  }, [template.id, template.isSystem, draft, onUpdate]);
-  return useAutosave(save);
-}
-
-/** Builds the variable-insertion handler from current varPickerTarget state. */
-function buildInsertVariableHandler(
-  varPickerTarget: VarPickerTarget | null,
-  updateField: (changes: Partial<TemplateDraft>) => void,
-  setVarPickerTarget: React.Dispatch<React.SetStateAction<VarPickerTarget | null>>,
-): (variable: string) => void {
-  return (variable: string): void => {
-    if (!varPickerTarget) return;
-    if (varPickerTarget.field === 'noteName') {
-      insertIntoNoteNameInput(variable, (v) => updateField({ noteNameTemplate: v }));
-    }
-    setVarPickerTarget(null);
-  };
-}
-
-/** Owns all draft state, autosave, and derived callbacks for {@link TemplateEditor}. */
-function useEditorState(
-  template: TemplateView,
-  onUpdate: (id: string, changes: Partial<TemplateConfig>) => Promise<void>,
-): EditorState {
-  const [previewOn, setPreviewOn] = useState(false);
-  const [varPickerTarget, setVarPickerTarget] = useState<VarPickerTarget | null>(null);
-  const [draft, setDraft] = useState<TemplateDraft>(() => draftFromTemplate(template));
-  const prevIdRef = useRef(template.id);
-  if (prevIdRef.current !== template.id) {
-    prevIdRef.current = template.id;
-    setDraft(draftFromTemplate(template));
-  }
-  const bodyEditorRef = useRef<BodyEditorHandle>(null);
-  const { status, trigger, flush } = useEditorSave(template, draft, onUpdate);
-  const updateField = useCallback(
-    (changes: Partial<TemplateDraft>): void => {
-      setDraft((prev) => ({ ...prev, ...changes }));
-      trigger();
-    },
-    [trigger],
-  );
-  const handleInsertVariable = buildInsertVariableHandler(
-    varPickerTarget,
-    updateField,
-    setVarPickerTarget,
-  );
-  return {
-    draft,
-    previewOn,
-    varPickerTarget,
-    bodyEditorRef,
-    autosaveStatus: status,
-    updateField,
-    handleInsertVariable,
-    handleKeyDown: useEditorKeyDown(flush, setPreviewOn),
-    setPreviewOn,
-    setVarPickerTarget,
-    flush,
-  };
-}
-
 /** Props for {@link EditorFields}. */
 interface EditorFieldsProps {
   readonly draft: TemplateDraft;
@@ -193,6 +67,12 @@ interface EditorFieldsProps {
   readonly onUpdateField: (changes: Partial<TemplateDraft>) => void;
   readonly onOpenNoteNamePicker: () => void;
   readonly onOpenFrontmatterPicker: (rowIndex: number) => void;
+  /** Whether a CSS pick session is active (disables the Pick element button). */
+  readonly isPicking: boolean;
+  /** Start a CSS pick session targeting the frontmatter field. */
+  readonly onPickFrontmatter: () => void;
+  /** Start a CSS pick session targeting the body field. */
+  readonly onPickBody: () => void;
 }
 
 /** Renders the three editable fields plus the live preview panel. */
@@ -204,6 +84,9 @@ function EditorFields({
   onUpdateField,
   onOpenNoteNamePicker,
   onOpenFrontmatterPicker,
+  isPicking,
+  onPickFrontmatter,
+  onPickBody,
 }: EditorFieldsProps) {
   return (
     <>
@@ -213,12 +96,14 @@ function EditorFields({
         onChange={(noteNameTemplate) => onUpdateField({ noteNameTemplate })}
         onInsertVariable={onOpenNoteNamePicker}
       />
+      <PickElementButton isPicking={isPicking} onClick={onPickFrontmatter} />
       <FrontmatterField
         value={draft.frontmatterTemplate}
         readonly={isSystem}
         onChange={(frontmatterTemplate) => onUpdateField({ frontmatterTemplate })}
         onInsertVariable={onOpenFrontmatterPicker}
       />
+      <PickElementButton isPicking={isPicking} onClick={onPickBody} />
       <BodyEditorField
         ref={bodyEditorRef}
         value={draft.bodyTemplate}
@@ -335,27 +220,40 @@ interface EditorPaneProps extends EditorState {
   readonly onExport: (id: string) => void;
   readonly onDelete: (id: string) => void;
   readonly readyMessage: string;
+  /** Whether a CSS pick session is active. */
+  readonly isPicking: boolean;
+  /** Start a CSS pick session targeting the frontmatter field. */
+  readonly onPickFrontmatter: () => void;
+  /** Start a CSS pick session targeting the body field. */
+  readonly onPickBody: () => void;
 }
 
 /** Props for {@link EditorPaneScroll}. */
 interface EditorPaneScrollProps {
   readonly state: EditorState;
   readonly template: TemplateView;
-  readonly closeVarPicker: () => void;
-  readonly openNoteNamePicker: () => void;
-  readonly openFmPicker: (rowIndex: number) => void;
   readonly readyMessage: string;
+  /** Whether a CSS pick session is active. */
+  readonly isPicking: boolean;
+  /** Start a CSS pick session targeting the frontmatter field. */
+  readonly onPickFrontmatter: () => void;
+  /** Start a CSS pick session targeting the body field. */
+  readonly onPickBody: () => void;
 }
 
 /** Renders the scrollable section and a11y announcer of the editor pane. */
 function EditorPaneScroll({
   state: s,
   template,
-  closeVarPicker,
-  openNoteNamePicker,
-  openFmPicker,
   readyMessage,
+  isPicking,
+  onPickFrontmatter,
+  onPickBody,
 }: EditorPaneScrollProps) {
+  const closeVarPicker = () => s.setVarPickerTarget(null);
+  const openNoteNamePicker = () => s.setVarPickerTarget({ field: 'noteName' });
+  const openFmPicker = (rowIndex: number) =>
+    s.setVarPickerTarget({ field: 'frontmatter', rowIndex });
   return (
     <>
       <EditorScrollArea
@@ -369,6 +267,9 @@ function EditorPaneScroll({
         onUpdateField={s.updateField}
         onOpenNoteNamePicker={openNoteNamePicker}
         onOpenFrontmatterPicker={openFmPicker}
+        isPicking={isPicking}
+        onPickFrontmatter={onPickFrontmatter}
+        onPickBody={onPickBody}
       />
       {s.varPickerTarget === null ? <EditorA11yAnnouncer message={readyMessage} /> : null}
     </>
@@ -382,12 +283,11 @@ function EditorPane({
   onExport,
   onDelete,
   readyMessage,
+  isPicking,
+  onPickFrontmatter,
+  onPickBody,
   ...s
 }: EditorPaneProps) {
-  const closeVarPicker = () => s.setVarPickerTarget(null);
-  const openNoteNamePicker = () => s.setVarPickerTarget({ field: 'noteName' });
-  const openFmPicker = (rowIndex: number) =>
-    s.setVarPickerTarget({ field: 'frontmatter', rowIndex });
   return (
     <div
       data-testid="template-editor"
@@ -408,10 +308,10 @@ function EditorPane({
       <EditorPaneScroll
         state={s}
         template={template}
-        closeVarPicker={closeVarPicker}
-        openNoteNamePicker={openNoteNamePicker}
-        openFmPicker={openFmPicker}
         readyMessage={readyMessage}
+        isPicking={isPicking}
+        onPickFrontmatter={onPickFrontmatter}
+        onPickBody={onPickBody}
       />
     </div>
   );
@@ -431,6 +331,20 @@ export function TemplateEditor({
   const fmt = useFormatMessage();
   const state = useEditorState(template, onUpdate);
   const readyMessage = fmt({ id: 'settings.templates.editorReady', defaultMessage: '' });
+
+  const onPickResult = useCallback(
+    (field: 'frontmatter' | 'body', variable: string): void => {
+      if (field === 'frontmatter') {
+        state.updateField({ frontmatterTemplate: state.draft.frontmatterTemplate + variable });
+      } else {
+        state.updateField({ bodyTemplate: state.draft.bodyTemplate + variable });
+      }
+    },
+    [state],
+  );
+
+  const { isPicking, handlePickElement } = useCssPicker(onPickResult);
+
   return (
     <EditorPane
       {...state}
@@ -439,6 +353,9 @@ export function TemplateEditor({
       onExport={onExport}
       onDelete={onDelete}
       readyMessage={readyMessage}
+      isPicking={isPicking}
+      onPickFrontmatter={() => handlePickElement('frontmatter')}
+      onPickBody={() => handlePickElement('body')}
     />
   );
 }

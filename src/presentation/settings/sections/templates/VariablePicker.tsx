@@ -58,6 +58,35 @@ const VARIABLE_GROUPS: readonly VariableGroup[] = [
       { variable: '| default("fallback")', description: 'Fallback when value is empty' },
     ],
   },
+  {
+    label: 'Dynamic',
+    entries: [
+      {
+        variable: '{{selector:.byline}}',
+        description: 'Text of matching CSS element (click "Pick element" to generate)',
+      },
+      {
+        variable: '{{selectorHtml:.card}}',
+        description: 'Outer HTML of matching CSS element',
+      },
+      {
+        variable: '{{selector:img?src}}',
+        description: 'Attribute value from matching element',
+      },
+      {
+        variable: '{{schema:@Article:author}}',
+        description: 'Schema.org / JSON-LD field',
+      },
+      {
+        variable: '{{meta:name:keywords}}',
+        description: 'Any <meta name="…"> tag value',
+      },
+      {
+        variable: '{{meta:property:og:image}}',
+        description: 'Any <meta property="…"> tag value',
+      },
+    ],
+  },
 ];
 
 const WH_BORDER = 'var(--wh-border)';
