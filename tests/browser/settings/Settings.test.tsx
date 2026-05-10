@@ -10,6 +10,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, it, expect, afterEach } from 'vitest';
 
 import { Settings } from '@presentation/settings/Settings';
+import { useSettingsStore } from '@presentation/stores/useSettingsStore';
 
 const SIDEBAR_ID = 'settings-sidebar';
 
@@ -64,5 +65,18 @@ describe('Settings — layout', () => {
     await user.click(appearanceButton);
 
     expect(document.querySelector('[data-testid="theme-section"]')).not.toBeNull();
+  });
+});
+
+describe('Settings store — plugins slice', () => {
+  it('has an empty plugins array by default', () => {
+    expect(useSettingsStore.getState().plugins).toEqual([]);
+  });
+
+  it('setPlugins replaces the plugins array', () => {
+    useSettingsStore.getState().setPlugins([{ id: 'x', name: 'X', state: 'active' }]);
+    expect(useSettingsStore.getState().plugins).toHaveLength(1);
+    // Reset
+    useSettingsStore.getState().setPlugins([]);
   });
 });

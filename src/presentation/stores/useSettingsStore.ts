@@ -3,6 +3,7 @@
 import { create, createStore, type StoreApi } from 'zustand';
 
 import { DEFAULT_TEMPLATE } from '@shared/defaultTemplate';
+import type { PluginRow } from '@shared/pluginStatus';
 import type { AppSettings, TemplateConfig } from '@shared/types';
 
 import { type IStorageSyncPort, withStorageSync } from './storageSyncMiddleware';
@@ -29,7 +30,7 @@ export interface DestinationView {
 
 /**
  * Shape of the settings store slice — settings record, destinations list,
- * templates list, and a loading flag, plus the actions that mutate them.
+ * templates list, loading flag, and plugin rows, plus the actions that mutate them.
  */
 export interface SettingsStoreState {
   /** App-wide settings record (theme, locale, default ids, etc.). */
@@ -40,6 +41,8 @@ export interface SettingsStoreState {
   templates: TemplateConfig[];
   /** Whether settings are currently being loaded from storage. */
   isLoading: boolean;
+  /** Plugin lifecycle states sourced from the background service worker via storage bridge. */
+  plugins: PluginRow[];
 
   /** Replaces the entire settings record. */
   setSettings: (settings: AppSettings) => void;
@@ -51,6 +54,8 @@ export interface SettingsStoreState {
   setTemplates: (templates: TemplateConfig[]) => void;
   /** Toggles the loading-in-flight flag. */
   setLoading: (loading: boolean) => void;
+  /** Replaces the plugins list. */
+  setPlugins: (plugins: PluginRow[]) => void;
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -72,12 +77,14 @@ function makeSlice(
     destinations: [],
     templates: [DEFAULT_TEMPLATE],
     isLoading: false,
+    plugins: [],
 
     setSettings: (settings): void => set({ settings }),
     updateSettings: (partial): void => set({ settings: { ...get().settings, ...partial } }),
     setDestinations: (destinations): void => set({ destinations }),
     setTemplates: (templates): void => set({ templates }),
     setLoading: (loading): void => set({ isLoading: loading }),
+    setPlugins: (plugins): void => set({ plugins }),
   };
 }
 
