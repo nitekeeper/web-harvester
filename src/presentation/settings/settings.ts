@@ -14,6 +14,7 @@ import { StrictMode, createElement } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { ChromeAdapter } from '@infrastructure/adapters/chrome/ChromeAdapter';
+import type { IStorageAdapter } from '@infrastructure/adapters/interfaces/IStorageAdapter';
 import { createDestinationStorage } from '@infrastructure/storage/destinations';
 import type { IDestinationPort } from '@presentation/ports/IDestinationPort';
 import '@presentation/styles/global.css';
@@ -33,7 +34,7 @@ const logger = createLogger('settings');
  * storage-change events so the Plugins settings panel stays in sync with
  * the background service worker.
  */
-function hydratePluginStatus(adapter: ChromeAdapter): void {
+function hydratePluginStatus(adapter: IStorageAdapter): void {
   adapter
     .getLocal(PLUGIN_STATUS_STORAGE_KEY)
     .then((raw) => {
@@ -54,6 +55,7 @@ function hydratePluginStatus(adapter: ChromeAdapter): void {
     if (isPluginStatusPayload(newValue)) {
       useSettingsStore.setState({ plugins: [...newValue.plugins] });
     } else {
+      logger.warn('plugin status changed to invalid value, clearing plugin list');
       useSettingsStore.setState({ plugins: [] });
     }
   });

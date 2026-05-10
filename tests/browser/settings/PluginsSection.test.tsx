@@ -70,8 +70,9 @@ describe('PluginsSection — summary bar', () => {
   it('shows active, failed, and inactive counts', () => {
     render(<PluginsSection plugins={SAMPLE_PLUGINS} />);
     const bar = screen.getByTestId(TESTID_SUMMARY).textContent ?? '';
-    expect(bar).toContain('2');
-    expect(bar).toContain('1');
+    expect(bar).toMatch(/2\s*active/);
+    expect(bar).toMatch(/1\s*failed/);
+    expect(bar).toMatch(/1\s*inactive/);
   });
 });
 
@@ -128,14 +129,14 @@ describe('PluginsSection — error block', () => {
     expect(screen.getByText(/companion app not detected/)).not.toBeNull();
   });
 
-  it('error block has role="status"', () => {
+  it('error block has role="alert"', () => {
     render(<PluginsSection plugins={SAMPLE_PLUGINS} />);
-    expect(screen.getByRole('status')).not.toBeNull();
+    expect(screen.getByRole('alert')).not.toBeNull();
   });
 
   it('does not render error block for active plugins', () => {
     render(<PluginsSection plugins={[{ id: 'x', name: 'X', state: 'active' }]} />);
-    expect(screen.queryByRole('status')).toBeNull();
+    expect(screen.queryByRole('alert')).toBeNull();
   });
 });
 

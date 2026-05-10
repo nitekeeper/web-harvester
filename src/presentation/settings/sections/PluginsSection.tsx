@@ -163,7 +163,7 @@ function StatePill({
 function PluginErrorBlock({ error }: { readonly error: string }) {
   return (
     <div
-      role="status"
+      role="alert"
       style={{
         background: 'rgba(239,68,68,0.06)',
         border: '1px solid rgba(239,68,68,0.20)',
