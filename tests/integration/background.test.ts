@@ -195,7 +195,7 @@ describe('background bootstrap — plugin status storage bridge', () => {
     // Call the production helper directly — this is what bootstrap() calls after activateAll()
     writePluginStatus(harness.adapter, harness.registry);
     // Allow the microtask (Promise chain) to settle
-    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    await Promise.resolve();
     const stored = await harness.adapter.getLocal(PLUGIN_STATUS_STORAGE_KEY);
     expect(stored).toMatchObject({
       plugins: expect.arrayContaining([expect.objectContaining({ state: 'active' })]),
