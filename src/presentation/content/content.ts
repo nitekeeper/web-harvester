@@ -177,7 +177,16 @@ function handleExtractSelectors(
     const rawSelector = parts[0] ?? '';
     const attr = parts[1];
     const selector = rawSelector.trim();
-    const elements = Array.from(document.querySelectorAll(selector));
+    if (!selector) {
+      Reflect.set(results, expr, '');
+      continue;
+    }
+    let elements: Element[];
+    try {
+      elements = Array.from(document.querySelectorAll(selector));
+    } catch {
+      elements = [];
+    }
     const values = elements.map((el) => {
       if (attr) return (el as HTMLElement).getAttribute(attr.trim()) ?? '';
       if (isHtml) return el.outerHTML;
@@ -249,7 +258,8 @@ function handleStartCssPicker(sendResponse: (r: unknown) => void): false {
     'position:fixed;z-index:2147483647;background:#1a1a1a;color:#fff;' +
     'padding:4px 8px;border-radius:4px;font:12px monospace;pointer-events:none;' +
     'max-width:320px;word-break:break-all;box-shadow:0 2px 8px rgba(0,0,0,.4)';
-  document.body.appendChild(tooltip);
+  const mountTarget = document.body ?? document.documentElement;
+  mountTarget.appendChild(tooltip);
 
   cssPickerCleanup = mountCssPickerOverlay(tooltip);
   sendResponse({ ok: true });

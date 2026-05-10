@@ -29,11 +29,11 @@ export interface ClipContent {
   site?: string;
   wordCount?: number;
   /** Browser tab ID — forwarded to `TemplatePlugin` for selector IPC calls. */
-  readonly tabId?: number;
+  tabId?: number;
   /** Raw schema.org / JSON-LD data extracted by Defuddle from the page. */
-  readonly schemaOrgData?: Record<string, unknown>;
+  schemaOrgData?: Record<string, unknown>;
   /** All `<meta>` elements from the page, as parsed by Defuddle. */
-  readonly allMetaTags?: readonly MetaTag[];
+  allMetaTags?: readonly MetaTag[];
 }
 
 /** Event emitted when the user creates or modifies a highlight. */

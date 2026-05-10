@@ -52,6 +52,19 @@ describe('flattenSchemaOrg — object flattening', () => {
     flattenSchemaOrg({ '@type': 'Article', author: { name: 'John', '@type': 'Person' } }, vars);
     expect(vars[`${schemaTypeKey}author:name`]).toBe('John');
   });
+
+  it('flattens an object without @type using bare key names', () => {
+    const vars = createVars();
+    flattenSchemaOrg({ name: 'bare value', count: 42 }, vars);
+    expect(vars['schema:name']).toBe('bare value');
+    expect(vars['schema:count']).toBe('42');
+  });
+
+  it('treats a non-string @type as absent (falls back to empty prefix)', () => {
+    const vars = createVars();
+    flattenSchemaOrg({ '@type': 123, name: 'typed-number' }, vars);
+    expect(vars['schema:name']).toBe('typed-number');
+  });
 });
 
 describe('flattenSchemaOrg — arrays', () => {

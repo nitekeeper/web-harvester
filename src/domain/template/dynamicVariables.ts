@@ -43,8 +43,8 @@ function processObject(
   variables: Record<string, string>,
   prefix: string,
 ): void {
-  const type =
-    typeof Reflect.get(obj, '@type') === 'string' ? (Reflect.get(obj, '@type') as string) : '';
+  const rawType = Reflect.get(obj, '@type');
+  const type = typeof rawType === 'string' ? rawType : '';
   const thisPrefix = prefix === '' && type ? `@${type}` : prefix;
   for (const key of Object.keys(obj)) {
     if (key.startsWith('@')) continue;
