@@ -3,6 +3,7 @@
 import Defuddle from 'defuddle';
 
 import { buildTurndown } from '@shared/turndown';
+import type { MetaTag } from '@shared/types';
 
 /**
  * Parses `doc` with Defuddle (browser bundle) and returns the extracted
@@ -14,13 +15,6 @@ export function defuddleParse(doc: Document, url: string): string {
   return buildTurndown()
     .turndown(result.content ?? '')
     .trim();
-}
-
-/** Shape of one entry in Defuddle's metaTags array. */
-interface MetaTag {
-  readonly name?: string | null;
-  readonly property?: string | null;
-  readonly content: string | null;
 }
 
 /** Shape of the Defuddle parse result fields we consume. */

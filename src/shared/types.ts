@@ -39,3 +39,12 @@ export interface AppSettings {
   /** Default template id used when the user does not pick one explicitly. */
   readonly defaultTemplateId: string | null;
 }
+
+/**
+ * Shape of one entry in Defuddle's metaTags array — a parsed `<meta>` element.
+ */
+export interface MetaTag {
+  readonly name?: string | null;
+  readonly property?: string | null;
+  readonly content: string | null;
+}
