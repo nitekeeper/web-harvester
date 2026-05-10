@@ -5,7 +5,6 @@ import { type ReactNode, useState } from 'react';
 import {
   FolderIcon,
   FileIcon,
-  MetadataIcon,
   AppearanceIcon,
   AboutIcon,
   PluginIcon,
@@ -15,16 +14,15 @@ import { WHLogo } from '@presentation/components/WHLogo';
 import { useFormatMessage } from '@presentation/hooks/useFormatMessage';
 import { useSettingsStore } from '@presentation/stores/useSettingsStore';
 
+import { AppearanceSection } from './sections/AppearanceSection';
 import { DestinationsSection } from './sections/DestinationsSection';
-import { GeneralSection } from './sections/GeneralSection';
 import { PluginsSection } from './sections/PluginsSection';
 import { TemplatesSection } from './sections/TemplatesSection';
-import { ThemeSection } from './sections/ThemeSection';
 import { useDestinationHandlers } from './useDestinationHandlers';
 import { useTemplateHandlers } from './useTemplateHandlers';
 
-/** Names of the six tabs surfaced by the settings SPA. */
-type Tab = 'destinations' | 'templates' | 'metadata' | 'appearance' | 'plugins' | 'about';
+/** Names of the five tabs surfaced by the settings SPA. */
+type Tab = 'destinations' | 'templates' | 'appearance' | 'plugins' | 'about';
 
 const TAB_DEFS: readonly {
   value: Tab;
@@ -43,12 +41,6 @@ const TAB_DEFS: readonly {
     labelId: 'settings.nav.templates',
     defaultLabel: 'Templates',
     icon: <FileIcon />,
-  },
-  {
-    value: 'metadata',
-    labelId: 'settings.nav.metadata',
-    defaultLabel: 'Metadata',
-    icon: <MetadataIcon />,
   },
   {
     value: 'appearance',
@@ -172,17 +164,14 @@ function AboutSection() {
   );
 }
 
-/** Renders all six tab content panels. */
+/** Renders all five tab content panels. */
 function SectionPanels() {
   const plugins = useSettingsStore((s) => s.plugins);
   return (
     <>
       <DataPanels />
-      <TabsContent value="metadata">
-        <GeneralSection />
-      </TabsContent>
       <TabsContent value="appearance">
-        <ThemeSection />
+        <AppearanceSection />
       </TabsContent>
       <TabsContent value="plugins">
         <PluginsSection plugins={plugins} />

@@ -2,7 +2,7 @@
 //
 // Browser-mode tests for the settings SPA root layout. Asserts that the
 // two-column shell renders the WHLogo, branding text scoped to the sidebar,
-// and that the six sidebar navigation buttons switch the active panel
+// and that the five sidebar navigation buttons switch the active panel
 // when clicked.
 
 import { render, cleanup, screen, within } from '@testing-library/react';
@@ -43,9 +43,9 @@ describe('Settings — layout', () => {
     expect(within(getSidebar()).getByText('Settings · v0.1.0')).not.toBeNull();
   });
 
-  it('renders 6 navigation buttons', () => {
+  it('renders 5 navigation buttons', () => {
     render(<Settings />);
-    expect(getSidebarButtons().length).toBe(6);
+    expect(getSidebarButtons().length).toBe(5);
   });
 
   it('defaults to the Destinations tab', () => {
@@ -57,11 +57,11 @@ describe('Settings — layout', () => {
     const user = userEvent.setup();
     render(<Settings />);
     const buttons = getSidebarButtons();
-    expect(document.querySelector('[data-testid="theme-section"]')).toBeNull();
+    expect(document.querySelector('[data-testid="appearance-section"]')).toBeNull();
     const appearanceButton = Array.from(buttons).find((b) => b.textContent === 'Appearance');
     if (!appearanceButton) throw new Error('Appearance button not found in sidebar');
     await user.click(appearanceButton);
-    expect(document.querySelector('[data-testid="theme-section"]')).not.toBeNull();
+    expect(document.querySelector('[data-testid="appearance-section"]')).not.toBeNull();
   });
 });
 
