@@ -283,6 +283,7 @@
     --sidebar-ring: var(--wh-accent);
 }
 
+/* jscpd:ignore-start — shadcn token remapping is structurally identical to .dark by design */
 .light {
 
     /* wh design tokens — light theme */
@@ -371,6 +372,7 @@
 
     --sidebar-ring: var(--wh-accent);
 }
+/* jscpd:ignore-end */
 
 @layer base {
   * {

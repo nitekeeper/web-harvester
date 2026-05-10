@@ -23,6 +23,12 @@ vi.mock('@domain/extractor/content-extractor', async (importActual) => {
 /** Shared URL fixture used by `beforeClip` test cases. */
 const EXAMPLE_URL = 'https://example.com';
 
+/** Default body template used in the template service mock. */
+const BODY_TEMPLATE_DEFAULT = '# {{title}}';
+
+/** Default note name template used in the template service mock. */
+const NOTE_NAME_TEMPLATE = '{{title}}';
+
 /** Shared `ClipContent` fixture used by `beforeClip` test cases. */
 const baseContent: ClipContent = {
   title: 'Hello',
@@ -53,8 +59,8 @@ function setupHarness(): TemplateTestHarness {
       id: 'default',
       name: 'Default',
       frontmatterTemplate: '',
-      bodyTemplate: '# {{title}}',
-      noteNameTemplate: '{{title}}',
+      bodyTemplate: BODY_TEMPLATE_DEFAULT,
+      noteNameTemplate: NOTE_NAME_TEMPLATE,
     }),
     render: vi.fn().mockResolvedValue({ ok: true, output: '# Hello World', errors: [] }),
     getAll: vi.fn().mockResolvedValue([]),
@@ -235,8 +241,8 @@ const SELECTED_TEMPLATE = {
   id: SELECTED_TEMPLATE_ID,
   name: 'My Template',
   frontmatterTemplate: 'tags:\n  - note',
-  bodyTemplate: '# {{title}}',
-  noteNameTemplate: '{{title}}',
+  bodyTemplate: BODY_TEMPLATE_DEFAULT,
+  noteNameTemplate: NOTE_NAME_TEMPLATE,
 };
 
 describe('TemplatePlugin — beforeClip template selection by selectedTemplateId', () => {
@@ -416,7 +422,7 @@ describe('TemplatePlugin — deactivate()', () => {
     harness.templateService.render.mockClear();
     await harness.ctx.hooks.beforeClip.call({
       title: 'After deactivate',
-      url: 'https://example.com',
+      url: EXAMPLE_URL,
       body: 'body',
       selectedText: '',
     });
