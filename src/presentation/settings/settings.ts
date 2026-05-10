@@ -21,11 +21,43 @@ import { bootstrapStore } from '@presentation/stores/bootstrapStore';
 import { useSettingsStore } from '@presentation/stores/useSettingsStore';
 import { bootstrapTheme } from '@presentation/theme/bootstrapTheme';
 import { createLogger } from '@shared/logger';
+import { isPluginStatusPayload, PLUGIN_STATUS_STORAGE_KEY } from '@shared/pluginStatus';
 
 import { DestinationStorageProvider } from './DestinationStorageContext';
 import { Settings } from './Settings';
 
 const logger = createLogger('settings');
+
+/**
+ * Reads plugin status from storage on startup and subscribes to live
+ * storage-change events so the Plugins settings panel stays in sync with
+ * the background service worker.
+ */
+function hydratePluginStatus(adapter: ChromeAdapter): void {
+  adapter
+    .getLocal(PLUGIN_STATUS_STORAGE_KEY)
+    .then((raw) => {
+      if (isPluginStatusPayload(raw)) {
+        useSettingsStore.setState({ plugins: [...raw.plugins] });
+      }
+    })
+    .catch((err: unknown) => {
+      logger.error('failed to read plugin status', err);
+    });
+
+  adapter.onChanged((changes) => {
+    if (!Object.prototype.hasOwnProperty.call(changes, PLUGIN_STATUS_STORAGE_KEY)) return;
+    const change = Reflect.get(changes, PLUGIN_STATUS_STORAGE_KEY) as
+      | { newValue?: unknown }
+      | undefined;
+    const newValue = change?.newValue;
+    if (isPluginStatusPayload(newValue)) {
+      useSettingsStore.setState({ plugins: [...newValue.plugins] });
+    } else {
+      useSettingsStore.setState({ plugins: [] });
+    }
+  });
+}
 
 async function init(): Promise<void> {
   const rootEl = document.getElementById('root');
@@ -41,6 +73,7 @@ async function init(): Promise<void> {
   const port: IDestinationPort = idbStorage;
   const destinations = await idbStorage.getAll();
   useSettingsStore.setState({ destinations });
+  hydratePluginStatus(adapter);
 
   bootstrapTheme().catch((err: unknown) => {
     logger.error('theme bootstrap failed', err);
