@@ -80,7 +80,8 @@ function buildPluginRow(state: RegistryState, plugin: IPlugin): PluginRow {
     return { id, name, version, state: 'active' };
   }
   if (state.failed.has(id)) {
-    return { id, name, version, state: 'failed', error: normalizeError(state.failed.get(id)) };
+    const err = state.failed.get(id);
+    return { id, name, version, state: 'failed', error: normalizeError(err) };
   }
   return { id, name, version, state: 'inactive' };
 }

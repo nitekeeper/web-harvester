@@ -142,7 +142,9 @@ describe('PluginRegistry — getPluginRows', () => {
     const rows = registry.getPluginRows();
     expect(rows[0]).toMatchObject({ id: 'wh.test.inactive', state: 'inactive' });
   });
+});
 
+describe('PluginRegistry — getPluginRows (manifest and lifecycle)', () => {
   it('includes version from the plugin manifest', async () => {
     const plugin: IPlugin = {
       manifest: { id: 'wh.test.v', name: 'Versioned', version: '1.2.3' },
@@ -154,5 +156,18 @@ describe('PluginRegistry — getPluginRows', () => {
 
     const rows = registry.getPluginRows();
     expect(rows[0]).toMatchObject({ version: '1.2.3' });
+  });
+
+  it('returns inactive state for a previously-active plugin after deactivateAll', async () => {
+    const plugin = makePlugin('wh.test.deactivated');
+    registry.register(plugin);
+    await registry.activateAll();
+    expect(registry.getPluginRows()[0]).toMatchObject({ state: 'active' });
+
+    await registry.deactivateAll();
+    expect(registry.getPluginRows()[0]).toMatchObject({
+      id: 'wh.test.deactivated',
+      state: 'inactive',
+    });
   });
 });
