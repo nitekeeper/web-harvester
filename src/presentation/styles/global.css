@@ -106,6 +106,8 @@
 
     --color-wh-page-bg: var(--wh-page-bg);
 
+    --font-mono: var(--wh-mono);
+
     --radius-md: calc(var(--radius) * 0.8);
 
     --radius-lg: var(--radius);
@@ -197,6 +199,8 @@
 
     --wh-page-bg: #0a0b0c;
 
+    --wh-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
     --sidebar: oklch(0.985 0 0);
 
     --sidebar-foreground: oklch(0.145 0 0);
@@ -216,6 +220,95 @@
 
 .dark {
 
+    --background: var(--wh-bg);
+
+    --foreground: var(--wh-text);
+
+    --card: var(--wh-panel);
+
+    --card-foreground: var(--wh-text);
+
+    --popover: var(--wh-panel);
+
+    --popover-foreground: var(--wh-text);
+
+    --primary: var(--wh-accent);
+
+    --primary-foreground: var(--wh-accent-text);
+
+    --secondary: var(--wh-hover);
+
+    --secondary-foreground: var(--wh-text);
+
+    --muted: var(--wh-hover);
+
+    --muted-foreground: var(--wh-muted);
+
+    --accent: var(--wh-hover);
+
+    --accent-foreground: var(--wh-text);
+
+    --destructive: var(--wh-danger);
+
+    --border: var(--wh-border);
+
+    --input: var(--wh-border);
+
+    --ring: var(--wh-accent);
+
+    --chart-1: var(--wh-success);
+
+    --chart-2: var(--wh-accent);
+
+    --chart-3: var(--wh-muted);
+
+    --chart-4: var(--wh-subtle);
+
+    --chart-5: var(--wh-hover);
+
+    --sidebar: var(--wh-panel);
+
+    --sidebar-foreground: var(--wh-text);
+
+    --sidebar-primary: var(--wh-accent);
+
+    --sidebar-primary-foreground: var(--wh-accent-text);
+
+    --sidebar-accent: var(--wh-hover);
+
+    --sidebar-accent-foreground: var(--wh-text);
+
+    --sidebar-border: var(--wh-border);
+
+    --sidebar-ring: var(--wh-accent);
+}
+
+.light {
+
+    /* wh design tokens — light theme */
+    --wh-bg: #fbfbf9;
+
+    --wh-panel: #ffffff;
+
+    --wh-hover: #f4f3ef;
+
+    --wh-border: #e7e5e0;
+
+    --wh-text: #18181b;
+
+    --wh-muted: #6b7079;
+
+    --wh-subtle: #9da2a9;
+
+    --wh-accent: #059669;
+
+    --wh-accent-text: #ffffff;
+
+    --wh-success: #059669;
+
+    --wh-danger: #dc2626;
+
+    /* shadcn token remapping — identical mapping to .dark; values differ via --wh-* above */
     --background: var(--wh-bg);
 
     --foreground: var(--wh-text);
