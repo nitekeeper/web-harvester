@@ -92,6 +92,7 @@ export function buildClipHooksPort(hooks: CoreHookSystem): IClipHooksPort {
           body: value.html,
           selectedText: '',
           markdown: value.markdown,
+          selectedTemplateId: value.selectedTemplateId,
         });
         return {
           url: transformed.url,
