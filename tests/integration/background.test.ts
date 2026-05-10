@@ -22,7 +22,7 @@ import { ReaderPlugin } from '@plugins/reader/ReaderPlugin';
 import { SettingsPlugin } from '@plugins/settings/SettingsPlugin';
 import { TemplatePlugin } from '@plugins/template/TemplatePlugin';
 import { ThemePlugin } from '@plugins/theme/ThemePlugin';
-import { makeContextFactory } from '@presentation/background/background';
+import { makeContextFactory, writePluginStatus } from '@presentation/background/background';
 import { wireContextMenus } from '@presentation/background/wiring';
 import { PLUGIN_STATUS_STORAGE_KEY } from '@shared/pluginStatus';
 
@@ -190,11 +190,12 @@ describe('background bootstrap — plugin status storage bridge', () => {
     harness = setupHarness();
   });
 
-  it('writes plugin status payload to storage after activateAll', async () => {
+  it('writePluginStatus writes a valid PluginStatusPayload to storage', async () => {
     await harness.registry.activateAll();
-    await harness.adapter.setLocal(PLUGIN_STATUS_STORAGE_KEY, {
-      plugins: harness.registry.getPluginRows(),
-    });
+    // Call the production helper directly — this is what bootstrap() calls after activateAll()
+    writePluginStatus(harness.adapter, harness.registry);
+    // Allow the microtask (Promise chain) to settle
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
     const stored = await harness.adapter.getLocal(PLUGIN_STATUS_STORAGE_KEY);
     expect(stored).toMatchObject({
       plugins: expect.arrayContaining([expect.objectContaining({ state: 'active' })]),

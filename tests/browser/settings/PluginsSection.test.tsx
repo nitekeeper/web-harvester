@@ -32,4 +32,9 @@ describe('PluginsSection — empty state', () => {
     render(<PluginsSection plugins={[]} />);
     expect(screen.queryByRole('list')).toBeNull();
   });
+
+  it('does not render empty state when plugins are provided', () => {
+    render(<PluginsSection plugins={[{ id: 'x', name: 'X', state: 'active' }]} />);
+    expect(screen.queryByText('No plugins registered')).toBeNull();
+  });
 });

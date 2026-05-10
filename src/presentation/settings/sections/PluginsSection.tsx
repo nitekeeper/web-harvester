@@ -45,6 +45,29 @@ function EmptyStateIcon() {
   );
 }
 
+/** Sub-copy paragraph for the empty state card. */
+function EmptyStateCopy() {
+  const fmt = useFormatMessage();
+  return (
+    <p
+      style={{
+        fontSize: 12,
+        fontWeight: 400,
+        color: 'var(--wh-muted)',
+        lineHeight: 1.5,
+        maxWidth: 360,
+        margin: '4px auto 0',
+      }}
+    >
+      {fmt({
+        id: 'settings.plugins.empty.sub',
+        defaultMessage:
+          'Plugins listed in the manifest will appear here with their current load state.',
+      })}
+    </p>
+  );
+}
+
 /** Empty state card shown when no plugins are registered. */
 function EmptyState() {
   const fmt = useFormatMessage();
@@ -70,22 +93,7 @@ function EmptyState() {
       >
         {fmt({ id: 'settings.plugins.empty.headline', defaultMessage: 'No plugins registered' })}
       </p>
-      <p
-        style={{
-          fontSize: 12,
-          fontWeight: 400,
-          color: 'var(--wh-muted)',
-          lineHeight: 1.5,
-          maxWidth: 360,
-          margin: '4px auto 0',
-        }}
-      >
-        {fmt({
-          id: 'settings.plugins.empty.sub',
-          defaultMessage:
-            'Plugins listed in the manifest will appear here with their current load state.',
-        })}
-      </p>
+      <EmptyStateCopy />
     </div>
   );
 }
@@ -99,7 +107,7 @@ export function PluginsSection({ plugins }: PluginsSectionProps) {
   const sorted = sortPluginRows(plugins);
   return (
     <div style={{ padding: '22px 26px' }} data-testid="plugins-section">
-      <h1
+      <h2
         style={{
           fontSize: 20,
           fontWeight: 700,
@@ -110,7 +118,7 @@ export function PluginsSection({ plugins }: PluginsSectionProps) {
         }}
       >
         {fmt({ id: 'settings.plugins.heading', defaultMessage: 'Plugins' })}
-      </h1>
+      </h2>
       <p
         style={{
           fontSize: 12.5,

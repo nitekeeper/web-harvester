@@ -134,6 +134,24 @@ function bindServices(
   container.bind(TYPES.IReaderService).toConstantValue(services.readerService);
 }
 
+// ── Plugin status bridge ─────────────────────────────────────────────────────
+
+/**
+ * Writes the current plugin lifecycle snapshot to `chrome.storage.local` so
+ * the settings page can read it on mount without querying the registry
+ * directly. Fire-and-forget: logs failures but never throws.
+ */
+export function writePluginStatus(
+  adapter: { setLocal(key: string, value: unknown): Promise<void> },
+  registry: { getPluginRows(): import('@shared/pluginStatus').PluginRow[] },
+): void {
+  adapter
+    .setLocal(PLUGIN_STATUS_STORAGE_KEY, { plugins: registry.getPluginRows() })
+    .catch((err: unknown) => {
+      logger.error('failed to write plugin status', err);
+    });
+}
+
 // ── Plugin context factory ───────────────────────────────────────────────────
 
 /**
@@ -210,11 +228,7 @@ export async function bootstrap(): Promise<BackgroundContext> {
   registerPlugins(registry);
   await registry.activateAll();
 
-  adapter
-    .setLocal(PLUGIN_STATUS_STORAGE_KEY, { plugins: registry.getPluginRows() })
-    .catch((err: unknown) => {
-      logger.error('failed to write plugin status', err);
-    });
+  writePluginStatus(adapter, registry);
 
   // Resolve after plugins are active so message handlers have the full hook
   // system available before processing the first preview request.
