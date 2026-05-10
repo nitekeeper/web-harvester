@@ -9,7 +9,12 @@
 
 import type { ReaderSettings } from '@application/ReaderService';
 import { createLogger } from '@shared/logger';
-import { MSG_PICKER_RESULT } from '@shared/messages';
+import {
+  MSG_PICKER_RESULT,
+  MSG_EXTRACT_SELECTORS,
+  MSG_START_CSS_PICKER,
+  MSG_STOP_CSS_PICKER,
+} from '@shared/messages';
 
 import { defuddleParseAll } from './defuddleParse';
 import { activateHighlighter, deactivateHighlighter } from './highlighter';
@@ -26,7 +31,10 @@ type IncomingMessage =
   | { type: 'READER_ACTIVATE'; settings: ReaderSettings }
   | { type: 'READER_DEACTIVATE' }
   | { type: 'START_HIGHLIGHT' }
-  | { type: 'STOP_HIGHLIGHT' };
+  | { type: 'STOP_HIGHLIGHT' }
+  | { type: typeof MSG_EXTRACT_SELECTORS; selectors: readonly string[] }
+  | { type: typeof MSG_START_CSS_PICKER }
+  | { type: typeof MSG_STOP_CSS_PICKER };
 
 let activePicker: (() => void) | null = null;
 
@@ -122,6 +130,49 @@ function handleHighlighterMessage(
   return false;
 }
 
+/** Stops the active picker and acknowledges the STOP_PICKER message. */
+function handleStopPicker(sendResponse: (response: unknown) => void): false {
+  stopActivePicker();
+  sendResponse({ type: 'PICKER_STOPPED' });
+  return false;
+}
+
+/** Deactivates reader mode and acknowledges the READER_DEACTIVATE message. */
+function handleReaderDeactivate(sendResponse: (response: unknown) => void): false {
+  deactivateReader();
+  sendResponse({ ok: true });
+  return false;
+}
+
+/**
+ * Resolves CSS selector expressions against the live DOM and returns a
+ * record mapping each expression to the extracted text, HTML, or attribute
+ * value. Synchronous — uses the `sendResponse` callback directly.
+ */
+function handleExtractSelectors(
+  message: { type: typeof MSG_EXTRACT_SELECTORS; selectors: readonly string[] },
+  sendResponse: (r: unknown) => void,
+): false {
+  const results: Record<string, string> = {};
+  for (const expr of message.selectors) {
+    const isHtml = expr.startsWith('selectorHtml:');
+    const raw = isHtml ? expr.slice('selectorHtml:'.length) : expr.slice('selector:'.length);
+    const parts = raw.split('?');
+    const rawSelector = parts[0] ?? '';
+    const attr = parts[1];
+    const selector = rawSelector.trim();
+    const elements = Array.from(document.querySelectorAll(selector));
+    const values = elements.map((el) => {
+      if (attr) return (el as HTMLElement).getAttribute(attr.trim()) ?? '';
+      if (isHtml) return el.outerHTML;
+      return el.textContent?.trim() ?? '';
+    });
+    Reflect.set(results, expr, values.join(', '));
+  }
+  sendResponse(results);
+  return false;
+}
+
 chrome.runtime.onMessage.addListener((msg: unknown, _sender, sendResponse): boolean => {
   const message = msg as IncomingMessage;
 
@@ -130,9 +181,7 @@ chrome.runtime.onMessage.addListener((msg: unknown, _sender, sendResponse): bool
   }
 
   if (message.type === 'STOP_PICKER') {
-    stopActivePicker();
-    sendResponse({ type: 'PICKER_STOPPED' });
-    return false;
+    return handleStopPicker(sendResponse);
   }
 
   if (message.type === 'getHtml') {
@@ -156,13 +205,15 @@ chrome.runtime.onMessage.addListener((msg: unknown, _sender, sendResponse): bool
   }
 
   if (message.type === 'READER_DEACTIVATE') {
-    deactivateReader();
-    sendResponse({ ok: true });
-    return false;
+    return handleReaderDeactivate(sendResponse);
   }
 
   if (message.type === 'START_HIGHLIGHT' || message.type === 'STOP_HIGHLIGHT') {
     return handleHighlighterMessage(message, sendResponse);
+  }
+
+  if (message.type === MSG_EXTRACT_SELECTORS) {
+    return handleExtractSelectors(message, sendResponse);
   }
 
   return false;

@@ -18,20 +18,25 @@ import { createSettingsStorage } from '@infrastructure/storage/settings';
 import { createLogger } from '@shared/logger';
 import {
   isClipPageMessage,
+  isCssPickerResultMessage,
   isHighlightModeExitedMessage,
   isPickerResultMessage,
   isPreviewPageMessage,
+  isStartCssPickerMessage,
   isStartHighlightMessage,
   isStartPickerMessage,
+  isStopCssPickerMessage,
   isStopHighlightMessage,
   isStopPickerMessage,
   isToggleReaderMessage,
   type ClipPageMessage,
+  type CssPickerResultMessage,
   type PickerResultMessage,
   type PreviewPageMessage,
   type PreviewPageResponse,
   type StartPickerMessage,
   type ToggleReaderMessage,
+  CSS_PICKER_RESULT_KEY,
 } from '@shared/messages';
 import { normalizeError } from '@shared/normalizeError';
 
@@ -336,6 +341,40 @@ export async function handleStopPickerMessage(
 }
 
 /**
+ * Sends `START_CSS_PICKER` to the active tab's content script and
+ * acknowledges the caller immediately. The actual picker result arrives later
+ * via a separate {@link CssPickerResultMessage} — this avoids holding the MV3
+ * service-worker message channel open for the full duration of the interaction.
+ */
+export async function handleStartCssPickerMessage(
+  adapter: Pick<ITabAdapter, 'getActiveTab' | 'sendMessageToTab'>,
+  sendResponse: (r: unknown) => void,
+): Promise<void> {
+  const tabId = await resolveActiveTabId(adapter, sendResponse);
+  if (tabId === undefined) return;
+  adapter.sendMessageToTab(tabId, { type: 'START_CSS_PICKER' }).catch((err: unknown) => {
+    logger.warn('START_CSS_PICKER delivery failed', err);
+  });
+  sendResponse({ ok: true });
+}
+
+/**
+ * Stores the CSS picker result in local storage so the settings page can react
+ * to it via a `storage.onChanged` listener. Exported for unit-testing.
+ */
+export async function handleCssPickerResultMessage(
+  msg: CssPickerResultMessage,
+  storage: IWiringStoragePort,
+  sendResponse: (r: unknown) => void,
+): Promise<void> {
+  await storage.setLocal(CSS_PICKER_RESULT_KEY, {
+    selector: msg.selector,
+    timestamp: Date.now(),
+  });
+  sendResponse({ ok: true });
+}
+
+/**
  * Services bag shared by {@link wireMessageListener} and
  * {@link wireMessageListenerDeferred}.
  */
@@ -410,6 +449,37 @@ function dispatchPickerMessage(
 }
 
 /**
+ * Dispatches CSS-picker-related messages to their handlers. Returns `true` if
+ * the message was handled, `false` otherwise.
+ */
+function dispatchCssPickerMessage(
+  msg: unknown,
+  sendResponse: (r: unknown) => void,
+  adapter: MessageDispatchAdapter,
+  storageAdapter: IWiringStoragePort,
+): boolean {
+  if (isStartCssPickerMessage(msg)) {
+    handleStartCssPickerMessage(adapter, sendResponse).catch((err: unknown) => {
+      logger.error('start-css-picker handler failed', err);
+    });
+    return true;
+  }
+  if (isStopCssPickerMessage(msg)) {
+    sendCommandToTab(adapter, 'STOP_CSS_PICKER', sendResponse).catch((err: unknown) => {
+      logger.error('stop-css-picker handler failed', err);
+    });
+    return true;
+  }
+  if (isCssPickerResultMessage(msg)) {
+    handleCssPickerResultMessage(msg, storageAdapter, sendResponse).catch((err: unknown) => {
+      logger.error('css-picker-result handler failed', err);
+    });
+    return true;
+  }
+  return false;
+}
+
+/**
  * Dispatches a single incoming message to the appropriate handler.
  * Extracted from {@link wireMessageListenerDeferred} to keep each function
  * within the 40-line limit.
@@ -442,7 +512,8 @@ function dispatchMessage(
     return;
   }
   if (dispatchHighlightMessage(msg, sendResponse, adapter, storageAdapter)) return;
-  dispatchPickerMessage(msg, sendResponse, adapter, storageAdapter);
+  if (dispatchPickerMessage(msg, sendResponse, adapter, storageAdapter)) return;
+  dispatchCssPickerMessage(msg, sendResponse, adapter, storageAdapter);
 }
 
 /**
