@@ -28,6 +28,7 @@ interface DefuddleParseResult {
   readonly description?: string;
   readonly image?: string;
   readonly site?: string;
+  readonly schemaOrgData?: unknown;
   readonly metaTags?: readonly MetaTag[];
 }
 
@@ -77,15 +78,19 @@ export function defuddleExtract(doc: Document, url: string): ExtractResult {
 }
 
 /**
- * Parses `doc` with Defuddle in a single pass and returns both the article
- * markdown and a {@link PageMetadata} bag with description, author, published
- * date, tags (from `<meta name="keywords">`), image, site, and word count.
- * Clones the document so the live DOM is never mutated.
+ * Parses `doc` with Defuddle in a single pass and returns the article
+ * markdown, a {@link PageMetadata} bag, all raw meta tags, and the raw
+ * schema.org JSON-LD data. Clones the document so the live DOM is never mutated.
  */
 export function defuddleParseAll(
   doc: Document,
   url: string,
-): { readonly markdown: string; readonly meta: PageMetadata } {
+): {
+  readonly markdown: string;
+  readonly meta: PageMetadata;
+  readonly schemaOrgData: Record<string, unknown>;
+  readonly allMetaTags: readonly MetaTag[];
+} {
   const defuddle = new Defuddle(doc.cloneNode(true) as Document, { url });
   const result = defuddle.parse() as DefuddleParseResult;
   const metaTags = result.metaTags ?? [];
@@ -103,5 +108,7 @@ export function defuddleParseAll(
       site: result.site ?? '',
       wordCount: result.wordCount ?? 0,
     },
+    schemaOrgData: (result.schemaOrgData ?? {}) as Record<string, unknown>,
+    allMetaTags: metaTags,
   };
 }

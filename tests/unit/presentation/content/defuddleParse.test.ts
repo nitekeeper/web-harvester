@@ -11,6 +11,11 @@ const MOCK_PUBLISHED = '2024-01-01';
 const MOCK_DESCRIPTION = 'An article about web development';
 const MOCK_IMAGE = 'https://example.com/og-image.jpg';
 const MOCK_SITE = 'Example Site';
+const MOCK_SCHEMA = { '@type': 'Article', author: 'Jane Doe' };
+const MOCK_ALL_META_TAGS = [
+  { name: 'keywords', property: null, content: 'web, development' },
+  { name: null, property: 'og:image', content: 'https://example.com/img.jpg' },
+];
 
 /** Returns a mock Defuddle response. */
 function mockResponse(overrides?: Record<string, unknown>) {
@@ -30,8 +35,8 @@ function mockResponse(overrides?: Record<string, unknown>) {
     language: '',
     parseTime: 0,
     site: MOCK_SITE,
-    schemaOrgData: {},
-    metaTags: [{ name: 'keywords', property: null, content: 'web, development, javascript' }],
+    schemaOrgData: MOCK_SCHEMA,
+    metaTags: MOCK_ALL_META_TAGS,
     ...overrides,
   };
 }
@@ -174,7 +179,7 @@ describe('defuddleParseAll — tags extraction', () => {
 
   it('extracts tags from the keywords meta tag', () => {
     const { meta } = defuddleParseAll(document, URL);
-    expect(meta.tags).toBe('web, development, javascript');
+    expect(meta.tags).toBe('web, development');
   });
 
   it('returns empty tags when no keywords meta tag exists', () => {
@@ -236,5 +241,43 @@ describe('defuddleParseAll — edge cases', () => {
     const [docArg] = vi.mocked(MockDefuddle).mock.calls[0] as unknown as [Document];
     expect(docArg.nodeType).toBe(Node.DOCUMENT_NODE);
     expect(docArg).not.toBe(document);
+  });
+});
+
+describe('defuddleParseAll — schemaOrgData and allMetaTags', () => {
+  beforeEach(() => {
+    vi.mocked(MockDefuddle).mockClear();
+  });
+
+  it('returns schemaOrgData from the Defuddle parse result', () => {
+    const { schemaOrgData } = defuddleParseAll(document, URL);
+    expect(schemaOrgData).toEqual(MOCK_SCHEMA);
+  });
+
+  it('returns empty object for schemaOrgData when absent', () => {
+    vi.mocked(MockDefuddle).mockImplementationOnce(
+      () =>
+        ({
+          parse: () => mockResponse({ schemaOrgData: undefined }),
+        }) as unknown as InstanceType<typeof MockDefuddle>,
+    );
+    const { schemaOrgData } = defuddleParseAll(document, URL);
+    expect(schemaOrgData).toEqual({});
+  });
+
+  it('returns allMetaTags from the Defuddle parse result', () => {
+    const { allMetaTags } = defuddleParseAll(document, URL);
+    expect(allMetaTags).toEqual(MOCK_ALL_META_TAGS);
+  });
+
+  it('returns empty array for allMetaTags when metaTags is absent', () => {
+    vi.mocked(MockDefuddle).mockImplementationOnce(
+      () =>
+        ({
+          parse: () => mockResponse({ metaTags: undefined }),
+        }) as unknown as InstanceType<typeof MockDefuddle>,
+    );
+    const { allMetaTags } = defuddleParseAll(document, URL);
+    expect(allMetaTags).toEqual([]);
   });
 });
