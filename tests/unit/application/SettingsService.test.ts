@@ -54,8 +54,8 @@ describe('SettingsService — get()', () => {
   it('returns schema defaults when no stored settings exist', async () => {
     storage.get.mockResolvedValue(undefined);
     const settings = await service.get();
-    expect(settings.version).toBe(1);
-    expect(settings.theme).toBe('system');
+    expect(settings.version).toBe(2);
+    expect(settings.theme).toBe('dark');
     expect(settings.locale).toBe('en');
     expect(settings.conflictStrategy).toBe('suffix');
     expect(settings.customThemeTokens).toEqual({});
