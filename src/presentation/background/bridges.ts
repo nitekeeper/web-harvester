@@ -100,6 +100,9 @@ export function buildClipHooksPort(hooks: CoreHookSystem): IClipHooksPort {
           image: value.image,
           site: value.site,
           wordCount: value.wordCount,
+          tabId: value.tabId,
+          schemaOrgData: value.schemaOrgData,
+          allMetaTags: value.allMetaTags,
         });
         return {
           url: transformed.url,
