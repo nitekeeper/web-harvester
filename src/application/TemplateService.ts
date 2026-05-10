@@ -14,6 +14,7 @@
 import { DEFAULT_TEMPLATE } from '@domain/templates/defaultTemplate';
 import type { ILogger } from '@domain/types';
 import { createLogger } from '@shared/logger';
+import { SYSTEM_TEMPLATES } from '@shared/systemTemplates';
 import type { TemplateConfig } from '@shared/types';
 
 // ── Public types ──────────────────────────────────────────────────────────────
@@ -187,8 +188,10 @@ export class TemplateService implements ITemplateService {
     return this.storage.getAll();
   }
 
-  /** Returns the template stored under `id`, or `undefined` when absent. */
+  /** Returns the template stored under `id`. Checks built-in system templates first, then user storage. */
   async getById(id: string): Promise<TemplateConfig | undefined> {
+    const system = SYSTEM_TEMPLATES.find((t) => t.id === id);
+    if (system !== undefined) return system;
     return this.storage.get(id);
   }
 

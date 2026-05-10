@@ -128,6 +128,19 @@ describe('TemplateService — getById()', () => {
     const result = await service.getById('missing');
     expect(result).toBeUndefined();
   });
+
+  it('returns a system template by its id without hitting storage', async () => {
+    const result = await service.getById('sys-default-article');
+    expect(result).toBeDefined();
+    expect(result?.id).toBe('sys-default-article');
+    expect(result?.name).toBe('Default Article');
+    expect(storage.get).not.toHaveBeenCalled();
+  });
+
+  it('returns sys-quick-capture system template by id', async () => {
+    const result = await service.getById('sys-quick-capture');
+    expect(result?.id).toBe('sys-quick-capture');
+  });
 });
 
 describe('TemplateService — save()', () => {

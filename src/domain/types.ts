@@ -16,6 +16,8 @@ export interface ClipContent {
   highlights?: string;
   /** Pre-extracted article markdown from the content script, avoiding service-worker DOMParser limits. */
   markdown?: string;
+  /** ID of the template to apply during the clip/preview flow. When absent, the plugin falls back to the default template. */
+  selectedTemplateId?: string;
 }
 
 /** Event emitted when the user creates or modifies a highlight. */

@@ -50,7 +50,10 @@ export class TemplatePlugin implements IPlugin {
 
     this.beforeClipUnsubscribe = hooks.beforeClip.tapAsync(
       async (content: ClipContent): Promise<ClipContent | undefined> => {
-        const template = await templateService.getDefault();
+        const template = content.selectedTemplateId
+          ? ((await templateService.getById(content.selectedTemplateId)) ??
+            (await templateService.getDefault()))
+          : await templateService.getDefault();
         const markdownBody = await extractBody(content, logger);
         const variables = {
           content: markdownBody,

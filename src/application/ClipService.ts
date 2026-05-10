@@ -28,6 +28,8 @@ export interface ClipContent {
   readonly title: string;
   /** Pre-extracted article markdown returned by the content script alongside the raw HTML. */
   readonly markdown?: string;
+  /** ID of the template to apply during the clip/preview flow. When absent, the plugin falls back to the default template. */
+  readonly selectedTemplateId?: string;
 }
 
 /**
@@ -194,8 +196,10 @@ export interface IClipService {
    * Extracts the current page and runs the `beforeClip` waterfall without
    * persisting anything. Returns the compiled markdown string for display in
    * the popup's PROPERTIES and PREVIEW sections.
+   *
+   * @param templateId - ID of the template to compile the preview with. When omitted the plugin falls back to the default template.
    */
-  preview(): Promise<string>;
+  preview(templateId?: string): Promise<string>;
 }
 
 // ── Errors ────────────────────────────────────────────────────────────────────
@@ -330,11 +334,17 @@ export class ClipService implements IClipService {
    * the popup's PROPERTIES and PREVIEW sections. (Note: the field is named 'html'
    * for historical reasons — after beforeClip it holds the compiled markdown output.)
    */
-  async preview(): Promise<string> {
+  async preview(templateId?: string): Promise<string> {
     try {
       const tab = await this.tabAdapter.getActiveTab();
       const { html, markdown } = await this.extractPageContent(tab.id);
-      const initialContent: ClipContent = { url: tab.url, html, title: tab.title, markdown };
+      const initialContent: ClipContent = {
+        url: tab.url,
+        html,
+        title: tab.title,
+        markdown,
+        selectedTemplateId: templateId,
+      };
       const content = await this.hooks.beforeClip.call(initialContent);
       return content.html;
     } catch (err: unknown) {

@@ -39,6 +39,7 @@ interface TemplateTestHarness {
     getDefault: ReturnType<typeof vi.fn>;
     render: ReturnType<typeof vi.fn>;
     getAll: ReturnType<typeof vi.fn>;
+    getById: ReturnType<typeof vi.fn>;
   };
 }
 
@@ -57,6 +58,7 @@ function setupHarness(): TemplateTestHarness {
     }),
     render: vi.fn().mockResolvedValue({ ok: true, output: '# Hello World', errors: [] }),
     getAll: vi.fn().mockResolvedValue([]),
+    getById: vi.fn().mockResolvedValue(undefined),
   };
 
   vi.mocked(ctx.container.get).mockImplementation((token) => {
@@ -210,6 +212,65 @@ describe('TemplatePlugin — beforeClip service calls', () => {
     const renderArgs = harness.templateService.render.mock.calls[0];
     const variables = renderArgs?.[1] as { content: string };
     expect(variables.content).toBe('pre-extracted article markdown');
+  });
+});
+
+/** Fixture template id used by the selectedTemplateId describe block. */
+const SELECTED_TEMPLATE_ID = 'my-template';
+
+/** Fixture template returned by getById in selectedTemplateId tests. */
+const SELECTED_TEMPLATE = {
+  id: SELECTED_TEMPLATE_ID,
+  name: 'My Template',
+  frontmatterTemplate: 'tags:\n  - note',
+  bodyTemplate: '# {{title}}',
+  noteNameTemplate: '{{title}}',
+};
+
+describe('TemplatePlugin — beforeClip template selection by selectedTemplateId', () => {
+  let harness: TemplateTestHarness;
+
+  beforeEach(() => {
+    harness = setupHarness();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('uses getById(selectedTemplateId) when content.selectedTemplateId is set and found', async () => {
+    harness.templateService.getById.mockResolvedValue(SELECTED_TEMPLATE);
+
+    await harness.plugin.activate(harness.ctx);
+    await harness.ctx.hooks.beforeClip.call({
+      ...baseContent,
+      selectedTemplateId: SELECTED_TEMPLATE_ID,
+    });
+
+    expect(harness.templateService.getById).toHaveBeenCalledWith(SELECTED_TEMPLATE_ID);
+    expect(harness.templateService.getDefault).not.toHaveBeenCalled();
+    expect(harness.templateService.render).toHaveBeenCalledWith(
+      SELECTED_TEMPLATE_ID,
+      expect.any(Object),
+    );
+  });
+
+  it('falls back to getDefault() when selectedTemplateId is set but getById returns undefined', async () => {
+    harness.templateService.getById.mockResolvedValue(undefined);
+
+    await harness.plugin.activate(harness.ctx);
+    await harness.ctx.hooks.beforeClip.call({ ...baseContent, selectedTemplateId: 'ghost-id' });
+
+    expect(harness.templateService.getById).toHaveBeenCalledWith('ghost-id');
+    expect(harness.templateService.getDefault).toHaveBeenCalledTimes(1);
+  });
+
+  it('uses getDefault() when content has no selectedTemplateId', async () => {
+    await harness.plugin.activate(harness.ctx);
+    await harness.ctx.hooks.beforeClip.call(baseContent);
+
+    expect(harness.templateService.getById).not.toHaveBeenCalled();
+    expect(harness.templateService.getDefault).toHaveBeenCalledTimes(1);
   });
 });
 

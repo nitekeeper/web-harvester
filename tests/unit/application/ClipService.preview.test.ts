@@ -122,6 +122,20 @@ describe('ClipService.preview() — extraction and transform', () => {
     const result = await service.preview();
     expect(result).toBe('');
   });
+
+  it('passes selectedTemplateId to beforeClip when templateId argument is provided', async () => {
+    await service.preview('my-template-id');
+    expect(hooks.beforeClip.call).toHaveBeenCalledWith(
+      expect.objectContaining({ selectedTemplateId: 'my-template-id' }),
+    );
+  });
+
+  it('passes selectedTemplateId as undefined when no templateId argument is provided', async () => {
+    await service.preview();
+    expect(hooks.beforeClip.call).toHaveBeenCalledWith(
+      expect.objectContaining({ selectedTemplateId: undefined }),
+    );
+  });
 });
 
 describe('ClipService.preview() — no side effects', () => {

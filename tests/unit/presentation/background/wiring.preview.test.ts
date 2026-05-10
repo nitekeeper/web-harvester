@@ -99,6 +99,29 @@ describe('handlePreviewMessage', () => {
   });
 });
 
+// ── handlePreviewMessage — templateId forwarding ──────────────────────────────
+
+describe('handlePreviewMessage — templateId forwarding', () => {
+  it('forwards msg.templateId as the first argument to clipService.preview()', async () => {
+    const clipService = makeClipService();
+    const sendResponse = vi.fn();
+    const msg: PreviewPageMessage = { type: MSG_PREVIEW, templateId: 'sys-quick-capture' };
+
+    await handlePreviewMessage(msg, clipService, sendResponse);
+
+    expect(clipService.preview).toHaveBeenCalledWith('sys-quick-capture');
+  });
+
+  it('passes undefined to clipService.preview() when msg.templateId is null', async () => {
+    const clipService = makeClipService();
+    const sendResponse = vi.fn();
+
+    await handlePreviewMessage(PREVIEW_MSG, clipService, sendResponse); // PREVIEW_MSG has templateId: null
+
+    expect(clipService.preview).toHaveBeenCalledWith(undefined);
+  });
+});
+
 // ── handleClipMessage forwards previewMarkdown ────────────────────────────────
 
 describe('handleClipMessage with previewMarkdown', () => {

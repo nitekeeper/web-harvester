@@ -134,10 +134,8 @@ export async function handlePreviewMessage(
   clipService: IClipService,
   sendResponse: (r: PreviewPageResponse) => void,
 ): Promise<void> {
-  // msg.templateId is intentionally not forwarded — TemplatePlugin reads
-  // selectedTemplateId directly from the popup store via the beforeClip hook.
   try {
-    const previewMarkdown = await clipService.preview();
+    const previewMarkdown = await clipService.preview(msg.templateId ?? undefined);
     sendResponse({ ok: true, previewMarkdown });
   } catch (err: unknown) {
     const error = normalizeError(err);
