@@ -91,6 +91,26 @@ export function AboutIcon() {
   );
 }
 
+/**
+ * Puzzle-piece glyph — used for the Plugins settings nav entry and the
+ * Plugins empty-state tile. Pass `size` (default 14) and `strokeWidth`
+ * (default 2) to adapt between sidebar (14 / 2) and empty-state (22 / 1.8)
+ * contexts.
+ */
+export function PluginIcon({
+  size = 14,
+  strokeWidth = 2,
+}: {
+  readonly size?: number;
+  readonly strokeWidth?: number;
+} = {}) {
+  return (
+    <IconSvg strokeWidth={strokeWidth} joinRound size={size}>
+      <path d="M14 7V4a2 2 0 0 0-4 0v3H7a2 2 0 0 0-2 2v3h3a2 2 0 1 1 0 4H5v3a2 2 0 0 0 2 2h3v-3a2 2 0 1 1 4 0v3h3a2 2 0 0 0 2-2v-3h-3a2 2 0 1 1 0-4h3V9a2 2 0 0 0-2-2z" />
+    </IconSvg>
+  );
+}
+
 /** Props for icon components that need external className (e.g. for rotation). */
 interface ClassedIconProps {
   /** Optional CSS class names applied to the SVG element. */
