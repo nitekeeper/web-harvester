@@ -1,3 +1,5 @@
+import dayjs from 'dayjs';
+
 /** Fixture web page used to render live note-name pattern previews. */
 export interface FixturePage {
   readonly title: string;
@@ -30,6 +32,7 @@ function toSafeName(value: string): string {
  */
 export function resolveNoteNamePattern(pattern: string, page: FixturePage): string {
   return pattern
+    .replace(/\{\{date\|date:([^}]+)\}\}/g, (_, fmt: string) => dayjs(page.date).format(fmt))
     .replace(/\{\{date\}\}/g, page.date)
     .replace(/\{\{title\|safe_name\}\}/g, toSafeName(page.title))
     .replace(/\{\{title\}\}/g, page.title)

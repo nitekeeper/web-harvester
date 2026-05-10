@@ -28,6 +28,19 @@ describe('resolveNoteNamePattern', () => {
     expect(result).toBe('2026-05-09-how-attention-became-the-new-currency');
   });
 
+  it('replaces {{date|date:YYYY-MM-DD}} with the formatted fixture date', () => {
+    const result = resolveNoteNamePattern(
+      '{{date|date:YYYY-MM-DD}} {{title|safe_name}}',
+      FIXTURE_PAGE,
+    );
+    expect(result).toBe('2026-05-09 how-attention-became-the-new-currency');
+  });
+
+  it('replaces {{date|date:YYYYMMDD}} with the formatted fixture date', () => {
+    const result = resolveNoteNamePattern('{{date|date:YYYYMMDD}}', FIXTURE_PAGE);
+    expect(result).toBe('20260509');
+  });
+
   it('leaves unrecognised tokens in place', () => {
     const result = resolveNoteNamePattern('prefix-{{unknown}}', FIXTURE_PAGE);
     expect(result).toBe('prefix-{{unknown}}');
