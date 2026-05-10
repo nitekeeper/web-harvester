@@ -12,7 +12,7 @@ import { createLogger } from '@shared/logger';
  * parses successfully.
  */
 export const AppSettingsSchema = z.object({
-  version: z.number().default(1),
+  version: z.number().default(2),
   theme: z.enum(['light', 'dark', 'system']).default('dark'),
   locale: z.string().default('en'),
   defaultDestinationId: z.string().optional(),
@@ -116,7 +116,17 @@ export class SettingsService implements ISettingsService {
       });
       return AppSettingsSchema.parse({});
     }
-    return parsed.data;
+    const settings = parsed.data;
+    if (settings.version < 2) {
+      const migrated: AppSettings = {
+        ...settings,
+        version: 2,
+        theme: settings.theme === 'system' ? 'dark' : settings.theme,
+      };
+      await this.storage.set(STORAGE_KEY, migrated);
+      return migrated;
+    }
+    return settings;
   }
 
   /**
