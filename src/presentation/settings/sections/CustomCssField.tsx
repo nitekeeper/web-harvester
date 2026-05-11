@@ -167,6 +167,7 @@ function CssTextarea({
       value={value}
       onChange={onChange}
       spellCheck={false}
+      className="preview-scroll"
       style={{
         display: 'block',
         width: '100%',
@@ -175,7 +176,7 @@ function CssTextarea({
         outline: 'none',
         resize: 'vertical',
         padding: 14,
-        minHeight: 140,
+        minHeight: 480,
         color: '#c9d1d9',
         caretColor: 'var(--wh-accent)',
         fontFamily: 'var(--wh-mono)',

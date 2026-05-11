@@ -8,6 +8,7 @@
 
 import { useState } from 'react';
 
+import { PencilIcon } from '@presentation/components/icons';
 import { IconSvg } from '@presentation/components/IconSvg';
 import { WHLogo } from '@presentation/components/WHLogo';
 import { useFormatMessage } from '@presentation/hooks/useFormatMessage';
@@ -69,6 +70,7 @@ function GearIcon() {
 function themeIcon(theme: Theme) {
   if (theme === 'light') return <SunIcon />;
   if (theme === 'system') return <MonitorIcon />;
+  if (theme === 'custom') return <PencilIcon />;
   return <MoonIcon />;
 }
 

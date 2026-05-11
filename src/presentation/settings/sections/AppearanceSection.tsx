@@ -8,7 +8,7 @@ import { useSettingsStore } from '@presentation/stores/useSettingsStore';
 import { applyThemeToDocument } from '@presentation/theme/applyTheme';
 import type { AppSettings } from '@shared/types';
 
-import { CustomCssField } from './CustomCssField';
+import { CustomCssField, DEFAULT_CSS_SEED } from './CustomCssField';
 
 /** BCP-47 locale codes supported by the application UI. */
 type SupportedLocale = 'en' | 'ko';
@@ -299,7 +299,11 @@ export function AppearanceSection() {
       <ThemeField
         value={settings.theme}
         onChange={(theme) => {
-          updateSettings({ theme });
+          if (theme === 'custom' && settings.customCss === '') {
+            updateSettings({ theme, customCss: DEFAULT_CSS_SEED });
+          } else {
+            updateSettings({ theme });
+          }
           applyThemeToDocument(theme);
         }}
       />

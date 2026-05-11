@@ -8,6 +8,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AppearanceSection } from '@presentation/settings/sections/AppearanceSection';
+import { DEFAULT_CSS_SEED } from '@presentation/settings/sections/CustomCssField';
 import { useSettingsStore } from '@presentation/stores/useSettingsStore';
 import type { SettingsStoreState } from '@presentation/stores/useSettingsStore';
 import { applyThemeToDocument } from '@presentation/theme/applyTheme';
@@ -21,6 +22,7 @@ vi.mock('@presentation/theme/applyTheme', () => ({ applyThemeToDocument: vi.fn()
 
 const mockUpdateSettings = vi.fn();
 const ATTR_ARIA_PRESSED = 'aria-pressed';
+const EXISTING_CSS_VALUE = ':root { --my-var: red; }';
 
 const baseSettings: AppSettings = {
   version: 1,
@@ -144,10 +146,10 @@ describe('AppearanceSection — custom CSS field — initial state', () => {
   });
 
   it('shows saved customCss when not empty', () => {
-    setupStore({ customCss: ':root { --my-var: red; }' });
+    setupStore({ customCss: EXISTING_CSS_VALUE });
     render(<AppearanceSection />);
     const ta = screen.getByRole('textbox') as HTMLTextAreaElement;
-    expect(ta.value).toBe(':root { --my-var: red; }');
+    expect(ta.value).toBe(EXISTING_CSS_VALUE);
   });
 
   it('resets textarea to seed content on Reset click', () => {
@@ -214,6 +216,32 @@ describe('AppearanceSection — custom CSS field — injection gating', () => {
   });
 });
 
+describe('AppearanceSection — Custom theme tile seed persistence', () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
+  it('saves DEFAULT_CSS_SEED when Custom selected with empty customCss', async () => {
+    setupStore({ theme: 'dark', customCss: '' });
+    const user = userEvent.setup();
+    render(<AppearanceSection />);
+    await user.click(screen.getByRole('button', { name: /^custom$/i }));
+    expect(mockUpdateSettings).toHaveBeenCalledWith({
+      theme: 'custom',
+      customCss: DEFAULT_CSS_SEED,
+    });
+  });
+
+  it('does not include customCss in updateSettings when custom selected and customCss is not empty', async () => {
+    setupStore({ theme: 'dark', customCss: EXISTING_CSS_VALUE });
+    const user = userEvent.setup();
+    render(<AppearanceSection />);
+    await user.click(screen.getByRole('button', { name: /^custom$/i }));
+    expect(mockUpdateSettings).toHaveBeenCalledWith({ theme: 'custom' });
+  });
+});
+
 describe('AppearanceSection — font size field removed', () => {
   afterEach(() => {
     cleanup();
@@ -250,8 +278,8 @@ describe('AppearanceSection — Custom theme tile', () => {
     );
   });
 
-  it('calls updateSettings with custom on Custom tile click', async () => {
-    setupStore({ theme: 'dark' });
+  it('calls updateSettings with custom on Custom tile click when customCss is not empty', async () => {
+    setupStore({ theme: 'dark', customCss: EXISTING_CSS_VALUE });
     const user = userEvent.setup();
     render(<AppearanceSection />);
     await user.click(screen.getByRole('button', { name: /^custom$/i }));

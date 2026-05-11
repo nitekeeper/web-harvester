@@ -10,6 +10,7 @@ import { describe, it, expect, afterEach } from 'vitest';
 import { PopupHeader } from '@presentation/popup/components/PopupHeader';
 
 const NOOP = (): void => undefined;
+const THEME_BTN_TESTID = 'header-theme-btn';
 
 describe('PopupHeader — rendering', () => {
   afterEach(() => {
@@ -54,6 +55,28 @@ describe('PopupHeader — settings button', () => {
   });
 });
 
+describe('PopupHeader — custom theme', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  it('renders the theme toggle button with aria-label "custom" when theme is custom', () => {
+    render(<PopupHeader theme="custom" onTheme={NOOP} onSettings={NOOP} />);
+    const btn = screen.getByTestId(THEME_BTN_TESTID);
+    expect(btn.getAttribute('aria-label')).toBe('custom');
+  });
+
+  it('does not show Custom option in the theme dropdown', async () => {
+    const user = userEvent.setup();
+    render(<PopupHeader theme="custom" onTheme={NOOP} onSettings={NOOP} />);
+    await user.click(screen.getByTestId(THEME_BTN_TESTID));
+    expect(screen.queryByText('Custom')).toBeNull();
+    expect(screen.getByText('Light')).not.toBeNull();
+    expect(screen.getByText('Dark')).not.toBeNull();
+    expect(screen.getByText('System')).not.toBeNull();
+  });
+});
+
 describe('PopupHeader — theme menu', () => {
   afterEach(() => {
     cleanup();
@@ -62,7 +85,7 @@ describe('PopupHeader — theme menu', () => {
   it('opens theme menu when theme button is clicked', async () => {
     const user = userEvent.setup();
     render(<PopupHeader theme="dark" onTheme={NOOP} onSettings={NOOP} />);
-    await user.click(screen.getByTestId('header-theme-btn'));
+    await user.click(screen.getByTestId(THEME_BTN_TESTID));
     expect(screen.getByText('Light')).not.toBeNull();
     expect(screen.getByText('Dark')).not.toBeNull();
     expect(screen.getByText('System')).not.toBeNull();
@@ -80,7 +103,7 @@ describe('PopupHeader — theme menu', () => {
         onSettings={NOOP}
       />,
     );
-    await user.click(screen.getByTestId('header-theme-btn'));
+    await user.click(screen.getByTestId(THEME_BTN_TESTID));
     await user.click(screen.getByText('Light'));
     expect(chosen).toBe('light');
   });
