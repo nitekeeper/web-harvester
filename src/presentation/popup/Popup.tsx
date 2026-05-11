@@ -12,7 +12,7 @@ import { mergeTemplates } from '@shared/systemTemplates';
 import { ActionFooter } from './components/ActionFooter';
 import { DestinationSelector } from './components/DestinationSelector';
 import { MarkdownPreview } from './components/MarkdownPreview';
-import { PopupHeader } from './components/PopupHeader';
+import { PopupHeader, type Theme } from './components/PopupHeader';
 import { PropertiesEditor } from './components/PropertiesEditor';
 import { TemplateSelector } from './components/TemplateSelector';
 import { ToolbarSlot } from './components/ToolbarSlot';
@@ -43,7 +43,7 @@ function useSettingsBindings() {
   const theme = useSettingsStore((s) => s.settings.theme);
   const updateSettings = useSettingsStore((s) => s.updateSettings);
   const handleTheme = useCallback(
-    (next: 'light' | 'dark' | 'system') => updateSettings({ theme: next }),
+    (next: Theme) => updateSettings({ theme: next }),
     [updateSettings],
   );
   return { theme, handleTheme };

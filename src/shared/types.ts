@@ -31,7 +31,7 @@ export interface AppSettings {
   /** Schema version of the persisted settings record. */
   readonly version: number;
   /** Active theme preference. */
-  readonly theme: 'light' | 'dark' | 'system';
+  readonly theme: 'light' | 'dark' | 'system' | 'custom';
   /** BCP-47 locale tag used by the i18n layer. */
   readonly locale: string;
   /** Default destination id used when the user does not pick one explicitly. */

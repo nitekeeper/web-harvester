@@ -1,7 +1,11 @@
 // tests/unit/application/SettingsService.test.ts
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import { SettingsService, type ISettingsService } from '@application/SettingsService';
+import {
+  AppSettingsSchema,
+  SettingsService,
+  type ISettingsService,
+} from '@application/SettingsService';
 import { createLogger } from '@shared/logger';
 
 // Minimal ISettingsStorage mock — mirrors the interface from @infrastructure/storage
@@ -121,6 +125,13 @@ describe('SettingsService — setAll()', () => {
     service.onChange(handler);
     await service.setAll(FULL_SETTINGS);
     expect(handler).toHaveBeenCalledWith(FULL_SETTINGS);
+  });
+});
+
+describe('AppSettingsSchema — theme', () => {
+  it('accepts custom as a valid theme value', () => {
+    const result = AppSettingsSchema.parse({ theme: 'custom' });
+    expect(result.theme).toBe('custom');
   });
 });
 

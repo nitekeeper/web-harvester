@@ -12,7 +12,7 @@ import { WHLogo } from '@presentation/components/WHLogo';
 import { useFormatMessage } from '@presentation/hooks/useFormatMessage';
 
 /** Active theme value accepted by {@link PopupHeader}. */
-export type Theme = 'light' | 'dark' | 'system';
+export type Theme = 'light' | 'dark' | 'system' | 'custom';
 
 /** Props for {@link PopupHeader}. */
 export interface PopupHeaderProps {
@@ -66,15 +66,15 @@ function GearIcon() {
 /** Returns the icon glyph for the supplied theme value. */
 function themeIcon(theme: Theme) {
   if (theme === 'light') return <SunIcon />;
-  if (theme === 'dark') return <MoonIcon />;
-  return <MonitorIcon />;
+  if (theme === 'system') return <MonitorIcon />;
+  return <MoonIcon />;
 }
 
 /** Applies `theme` immediately to `document.documentElement` via the `.dark` class. */
 function applyThemeClass(theme: Theme): void {
   const root = document.documentElement;
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const isDark = theme === 'dark' || (theme === 'system' && prefersDark);
+  const isDark = theme === 'dark' || theme === 'custom' || (theme === 'system' && prefersDark);
   root.classList.toggle('dark', isDark);
 }
 

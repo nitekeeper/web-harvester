@@ -13,7 +13,7 @@ import { createLogger } from '@shared/logger';
  */
 export const AppSettingsSchema = z.object({
   version: z.number().default(2),
-  theme: z.enum(['light', 'dark', 'system']).default('dark'),
+  theme: z.enum(['light', 'dark', 'system', 'custom']).default('dark'),
   locale: z.string().default('en'),
   defaultDestinationId: z.string().optional(),
   conflictStrategy: z.enum(['overwrite', 'skip', 'suffix']).default('suffix'),

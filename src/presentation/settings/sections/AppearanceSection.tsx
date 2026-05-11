@@ -121,12 +121,14 @@ const SWATCHES: Record<ThemePreference, SwatchSpec> = {
     bar2: SWATCH_LIGHT_BAR2,
     accent: SWATCH_ACCENT,
   },
+  custom: { bg: '#0f1011', bar1: SWATCH_DARK_BAR1, bar2: SWATCH_DARK_BAR2, accent: SWATCH_ACCENT },
 };
 
 const THEME_LABELS: Record<ThemePreference, string> = {
   light: 'Light',
   dark: 'Dark',
   system: 'System',
+  custom: 'Custom',
 };
 
 const THEME_OPTIONS: readonly ThemePreference[] = ['light', 'dark', 'system'];
