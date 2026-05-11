@@ -130,9 +130,10 @@ describe('AppearanceSection — custom CSS field — initial state', () => {
   it('shows default seed when customCss is empty', () => {
     setupStore({ customCss: '' });
     render(<AppearanceSection />);
-    expect(screen.getByRole('textbox')).toBeDefined();
     const ta = screen.getByRole('textbox') as HTMLTextAreaElement;
-    expect(ta.value).toContain('--color-primary');
+    expect(ta.value).toContain('Purple Midnight');
+    expect(ta.value).toContain('--wh-accent');
+    expect(ta.value).toContain('#a78bfa');
   });
 
   it('shows saved customCss when not empty', () => {
@@ -147,7 +148,7 @@ describe('AppearanceSection — custom CSS field — initial state', () => {
     render(<AppearanceSection />);
     fireEvent.click(screen.getByRole('button', { name: /reset to default/i }));
     const ta = screen.getByRole('textbox') as HTMLTextAreaElement;
-    expect(ta.value).toContain('--color-primary');
+    expect(ta.value).toContain('Purple Midnight');
   });
 });
 
@@ -173,6 +174,35 @@ describe('AppearanceSection — custom CSS field — autosave', () => {
     fireEvent.change(screen.getByRole('textbox'), { target: { value: 'a' } });
     vi.advanceTimersByTime(600);
     expect(mockUpdateSettings).toHaveBeenCalled();
+    vi.useRealTimers();
+  });
+});
+
+describe('AppearanceSection — custom CSS field — injection gating', () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
+  it('does not inject css when theme is not custom', () => {
+    setupStore({ customCss: '', theme: 'dark' });
+    vi.useFakeTimers();
+    render(<AppearanceSection />);
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'a' } });
+    vi.advanceTimersByTime(600);
+    const el = document.getElementById('wh-custom-css');
+    expect(el?.textContent ?? '').toBe('');
+    vi.useRealTimers();
+  });
+
+  it('injects css when theme is custom', () => {
+    setupStore({ customCss: '', theme: 'custom' });
+    vi.useFakeTimers();
+    render(<AppearanceSection />);
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: ':root{}' } });
+    vi.advanceTimersByTime(600);
+    const el = document.getElementById('wh-custom-css');
+    expect(el?.textContent).toBe(':root{}');
     vi.useRealTimers();
   });
 });

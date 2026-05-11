@@ -202,19 +202,9 @@ export function ClipboardIcon() {
 /** Pencil edit icon — 11×11 px, stroke 2. Used on the Custom theme tile swatch. */
 export function PencilIcon() {
   return (
-    <svg
-      width="11"
-      height="11"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
+    <IconSvg strokeWidth={2} joinRound size={11}>
       <path d="M12 20h9" />
       <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z" />
-    </svg>
+    </IconSvg>
   );
 }

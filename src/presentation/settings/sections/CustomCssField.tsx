@@ -8,7 +8,31 @@ import { useFormatMessage } from '@presentation/hooks/useFormatMessage';
 export type SaveState = 'saved' | 'saving' | 'invalid';
 
 /** Default seed content shown when no custom CSS is saved. */
-export const DEFAULT_CSS_SEED = `/* Override any token */\n:root {\n  --color-primary: #5b21b6;\n  --radius-card: 8px;\n}\n`;
+export const DEFAULT_CSS_SEED = `/* Web Harvestor — Custom CSS
+ * Theme tiles set the base. Rules here win on top.
+ *
+ * Blueprint below: "Purple Midnight" — a dark theme with a violet
+ * accent and warmer surfaces. Uncomment the block to apply it,
+ * or tweak any value to make it your own.
+ */
+
+/*
+:root {
+  --wh-accent:    #a78bfa;
+  --wh-accent-fg: #1a1130;
+
+  --wh-bg:        #14111c;
+  --wh-panel:     #1d1828;
+  --wh-border:    #2c2540;
+
+  --wh-text:      #f4f1ff;
+  --wh-muted:     #b6a7d4;
+  --wh-subtle:    #7d6f9a;
+
+  --wh-font-sans: "Iowan Old Style", Georgia, serif;
+}
+*/
+`;
 
 const INDICATOR_COLOR_SAVED = '#10b981';
 const INDICATOR_COLOR_INVALID = '#ef4444';
@@ -174,18 +198,18 @@ interface CssEditorState {
 }
 
 /** Manages debounced autosave state for the custom CSS editor. */
-function useCssEditor(value: string, onChange: (v: string) => void): CssEditorState {
+function useCssEditor(value: string, theme: string, onChange: (v: string) => void): CssEditorState {
   const [localValue, setLocalValue] = useState(value === '' ? DEFAULT_CSS_SEED : value);
   const [saveState, setSaveState] = useState<SaveState>('saved');
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const flush = useCallback(
     (css: string) => {
-      const state = injectAndValidateCss(css);
+      const state = theme === 'custom' ? injectAndValidateCss(css) : 'saved';
       onChange(css);
       setSaveState(state);
     },
-    [onChange],
+    [theme, onChange],
   );
 
   const schedule = useCallback(
@@ -198,8 +222,8 @@ function useCssEditor(value: string, onChange: (v: string) => void): CssEditorSt
   );
 
   useEffect(() => {
-    if (value !== '') injectAndValidateCss(value);
-    // mount-only effect: inject persisted CSS once; value intentionally omitted from deps
+    if (value !== '' && theme === 'custom') injectAndValidateCss(value);
+    // mount-only effect: inject persisted CSS once; deps intentionally omitted
   }, []);
 
   useEffect(
@@ -223,20 +247,52 @@ function useCssEditor(value: string, onChange: (v: string) => void): CssEditorSt
   return { localValue, saveState, handleChange, handleReset };
 }
 
+/** Bordered editor box containing the header strip and textarea. */
+function CssEditorBox({
+  saveState,
+  resetLabel,
+  localValue,
+  onReset,
+  onChange,
+}: {
+  readonly saveState: SaveState;
+  readonly resetLabel: string;
+  readonly localValue: string;
+  readonly onReset: () => void;
+  readonly onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+}) {
+  return (
+    <div
+      style={{
+        background: '#0d1117',
+        border: '1px solid var(--wh-border)',
+        borderRadius: 6,
+        overflow: 'hidden',
+      }}
+    >
+      <CssEditorHeader saveState={saveState} resetLabel={resetLabel} onReset={onReset} />
+      <CssTextarea value={localValue} onChange={onChange} />
+    </div>
+  );
+}
+
 /** Debounced CSS editor with autosave, validation, and CSS injection on mount. */
 export function CustomCssField({
   value,
+  theme,
   onChange,
 }: {
   readonly value: string;
+  readonly theme: string;
   readonly onChange: (v: string) => void;
 }) {
   const fmt = useFormatMessage();
-  const { localValue, saveState, handleChange, handleReset } = useCssEditor(value, onChange);
+  const { localValue, saveState, handleChange, handleReset } = useCssEditor(value, theme, onChange);
   const resetLabel = fmt({
     id: 'settings.appearance.customCss.reset',
     defaultMessage: 'Reset to default',
   });
+  const fieldLabel = fmt({ id: 'settings.appearance.customCss', defaultMessage: 'Custom CSS' });
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -249,19 +305,15 @@ export function CustomCssField({
           color: 'var(--wh-muted)',
         }}
       >
-        {fmt({ id: 'settings.appearance.customCss', defaultMessage: 'Custom CSS' })}
+        {fieldLabel}
       </span>
-      <div
-        style={{
-          background: '#0d1117',
-          border: '1px solid var(--wh-border)',
-          borderRadius: 6,
-          overflow: 'hidden',
-        }}
-      >
-        <CssEditorHeader saveState={saveState} resetLabel={resetLabel} onReset={handleReset} />
-        <CssTextarea value={localValue} onChange={handleChange} />
-      </div>
+      <CssEditorBox
+        saveState={saveState}
+        resetLabel={resetLabel}
+        localValue={localValue}
+        onReset={handleReset}
+        onChange={handleChange}
+      />
     </div>
   );
 }

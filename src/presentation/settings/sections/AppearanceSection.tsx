@@ -279,6 +279,7 @@ export function AppearanceSection() {
       />
       <CustomCssField
         value={settings.customCss}
+        theme={settings.theme}
         onChange={(customCss) => updateSettings({ customCss })}
       />
     </div>
