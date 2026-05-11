@@ -120,6 +120,7 @@ async function init(): Promise<void> {
     bootstrapStore(adapter, 'popup-state', usePopupStore),
   ]);
 
+  // Subscription returned by bootstrapLocale lives for the page lifetime — discard intentional.
   await bootstrapLocale(useSettingsStore.getState().settings.locale);
 
   const { selectedTemplateId } = usePopupStore.getState();

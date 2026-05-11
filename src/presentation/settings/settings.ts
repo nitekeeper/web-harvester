@@ -71,6 +71,7 @@ async function init(): Promise<void> {
     serialize: (s) => ({ settings: s.settings, templates: s.templates }),
   });
 
+  // Subscription returned by bootstrapLocale lives for the page lifetime — discard intentional.
   await bootstrapLocale(useSettingsStore.getState().settings.locale);
 
   const idbStorage = await createDestinationStorage();
