@@ -22,6 +22,7 @@ import { bootstrapStore } from '@presentation/stores/bootstrapStore';
 import { usePopupStore } from '@presentation/stores/usePopupStore';
 import { useReaderStore } from '@presentation/stores/useReaderStore';
 import { useSettingsStore } from '@presentation/stores/useSettingsStore';
+import { bootstrapCustomCss } from '@presentation/theme/bootstrapCustomCss';
 import { bootstrapTheme } from '@presentation/theme/bootstrapTheme';
 import { createLogger } from '@shared/logger';
 import {
@@ -82,6 +83,7 @@ function mountPopup(rootEl: HTMLElement, adapter: ChromeAdapter, onSave: () => v
   bootstrapTheme().catch((err: unknown) => {
     logger.error('theme bootstrap failed', err);
   });
+  bootstrapCustomCss();
   createRoot(rootEl).render(
     <StrictMode>
       <Popup

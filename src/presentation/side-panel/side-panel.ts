@@ -21,6 +21,7 @@ import { useHighlightsStore } from '@presentation/stores/useHighlightsStore';
 import { usePopupStore } from '@presentation/stores/usePopupStore';
 import { useReaderStore } from '@presentation/stores/useReaderStore';
 import { useSettingsStore } from '@presentation/stores/useSettingsStore';
+import { bootstrapCustomCss } from '@presentation/theme/bootstrapCustomCss';
 import { bootstrapTheme } from '@presentation/theme/bootstrapTheme';
 import { createLogger } from '@shared/logger';
 import { MSG_TOGGLE_READER } from '@shared/messages';
@@ -112,6 +113,7 @@ async function init(): Promise<void> {
   bootstrapTheme().catch((err: unknown) => {
     logger.error('theme bootstrap failed', err);
   });
+  bootstrapCustomCss();
 
   createRoot(rootEl).render(
     createElement(

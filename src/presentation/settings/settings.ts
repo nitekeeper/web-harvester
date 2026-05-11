@@ -22,6 +22,7 @@ import '@presentation/styles/global.css';
 import { bootstrapStore } from '@presentation/stores/bootstrapStore';
 import { useSettingsStore } from '@presentation/stores/useSettingsStore';
 import { applyThemeToDocument } from '@presentation/theme/applyTheme';
+import { bootstrapCustomCss } from '@presentation/theme/bootstrapCustomCss';
 import { createLogger } from '@shared/logger';
 import { isPluginStatusPayload, PLUGIN_STATUS_STORAGE_KEY } from '@shared/pluginStatus';
 
@@ -77,6 +78,7 @@ async function init(): Promise<void> {
   hydratePluginStatus(adapter);
 
   applyThemeToDocument(useSettingsStore.getState().settings.theme);
+  bootstrapCustomCss();
   createRoot(rootEl).render(
     createElement(
       StrictMode,
