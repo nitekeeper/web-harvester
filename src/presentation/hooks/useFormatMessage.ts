@@ -30,12 +30,11 @@ export interface MessageDescriptor {
 export type FormatMessageFn = (descriptor: MessageDescriptor) => string;
 
 /**
- * Returns a stable formatter function backed by the real i18n layer.
+ * Returns a formatter function backed by the real i18n layer. The reference
+ * is stable across renders and changes only when the locale changes.
  * Subscribes to `useLocaleStore` so components re-render when the locale
  * store updates — `bootstrapLocale` updates the store only after
  * `loadLocale` resolves, so re-renders always see a fully loaded bundle.
- * Returns a stable formatter function that changes reference only when the
- * locale changes.
  */
 export function useFormatMessage(): FormatMessageFn {
   const locale = useLocaleStore((state) => state.locale);
