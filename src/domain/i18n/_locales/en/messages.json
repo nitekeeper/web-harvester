@@ -138,5 +138,9 @@
   "settings.about.copyright": {
     "message": "© 2026 Web Harvester. Made for people who read on the web.",
     "description": "About page copyright line"
+  },
+  "about.legal.licenseNotice": {
+    "message": "Released under the MIT License.",
+    "description": "About page license notice line below copyright"
   }
 }

@@ -15,10 +15,18 @@ export interface LegalBlockProps {
   readonly licensesLabel: string;
   /** Copyright line text. */
   readonly copyright: string;
+  /** License notice line (e.g. "Released under the MIT License."). */
+  readonly licenseNotice: string;
 }
 
 /** Legal section — open-source licenses link and copyright line. */
-export function LegalBlock({ licensesUrl, heading, licensesLabel, copyright }: LegalBlockProps) {
+export function LegalBlock({
+  licensesUrl,
+  heading,
+  licensesLabel,
+  copyright,
+  licenseNotice,
+}: LegalBlockProps) {
   return (
     <>
       <Eyebrow label={heading} />
@@ -38,7 +46,11 @@ export function LegalBlock({ licensesUrl, heading, licensesLabel, copyright }: L
           {licensesLabel}
         </a>
       </div>
-      <p style={{ marginTop: 18, fontSize: 11, lineHeight: 1.6, color: C.subtle }}>{copyright}</p>
+      <p style={{ marginTop: 18, fontSize: 11, fontWeight: 400, lineHeight: 1.6, color: C.subtle }}>
+        {copyright}
+        <br />
+        {licenseNotice}
+      </p>
     </>
   );
 }

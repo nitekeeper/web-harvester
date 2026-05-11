@@ -27,6 +27,7 @@ interface AboutStrings {
   readonly legalHeading: string;
   readonly licensesLabel: string;
   readonly copyright: string;
+  readonly licenseNotice: string;
 }
 
 /** Builds all localised strings for the About section in one pass. */
@@ -55,6 +56,10 @@ function buildAboutStrings(fmt: FormatMessageFn, version: string): AboutStrings 
     copyright: fmt({
       id: 'about.legal.copyright',
       defaultMessage: '© 2026 Web Harvester. Made for people who read on the web.',
+    }),
+    licenseNotice: fmt({
+      id: 'about.legal.licenseNotice',
+      defaultMessage: 'Released under the MIT License.',
     }),
   };
 }
@@ -126,6 +131,7 @@ export function AboutSection() {
         heading={s.legalHeading}
         licensesLabel={s.licensesLabel}
         copyright={s.copyright}
+        licenseNotice={s.licenseNotice}
       />
     </div>
   );
