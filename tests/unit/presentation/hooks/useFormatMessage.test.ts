@@ -44,7 +44,7 @@ describe('useFormatMessage — delegation', () => {
     expect(result.current({ id: 'highlight-count', values: { count: 1 } })).toBe('1 highlight');
   });
 
-  it('ignores defaultMessage — delegates to the real formatter only', () => {
+  it('does not forward defaultMessage to formatMessage', () => {
     mockFormatMessage.mockReturnValue('From Bundle');
     const { result } = renderHook(() => useFormatMessage());
     // defaultMessage is present but the hook must not use it
@@ -52,20 +52,39 @@ describe('useFormatMessage — delegation', () => {
     expect(output).toBe('From Bundle');
     expect(mockFormatMessage).toHaveBeenCalledWith(SAVE_BUTTON_ID, undefined);
   });
+
+  it('returns the same function reference when locale has not changed', () => {
+    const { result, rerender } = renderHook(() => useFormatMessage());
+    const first = result.current;
+    rerender();
+    expect(result.current).toBe(first);
+  });
 });
 
 describe('useFormatMessage — re-render on locale change', () => {
   it('re-renders when the locale store changes', async () => {
-    // Use mockReturnValueOnce so each render call gets a distinct value.
-    mockFormatMessage.mockReturnValueOnce('English').mockReturnValueOnce('Korean');
-
-    const { result } = renderHook(() => useFormatMessage());
-    expect(result.current({ id: 'btn' })).toBe('English');
+    let renderCount = 0;
+    const { result } = renderHook(() => {
+      renderCount += 1;
+      return useFormatMessage();
+    });
+    const fnBefore = result.current;
+    const countBefore = renderCount;
 
     await act(async () => {
       useLocaleStore.setState({ locale: 'ko' });
     });
 
-    expect(result.current({ id: 'btn' })).toBe('Korean');
+    expect(renderCount).toBeGreaterThan(countBefore);
+    expect(result.current).not.toBe(fnBefore); // new ref after locale switch
+  });
+
+  it('returns a new function reference when locale changes', async () => {
+    const { result } = renderHook(() => useFormatMessage());
+    const before = result.current;
+    await act(async () => {
+      useLocaleStore.setState({ locale: 'ko' });
+    });
+    expect(result.current).not.toBe(before);
   });
 });

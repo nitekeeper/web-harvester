@@ -1,4 +1,6 @@
 // src/presentation/hooks/useFormatMessage.ts
+import { useCallback } from 'react';
+
 import { formatMessage } from '@application/i18n/localeService';
 import { useLocaleStore } from '@presentation/stores/useLocaleStore';
 
@@ -28,12 +30,14 @@ export interface MessageDescriptor {
 export type FormatMessageFn = (descriptor: MessageDescriptor) => string;
 
 /**
- * Returns a formatter function backed by the real i18n layer. Subscribes to
- * `useLocaleStore` so components re-render when the locale store updates —
- * `bootstrapLocale` updates the store only after `loadLocale` resolves, so
- * re-renders always see a fully loaded bundle.
+ * Returns a stable formatter function backed by the real i18n layer.
+ * Subscribes to `useLocaleStore` so components re-render when the locale
+ * store updates — `bootstrapLocale` updates the store only after
+ * `loadLocale` resolves, so re-renders always see a fully loaded bundle.
+ * Returns a stable formatter function that changes reference only when the
+ * locale changes.
  */
 export function useFormatMessage(): FormatMessageFn {
-  useLocaleStore((state) => state.locale);
-  return ({ id, values }) => formatMessage(id, values);
+  const locale = useLocaleStore((state) => state.locale);
+  return useCallback(({ id, values }) => formatMessage(id, values), [locale]);
 }
