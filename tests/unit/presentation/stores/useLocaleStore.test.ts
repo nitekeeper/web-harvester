@@ -16,7 +16,7 @@ describe('useLocaleStore', () => {
     expect(useLocaleStore.getState().locale).toBe('de');
   });
 
-  it('setLocale to same value is a no-op that does not change reference', () => {
+  it('setLocale to same value still produces a new state object', () => {
     const before = useLocaleStore.getState();
     useLocaleStore.getState().setLocale('en');
     expect(useLocaleStore.getState().locale).toBe('en');

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-import type { SupportedLocale } from '@shared/constants';
+import { DEFAULT_LOCALE, type SupportedLocale } from '@shared/constants';
 
 /**
  * State shape for the locale store. Holds the locale whose bundle is
@@ -21,6 +21,6 @@ export interface LocaleStoreState {
  * after a bundle swap, never mid-load.
  */
 export const useLocaleStore = create<LocaleStoreState>()((set) => ({
-  locale: 'en',
+  locale: DEFAULT_LOCALE,
   setLocale: (locale) => set({ locale }),
 }));
