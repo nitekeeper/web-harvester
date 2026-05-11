@@ -66,14 +66,31 @@ describe('PopupHeader — custom theme', () => {
     expect(btn.getAttribute('aria-label')).toBe('custom');
   });
 
-  it('does not show Custom option in the theme dropdown', async () => {
+  it('shows Custom option in the theme dropdown', async () => {
     const user = userEvent.setup();
     render(<PopupHeader theme="custom" onTheme={NOOP} onSettings={NOOP} />);
     await user.click(screen.getByTestId(THEME_BTN_TESTID));
-    expect(screen.queryByText('Custom')).toBeNull();
+    expect(screen.getByText('Custom')).not.toBeNull();
     expect(screen.getByText('Light')).not.toBeNull();
     expect(screen.getByText('Dark')).not.toBeNull();
     expect(screen.getByText('System')).not.toBeNull();
+  });
+
+  it('calls onTheme with "custom" when Custom menu item is clicked', async () => {
+    const user = userEvent.setup();
+    let chosen: string | null = null;
+    render(
+      <PopupHeader
+        theme="dark"
+        onTheme={(t) => {
+          chosen = t;
+        }}
+        onSettings={NOOP}
+      />,
+    );
+    await user.click(screen.getByTestId(THEME_BTN_TESTID));
+    await user.click(screen.getByText('Custom'));
+    expect(chosen).toBe('custom');
   });
 });
 

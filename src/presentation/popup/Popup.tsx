@@ -5,6 +5,7 @@ import { useCallback, useState } from 'react';
 import { ChevIcon } from '@presentation/components/icons';
 import { useFormatMessage } from '@presentation/hooks/useFormatMessage';
 import { parseFrontmatterFields } from '@presentation/popup/lib/parseFrontmatter';
+import { DEFAULT_CSS_SEED } from '@presentation/settings/sections/CustomCssField';
 import { type PopupStoreState, usePopupStore } from '@presentation/stores/usePopupStore';
 import { useSettingsStore } from '@presentation/stores/useSettingsStore';
 import { mergeTemplates } from '@shared/systemTemplates';
@@ -41,10 +42,17 @@ export interface PopupProps {
 /** Reads the slice of {@link useSettingsStore} that the popup root cares about. */
 function useSettingsBindings() {
   const theme = useSettingsStore((s) => s.settings.theme);
+  const customCss = useSettingsStore((s) => s.settings.customCss);
   const updateSettings = useSettingsStore((s) => s.updateSettings);
   const handleTheme = useCallback(
-    (next: Theme) => updateSettings({ theme: next }),
-    [updateSettings],
+    (next: Theme) => {
+      if (next === 'custom' && customCss === '') {
+        updateSettings({ theme: next, customCss: DEFAULT_CSS_SEED });
+      } else {
+        updateSettings({ theme: next });
+      }
+    },
+    [customCss, updateSettings],
   );
   return { theme, handleTheme };
 }

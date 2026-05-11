@@ -9,6 +9,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, it, expect, afterEach, beforeEach } from 'vitest';
 
 import { Popup } from '@presentation/popup/Popup';
+import { DEFAULT_CSS_SEED } from '@presentation/settings/sections/CustomCssField';
 import { usePopupStore } from '@presentation/stores/usePopupStore';
 import { useSettingsStore } from '@presentation/stores/useSettingsStore';
 
@@ -237,5 +238,37 @@ describe('Popup — collapsible properties header (interactions)', () => {
     expect(document.querySelector(CHEVRON_SELECTOR)?.classList.contains('rotate-180')).toBe(false);
     await userEvent.setup().click(btn);
     expect(document.querySelector(CHEVRON_SELECTOR)?.classList.contains('rotate-180')).toBe(true);
+  });
+});
+
+describe('Popup — custom theme seed', () => {
+  afterEach(() => {
+    cleanup();
+    useSettingsStore.setState({
+      settings: { ...useSettingsStore.getState().settings, theme: 'dark', customCss: '' },
+    });
+  });
+
+  it('seeds DEFAULT_CSS_SEED when Custom is selected from popup header and customCss is empty', async () => {
+    useSettingsStore.setState({
+      settings: { ...useSettingsStore.getState().settings, theme: 'dark', customCss: '' },
+    });
+    const user = userEvent.setup();
+    render(<Popup onSave={() => undefined} onSettings={() => undefined} />);
+    await user.click(document.querySelector('[data-testid="header-theme-btn"]') as Element);
+    await user.click(screen.getByText('Custom'));
+    expect(useSettingsStore.getState().settings.customCss).toBe(DEFAULT_CSS_SEED);
+  });
+
+  it('does not overwrite existing customCss when Custom is selected from popup header', async () => {
+    const existingCss = ':root { --wh-accent: red; }';
+    useSettingsStore.setState({
+      settings: { ...useSettingsStore.getState().settings, theme: 'dark', customCss: existingCss },
+    });
+    const user = userEvent.setup();
+    render(<Popup onSave={() => undefined} onSettings={() => undefined} />);
+    await user.click(document.querySelector('[data-testid="header-theme-btn"]') as Element);
+    await user.click(screen.getByText('Custom'));
+    expect(useSettingsStore.getState().settings.customCss).toBe(existingCss);
   });
 });

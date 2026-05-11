@@ -74,12 +74,12 @@ function themeIcon(theme: Theme) {
   return <MoonIcon />;
 }
 
-// 'custom' is intentionally omitted — Custom theme is selected from Settings → Appearance only.
 /** Static descriptor for each theme option rendered in the dropdown. */
 const THEME_OPTIONS: readonly { value: Theme; labelId: string; defaultLabel: string }[] = [
   { value: 'light', labelId: 'popup.header.theme.light', defaultLabel: 'Light' },
   { value: 'dark', labelId: 'popup.header.theme.dark', defaultLabel: 'Dark' },
   { value: 'system', labelId: 'popup.header.theme.system', defaultLabel: 'System' },
+  { value: 'custom', labelId: 'popup.header.theme.custom', defaultLabel: 'Custom' },
 ];
 
 /** Shared Tailwind class string for the two icon buttons in the header. */
