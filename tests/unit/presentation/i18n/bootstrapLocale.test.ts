@@ -46,6 +46,7 @@ const mockedSettingsStore = useSettingsStore as unknown as MockedSettingsStore;
 // --- helpers ---
 
 const mockSetLocale = vi.fn();
+const mockUnsubscribe = vi.fn();
 
 /** Builds a minimal SettingsStoreState fixture with the given locale. */
 function makeSettingsState(locale: string): SettingsStoreState {
@@ -58,7 +59,7 @@ function setupMocks(): { triggerSubscriber: (state: SettingsStoreState) => void 
   mockedLocaleStore.getState.mockReturnValue({ locale: 'en', setLocale: mockSetLocale });
   mockedSettingsStore.subscribe.mockImplementation((cb: StoreSubscriber) => {
     capturedCb = cb;
-    return vi.fn();
+    return mockUnsubscribe;
   });
   return { triggerSubscriber: (state) => capturedCb?.(state) };
 }
@@ -97,10 +98,11 @@ describe('bootstrapLocale — initial load', () => {
     expect(mockSetLocale).not.toHaveBeenCalled();
   });
 
-  it('registers a subscription on useSettingsStore', async () => {
+  it('registers a subscription on useSettingsStore and returns the unsubscribe function', async () => {
     setupMocks();
-    await bootstrapLocale('en');
+    const cleanup = await bootstrapLocale('en');
     expect(mockedSettingsStore.subscribe).toHaveBeenCalledOnce();
+    expect(cleanup).toBe(mockUnsubscribe);
   });
 });
 
@@ -126,7 +128,8 @@ describe('bootstrapLocale — subscription locale changes', () => {
     await bootstrapLocale('en');
     mockLoadLocale.mockClear();
     triggerSubscriber(makeSettingsState('en'));
-    await vi.waitFor(() => expect(mockLoadLocale).not.toHaveBeenCalled());
+    await Promise.resolve(); // flush microtask queue
+    expect(mockLoadLocale).not.toHaveBeenCalled();
   });
 });
 
@@ -137,6 +140,22 @@ describe('bootstrapLocale — subscription fallback and error handling', () => {
     mockLoadLocale.mockClear();
     mockSetLocale.mockClear();
     triggerSubscriber(makeSettingsState('zz-UNKNOWN'));
+    await vi.waitFor(() => {
+      expect(mockLoadLocale).toHaveBeenCalledWith('en');
+      expect(mockSetLocale).toHaveBeenCalledWith('en');
+    });
+  });
+
+  it('reloads for a second unknown locale even when both resolve to "en"', async () => {
+    const { triggerSubscriber } = setupMocks();
+    await bootstrapLocale('en');
+    // First unknown locale → triggers applyLocale('en')
+    triggerSubscriber(makeSettingsState('xx-UNKNOWN'));
+    await vi.waitFor(() => expect(mockLoadLocale).toHaveBeenCalledWith('en'));
+    mockLoadLocale.mockClear();
+    mockSetLocale.mockClear();
+    // Second different unknown locale → must also trigger applyLocale('en')
+    triggerSubscriber(makeSettingsState('yy-ALSO-UNKNOWN'));
     await vi.waitFor(() => {
       expect(mockLoadLocale).toHaveBeenCalledWith('en');
       expect(mockSetLocale).toHaveBeenCalledWith('en');

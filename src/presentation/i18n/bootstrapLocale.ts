@@ -15,12 +15,8 @@ function resolveLocale(raw: string): SupportedLocale {
 
 /** Loads the bundle for `locale` and updates the locale store on success. */
 async function applyLocale(locale: SupportedLocale): Promise<void> {
-  try {
-    await loadLocale(locale);
-    useLocaleStore.getState().setLocale(locale);
-  } catch (err: unknown) {
-    logger.error(`failed to load locale "${locale}"`, err);
-  }
+  await loadLocale(locale);
+  useLocaleStore.getState().setLocale(locale);
 }
 
 /**
@@ -30,21 +26,28 @@ async function applyLocale(locale: SupportedLocale): Promise<void> {
  *
  * Await this in each composition root's `init()` after `bootstrapStore`
  * resolves and before mounting the React tree — first paint will always
- * have correct strings in memory.
+ * have correct strings in memory. Returns the Zustand unsubscribe function
+ * so callers can clean up if needed.
  */
-export async function bootstrapLocale(rawLocale: string): Promise<void> {
+export async function bootstrapLocale(rawLocale: string): Promise<() => void> {
   const locale = resolveLocale(rawLocale);
-  await applyLocale(locale);
+  try {
+    await applyLocale(locale);
+  } catch (err: unknown) {
+    logger.error(`failed to load locale "${locale}"`, err);
+  }
 
   let prevRawLocale = rawLocale;
 
-  useSettingsStore.subscribe((state) => {
-    const rawNext = state.settings.locale;
-    if (rawNext === prevRawLocale) return;
-    prevRawLocale = rawNext;
-    const next = resolveLocale(rawNext);
+  const unsubscribe = useSettingsStore.subscribe((state) => {
+    const nextRaw = state.settings.locale;
+    if (nextRaw === prevRawLocale) return;
+    prevRawLocale = nextRaw;
+    const next = resolveLocale(nextRaw);
     applyLocale(next).catch((err: unknown) => {
       logger.error('locale subscription update failed', err);
     });
   });
+
+  return unsubscribe;
 }
