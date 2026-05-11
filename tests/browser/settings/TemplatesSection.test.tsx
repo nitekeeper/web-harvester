@@ -3,13 +3,23 @@
 // Replaces the old test. Tests the new split-pane layout and core behaviors.
 
 import { render, cleanup, screen, fireEvent, act } from '@testing-library/react';
-import { describe, it, expect, afterEach, vi } from 'vitest';
+import { beforeEach, afterEach, describe, it, expect, vi } from 'vitest';
 
 import { SYSTEM_TEMPLATES } from '@presentation/settings/sections/templates/systemTemplates';
 import { TemplatesSection } from '@presentation/settings/sections/TemplatesSection';
 import type { TemplateConfig } from '@shared/types';
 
-afterEach(cleanup);
+beforeEach(() => {
+  vi.stubGlobal('chrome', {
+    storage: { onChanged: { addListener: vi.fn(), removeListener: vi.fn() } },
+    runtime: { sendMessage: vi.fn().mockResolvedValue(undefined) },
+  });
+});
+
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
 
 const userTemplate: TemplateConfig = {
   id: 'u1',
