@@ -69,4 +69,4 @@ If this policy changes materially, the updated version will be committed to the 
 
 ## Contact
 
-If you have questions about this policy, open an issue at the project repository or contact the maintainer at howard.chung.2023@gmail.com.
+If you have questions about this policy, open an issue at the project repository.
