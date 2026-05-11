@@ -16,7 +16,6 @@ export const DEFAULT_CSS_SEED = `/* Web Harvestor — Custom CSS
  * or tweak any value to make it your own.
  */
 
-/*
 :root {
   --wh-accent:    #a78bfa;
   --wh-accent-fg: #1a1130;
@@ -31,7 +30,6 @@ export const DEFAULT_CSS_SEED = `/* Web Harvestor — Custom CSS
 
   --wh-font-sans: "Iowan Old Style", Georgia, serif;
 }
-*/
 `;
 
 const INDICATOR_COLOR_SAVED = '#10b981';
