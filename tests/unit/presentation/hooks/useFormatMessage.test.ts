@@ -38,6 +38,12 @@ describe('useFormatMessage — delegation', () => {
     expect(result.current({ id: SAVE_BUTTON_ID })).toBe('Save');
   });
 
+  it('returns the value from formatMessage when values are supplied', () => {
+    mockFormatMessage.mockReturnValue('1 highlight');
+    const { result } = renderHook(() => useFormatMessage());
+    expect(result.current({ id: 'highlight-count', values: { count: 1 } })).toBe('1 highlight');
+  });
+
   it('ignores defaultMessage — delegates to the real formatter only', () => {
     mockFormatMessage.mockReturnValue('From Bundle');
     const { result } = renderHook(() => useFormatMessage());

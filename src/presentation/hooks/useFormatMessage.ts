@@ -20,13 +20,18 @@ export interface MessageDescriptor {
   readonly values?: Record<string, string | number>;
 }
 
-/** Function signature returned by {@link useFormatMessage}. */
+/**
+ * Function signature returned by {@link useFormatMessage}. Always returns a
+ * string — falls back to the message `id` when the key is not found in the
+ * active locale bundle.
+ */
 export type FormatMessageFn = (descriptor: MessageDescriptor) => string;
 
 /**
  * Returns a formatter function backed by the real i18n layer. Subscribes to
- * `useLocaleStore` so components re-render exactly once after each
- * `loadLocale` call resolves — never mid-load.
+ * `useLocaleStore` so components re-render when the locale store updates —
+ * `bootstrapLocale` updates the store only after `loadLocale` resolves, so
+ * re-renders always see a fully loaded bundle.
  */
 export function useFormatMessage(): FormatMessageFn {
   useLocaleStore((state) => state.locale);
