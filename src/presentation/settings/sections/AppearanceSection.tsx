@@ -2,7 +2,7 @@
 
 import { type ReactNode, useEffect } from 'react';
 
-import { ChevIcon } from '@presentation/components/icons';
+import { ChevIcon, PencilIcon } from '@presentation/components/icons';
 import { useFormatMessage } from '@presentation/hooks/useFormatMessage';
 import { useSettingsStore } from '@presentation/stores/useSettingsStore';
 import { applyThemeToDocument } from '@presentation/theme/applyTheme';
@@ -11,21 +11,19 @@ import type { AppSettings } from '@shared/types';
 import { CustomCssField } from './CustomCssField';
 
 /** BCP-47 locale codes supported by the application UI. */
-type SupportedLocale = 'en' | 'ko' | 'ja';
+type SupportedLocale = 'en' | 'ko';
 
 /** Theme preference values mirrored from AppSettings. */
 type ThemePreference = AppSettings['theme'];
 
 const LOCALE_LABEL_EN = 'English';
 const LOCALE_LABEL_KO = '한국어 · Korean';
-const LOCALE_LABEL_JA = '日本語 · Japanese';
 const COLOR_MUTED = 'var(--wh-muted)';
 const COLOR_TEXT = 'var(--wh-text)';
 
 const LOCALE_OPTIONS: readonly { value: SupportedLocale; label: string }[] = [
   { value: 'en', label: LOCALE_LABEL_EN },
   { value: 'ko', label: LOCALE_LABEL_KO },
-  { value: 'ja', label: LOCALE_LABEL_JA },
 ];
 
 const FIELD_LABEL_STYLE: React.CSSProperties = {
@@ -104,6 +102,7 @@ interface SwatchSpec {
   bar1: string;
   bar2: string;
   accent: string;
+  pencilColor?: string;
 }
 
 const SWATCH_ACCENT = '#10b981';
@@ -111,6 +110,9 @@ const SWATCH_LIGHT_BAR1 = 'rgba(10,10,10,0.18)';
 const SWATCH_LIGHT_BAR2 = 'rgba(10,10,10,0.12)';
 const SWATCH_DARK_BAR1 = 'rgba(250,250,249,0.18)';
 const SWATCH_DARK_BAR2 = 'rgba(250,250,249,0.12)';
+const SWATCH_CUSTOM_BG = '#14111c';
+const SWATCH_CUSTOM_FG = '#f4f1ff';
+const SWATCH_CUSTOM_ACCENT = '#a78bfa';
 
 const SWATCHES: Record<ThemePreference, SwatchSpec> = {
   light: { bg: '#fafaf9', bar1: SWATCH_LIGHT_BAR1, bar2: SWATCH_LIGHT_BAR2, accent: SWATCH_ACCENT },
@@ -121,7 +123,13 @@ const SWATCHES: Record<ThemePreference, SwatchSpec> = {
     bar2: SWATCH_LIGHT_BAR2,
     accent: SWATCH_ACCENT,
   },
-  custom: { bg: '#0f1011', bar1: SWATCH_DARK_BAR1, bar2: SWATCH_DARK_BAR2, accent: SWATCH_ACCENT },
+  custom: {
+    bg: SWATCH_CUSTOM_BG,
+    bar1: 'rgba(244,241,255,0.18)',
+    bar2: 'rgba(244,241,255,0.12)',
+    accent: SWATCH_CUSTOM_ACCENT,
+    pencilColor: SWATCH_CUSTOM_FG,
+  },
 };
 
 const THEME_LABELS: Record<ThemePreference, string> = {
@@ -131,13 +139,14 @@ const THEME_LABELS: Record<ThemePreference, string> = {
   custom: 'Custom',
 };
 
-const THEME_OPTIONS: readonly ThemePreference[] = ['light', 'dark', 'system'];
+const THEME_OPTIONS: readonly ThemePreference[] = ['light', 'dark', 'system', 'custom'];
 
 /** Mini browser-chrome swatch inside a theme tile. */
 function ThemeSwatch({ s }: { readonly s: SwatchSpec }) {
   return (
     <div
       style={{
+        position: 'relative',
         height: 80,
         borderRadius: 4,
         padding: 8,
@@ -151,6 +160,20 @@ function ThemeSwatch({ s }: { readonly s: SwatchSpec }) {
       <div style={{ height: 6, width: 70, background: s.bar2, borderRadius: 2 }} />
       <div style={{ height: 6, width: 40, background: s.bar2, borderRadius: 2 }} />
       <div style={{ marginTop: 'auto', height: 14, background: s.accent, borderRadius: 3 }} />
+      {s.pencilColor !== undefined && (
+        <span
+          style={{
+            position: 'absolute',
+            top: 6,
+            right: 6,
+            color: s.pencilColor,
+            opacity: 0.7,
+            lineHeight: 0,
+          }}
+        >
+          <PencilIcon />
+        </span>
+      )}
     </div>
   );
 }
@@ -171,15 +194,19 @@ function ThemeTile({
     ? // eslint-disable-next-line security/detect-object-injection
       THEME_LABELS[theme]
     : theme;
+  const borderStyle = theme === 'custom' ? 'dashed' : 'solid';
+  const ariaDesc = theme === 'custom' ? 'Uses your Custom CSS rules' : undefined;
   return (
     <button
       type="button"
       aria-pressed={isSelected}
+      // eslint-disable-next-line sonarjs/no-unknown-property
+      aria-description={ariaDesc}
       onClick={onClick}
       style={{
-        width: 152,
+        width: 132,
         padding: 8,
-        border: `2px solid ${isSelected ? 'var(--wh-accent)' : 'var(--wh-border)'}`,
+        border: `2px ${borderStyle} ${isSelected ? 'var(--wh-accent)' : 'var(--wh-border)'}`,
         borderRadius: 8,
         background: 'transparent',
         cursor: 'pointer',
@@ -192,7 +219,7 @@ function ThemeTile({
   );
 }
 
-/** Three-tile theme selector (Light / Dark / System). */
+/** Four-tile theme selector (Light / Dark / System / Custom). */
 function ThemeField({
   value,
   onChange,
@@ -235,8 +262,7 @@ function PageChrome({
       <p style={{ fontSize: 12.5, color: COLOR_MUTED, margin: '4px 0 0' }}>
         {fmt({
           id: 'settings.appearance.description',
-          defaultMessage:
-            'Theme, language, and visual preferences for popup, settings, and side panel.',
+          defaultMessage: 'Theme, language, and visual preferences for the extension UI.',
         })}
       </p>
     </div>

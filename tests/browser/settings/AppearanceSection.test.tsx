@@ -20,6 +20,7 @@ vi.mock('@presentation/stores/useSettingsStore', () => ({
 vi.mock('@presentation/theme/applyTheme', () => ({ applyThemeToDocument: vi.fn() }));
 
 const mockUpdateSettings = vi.fn();
+const ATTR_ARIA_PRESSED = 'aria-pressed';
 
 const baseSettings: AppSettings = {
   version: 1,
@@ -54,7 +55,9 @@ describe('AppearanceSection — page chrome', () => {
 
   it('renders the description text', () => {
     render(<AppearanceSection />);
-    expect(screen.getByText(/theme, language, and visual preferences/i)).toBeDefined();
+    expect(
+      screen.getByText(/theme, language, and visual preferences for the extension ui/i),
+    ).toBeDefined();
   });
 });
 
@@ -84,6 +87,12 @@ describe('AppearanceSection — language field', () => {
     await user.selectOptions(screen.getByRole('combobox'), 'ko');
     expect(mockUpdateSettings).toHaveBeenCalledWith({ locale: 'ko' });
   });
+
+  it('does not render a Japanese option', () => {
+    setupStore();
+    render(<AppearanceSection />);
+    expect(screen.queryByRole('option', { name: /japanese/i })).toBeNull();
+  });
 });
 
 describe('AppearanceSection — theme field', () => {
@@ -92,11 +101,9 @@ describe('AppearanceSection — theme field', () => {
     vi.clearAllMocks();
   });
 
-  it('renders three theme tiles', () => {
+  it('renders at least Light, Dark, and System tiles', () => {
     setupStore({ theme: 'dark' });
     render(<AppearanceSection />);
-    const tiles = screen.getAllByRole('button');
-    expect(tiles.length).toBeGreaterThanOrEqual(3);
     expect(screen.getByText('Light')).toBeDefined();
     expect(screen.getByText('Dark')).toBeDefined();
     expect(screen.getByText('System')).toBeDefined();
@@ -106,9 +113,9 @@ describe('AppearanceSection — theme field', () => {
     setupStore({ theme: 'dark' });
     render(<AppearanceSection />);
     const darkBtn = screen.getByRole('button', { name: /dark/i });
-    expect(darkBtn.getAttribute('aria-pressed')).toBe('true');
+    expect(darkBtn.getAttribute(ATTR_ARIA_PRESSED)).toBe('true');
     const lightBtn = screen.getByRole('button', { name: /light/i });
-    expect(lightBtn.getAttribute('aria-pressed')).toBe('false');
+    expect(lightBtn.getAttribute(ATTR_ARIA_PRESSED)).toBe('false');
   });
 
   it('calls updateSettings and applyThemeToDocument on tile click', async () => {
@@ -217,5 +224,44 @@ describe('AppearanceSection — font size field removed', () => {
     setupStore();
     render(<AppearanceSection />);
     expect(screen.queryByRole('slider')).toBeNull();
+  });
+});
+
+describe('AppearanceSection — Custom theme tile', () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
+  it('renders four theme tiles including Custom', () => {
+    setupStore({ theme: 'dark' });
+    render(<AppearanceSection />);
+    expect(screen.getByRole('button', { name: /^light$/i })).toBeDefined();
+    expect(screen.getByRole('button', { name: /^dark$/i })).toBeDefined();
+    expect(screen.getByRole('button', { name: /^system$/i })).toBeDefined();
+    expect(screen.getByRole('button', { name: /^custom$/i })).toBeDefined();
+  });
+
+  it('marks the Custom tile as pressed when theme is custom', () => {
+    setupStore({ theme: 'custom' });
+    render(<AppearanceSection />);
+    expect(screen.getByRole('button', { name: /^custom$/i }).getAttribute(ATTR_ARIA_PRESSED)).toBe(
+      'true',
+    );
+  });
+
+  it('calls updateSettings with custom on Custom tile click', async () => {
+    setupStore({ theme: 'dark' });
+    const user = userEvent.setup();
+    render(<AppearanceSection />);
+    await user.click(screen.getByRole('button', { name: /^custom$/i }));
+    expect(mockUpdateSettings).toHaveBeenCalledWith({ theme: 'custom' });
+  });
+
+  it('Custom tile has aria-description mentioning Custom CSS', () => {
+    setupStore({ theme: 'dark' });
+    render(<AppearanceSection />);
+    const btn = screen.getByRole('button', { name: /^custom$/i });
+    expect(btn.getAttribute('aria-description')).toMatch(/custom css/i);
   });
 });
