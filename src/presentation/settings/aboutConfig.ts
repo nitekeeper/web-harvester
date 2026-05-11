@@ -14,6 +14,8 @@ export interface AboutLinks {
 export interface AboutLegal {
   /** In-extension open-source licenses page. Constructed at runtime from `window.location.origin`. */
   readonly licenses: string;
+  /** In-extension privacy policy page. Constructed at runtime from `window.location.origin`. */
+  readonly privacy: string;
 }
 
 /** Full config contract for the About section. */
@@ -35,6 +37,7 @@ export function buildAboutConfig(): AboutConfig {
     },
     legal: {
       licenses: `${window.location.origin}/licenses.html`,
+      privacy: `${window.location.origin}/privacy.html`,
     },
   };
 }

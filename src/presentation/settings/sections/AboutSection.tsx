@@ -26,6 +26,7 @@ interface AboutStrings {
   readonly copiedLabel: string;
   readonly legalHeading: string;
   readonly licensesLabel: string;
+  readonly privacyLabel: string;
   readonly copyright: string;
   readonly licenseNotice: string;
 }
@@ -53,6 +54,7 @@ function buildAboutStrings(fmt: FormatMessageFn, version: string): AboutStrings 
     copiedLabel: fmt({ id: 'about.diagnostics.copied', defaultMessage: 'Copied' }),
     legalHeading: fmt({ id: 'about.legal.heading', defaultMessage: 'LEGAL' }),
     licensesLabel: fmt({ id: 'about.legal.licenses', defaultMessage: 'Open-source licenses' }),
+    privacyLabel: fmt({ id: 'about.legal.privacy', defaultMessage: 'Privacy policy' }),
     copyright: fmt({
       id: 'about.legal.copyright',
       defaultMessage: '© 2026 Web Harvester. Made for people who read on the web.',
@@ -128,8 +130,10 @@ export function AboutSection() {
       />
       <LegalBlock
         licensesUrl={config.legal.licenses}
+        privacyUrl={config.legal.privacy}
         heading={s.legalHeading}
         licensesLabel={s.licensesLabel}
+        privacyLabel={s.privacyLabel}
         copyright={s.copyright}
         licenseNotice={s.licenseNotice}
       />

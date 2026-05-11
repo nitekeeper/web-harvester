@@ -9,21 +9,35 @@ import { BORDER_1, C, Eyebrow } from './_aboutShared';
 export interface LegalBlockProps {
   /** URL of the open-source licenses page. */
   readonly licensesUrl: string;
+  /** URL of the privacy policy page. */
+  readonly privacyUrl: string;
   /** Eyebrow heading label. */
   readonly heading: string;
   /** Visible link text for the licenses page. */
   readonly licensesLabel: string;
+  /** Visible link text for the privacy policy page. */
+  readonly privacyLabel: string;
   /** Copyright line text. */
   readonly copyright: string;
   /** License notice line (e.g. "Released under the MIT License."). */
   readonly licenseNotice: string;
 }
 
-/** Legal section — open-source licenses link and copyright line. */
+const LINK_STYLE: React.CSSProperties = {
+  fontSize: 12,
+  color: C.text,
+  textDecoration: 'none',
+  borderBottom: BORDER_1,
+  paddingBottom: 1,
+};
+
+/** Legal section — open-source licenses link, privacy policy link, and copyright line. */
 export function LegalBlock({
   licensesUrl,
+  privacyUrl,
   heading,
   licensesLabel,
+  privacyLabel,
   copyright,
   licenseNotice,
 }: LegalBlockProps) {
@@ -31,19 +45,11 @@ export function LegalBlock({
     <>
       <Eyebrow label={heading} />
       <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap' }}>
-        <a
-          href={licensesUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            fontSize: 12,
-            color: C.text,
-            textDecoration: 'none',
-            borderBottom: BORDER_1,
-            paddingBottom: 1,
-          }}
-        >
+        <a href={licensesUrl} target="_blank" rel="noopener noreferrer" style={LINK_STYLE}>
           {licensesLabel}
+        </a>
+        <a href={privacyUrl} target="_blank" rel="noopener noreferrer" style={LINK_STYLE}>
+          {privacyLabel}
         </a>
       </div>
       <p style={{ marginTop: 18, fontSize: 11, fontWeight: 400, lineHeight: 1.6, color: C.subtle }}>

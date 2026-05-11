@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Web Harvester — Privacy Policy</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; font-size: 14px; line-height: 1.6; color: #1a1a1a; background: #fff; margin: 0; padding: 2rem; max-width: 720px; }
+    h1 { font-size: 1.5rem; font-weight: 600; margin: 0 0 0.25rem; }
+    h2 { font-size: 1.1rem; font-weight: 600; margin: 1.75rem 0 0.5rem; }
+    p { margin: 0.5rem 0; }
+    em { color: #555; font-style: normal; }
+    table { width: 100%; border-collapse: collapse; margin: 0.75rem 0; }
+    thead th { text-align: left; padding: 0.4rem 0.75rem; background: #f5f5f5; border-bottom: 2px solid #e0e0e0; font-weight: 600; }
+    tbody td { padding: 0.35rem 0.75rem; border-bottom: 1px solid #ebebeb; vertical-align: top; }
+    td:first-child { font-family: monospace; font-size: 13px; white-space: nowrap; }
+    ul { margin: 0.5rem 0; padding-left: 1.4rem; }
+    li { margin: 0.2rem 0; }
+    a { color: #2563eb; }
+  </style>
+</head>
+<body>
+<h1>Privacy Policy — Web Harvester</h1>
+<p><em>Last updated: May 2026</em></p>
+<h2>Overview</h2>
+<p>Web Harvester is a browser extension that clips web content to Markdown and saves it to destinations you configure. This policy explains what data the extension accesses, how it is used, and how it is stored.</p>
+<h2>Data We Collect</h2>
+<p>Web Harvester does not collect, transmit, or share any personal data. All data stays on your device.</p>
+<h3>Data accessed during clipping</h3>
+<p>When you clip a page, the extension reads:</p>
+<ul>
+<li>The page URL and title</li>
+<li>The page content (HTML) to convert to Markdown</li>
+<li>Any text you have selected on the page</li>
+<li>Page metadata (author, date, description, and other <code>&lt;meta&gt;</code> tags if present)</li>
+</ul>
+<p>This data is processed locally in your browser and written to a destination you have chosen (for example, a folder on your filesystem via the File System Access API). It is never sent to any external server.</p>
+<h3>Data stored locally</h3>
+<p>The extension stores the following on your device using browser-provided storage (<code>chrome.storage.local</code> and IndexedDB):</p>
+<table>
+<thead>
+<tr>
+<th>Data</th>
+<th>Where</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Extension settings (theme, language, font size, custom CSS)</td>
+<td><code>chrome.storage.local</code></td>
+<td>Persist your preferences across sessions</td>
+</tr>
+<tr>
+<td>Destination configurations</td>
+<td>IndexedDB</td>
+<td>Remember the folders or locations you have set up</td>
+</tr>
+<tr>
+<td>Note templates</td>
+<td><code>chrome.storage.local</code></td>
+<td>Persist your custom templates</td>
+</tr>
+<tr>
+<td>Page highlights</td>
+<td><code>chrome.storage.local</code></td>
+<td>Remember highlights you have placed on pages</td>
+</tr>
+</tbody></table>
+<p>None of this data leaves your device.</p>
+<h2>Data We Do Not Collect</h2>
+<ul>
+<li>We do not collect analytics or usage data</li>
+<li>We do not use cookies</li>
+<li>We do not track your browsing history</li>
+<li>We do not transmit any data to external servers</li>
+<li>We do not use third-party analytics or advertising services</li>
+</ul>
+<h2>Permissions</h2>
+<p>Web Harvester requests the following Chrome permissions:</p>
+<table>
+<thead>
+<tr>
+<th>Permission</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>activeTab</code></td>
+<td>Read the content of the page you are currently viewing when you activate the extension</td>
+</tr>
+<tr>
+<td><code>storage</code></td>
+<td>Save your settings and highlights locally</td>
+</tr>
+<tr>
+<td><code>scripting</code></td>
+<td>Inject the content script that enables reader mode and highlighting</td>
+</tr>
+<tr>
+<td><code>contextMenus</code></td>
+<td>Add a right-click menu item for clipping</td>
+</tr>
+<tr>
+<td><code>sidePanel</code></td>
+<td>Show the extension in the Chrome side panel</td>
+</tr>
+<tr>
+<td><code>clipboardWrite</code></td>
+<td>Copy diagnostic information to the clipboard from the About page</td>
+</tr>
+<tr>
+<td><code>notifications</code></td>
+<td>Notify you when a clip has been saved</td>
+</tr>
+<tr>
+<td><code>&lt;all_urls&gt;</code></td>
+<td>Allow the content script to run on any page you choose to clip</td>
+</tr>
+</tbody></table>
+<h2>Your Control Over Data</h2>
+<ul>
+<li>You can delete all locally stored settings and highlights by removing the extension from Chrome (<code>chrome://extensions</code> → Remove)</li>
+<li>Destination data in IndexedDB is cleared when you remove the extension or clear browser storage from <code>chrome://settings/cookies</code></li>
+<li>Files written to your filesystem by the extension are under your full control</li>
+</ul>
+<h2>Changes to This Policy</h2>
+<p>If this policy changes materially, the updated version will be committed to the repository and the <em>Last updated</em> date above will reflect the change.</p>
+<h2>Contact</h2>
+<p>If you have questions about this policy, open an issue at the project repository or contact the maintainer at <a href="mailto:howard.chung.2023@gmail.com">howard.chung.2023@gmail.com</a>.</p>
+
+</body>
+</html>

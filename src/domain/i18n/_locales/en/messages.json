@@ -142,5 +142,9 @@
   "about.legal.licenseNotice": {
     "message": "Released under the MIT License.",
     "description": "About page license notice line below copyright"
+  },
+  "about.legal.privacy": {
+    "message": "Privacy policy",
+    "description": "About page privacy policy link label"
   }
 }
