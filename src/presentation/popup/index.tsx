@@ -17,6 +17,7 @@ import { ChromeAdapter } from '@infrastructure/adapters/chrome/ChromeAdapter';
 import { ensureWritable } from '@infrastructure/fsa/fsa';
 import { createDestinationStorage } from '@infrastructure/storage/destinations';
 import { createSaveHandler } from '@presentation/hooks/useSaveHandler';
+import { bootstrapLocale } from '@presentation/i18n/bootstrapLocale';
 import '@presentation/styles/global.css';
 import { bootstrapStore } from '@presentation/stores/bootstrapStore';
 import { usePopupStore } from '@presentation/stores/usePopupStore';
@@ -118,6 +119,8 @@ async function init(): Promise<void> {
     }),
     bootstrapStore(adapter, 'popup-state', usePopupStore),
   ]);
+
+  await bootstrapLocale(useSettingsStore.getState().settings.locale);
 
   const { selectedTemplateId } = usePopupStore.getState();
   if (selectedTemplateId === null) {

@@ -16,6 +16,7 @@ import { createRoot } from 'react-dom/client';
 import { ChromeAdapter } from '@infrastructure/adapters/chrome/ChromeAdapter';
 import type { IStorageAdapter } from '@infrastructure/adapters/interfaces/IStorageAdapter';
 import { createDestinationStorage } from '@infrastructure/storage/destinations';
+import { bootstrapLocale } from '@presentation/i18n/bootstrapLocale';
 import { getRootElement } from '@presentation/lib/mountApp';
 import type { IDestinationPort } from '@presentation/ports/IDestinationPort';
 import '@presentation/styles/global.css';
@@ -69,6 +70,8 @@ async function init(): Promise<void> {
   await bootstrapStore(adapter, 'settings-state', useSettingsStore, {
     serialize: (s) => ({ settings: s.settings, templates: s.templates }),
   });
+
+  await bootstrapLocale(useSettingsStore.getState().settings.locale);
 
   const idbStorage = await createDestinationStorage();
   // Structural typing: `Destination` matches `DestinationView` field-for-field.
