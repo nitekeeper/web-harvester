@@ -65,7 +65,6 @@ const DEFAULT_SETTINGS: AppSettings = {
   defaultDestinationId: null,
   defaultTemplateId: 'default',
   customCss: '',
-  fontSize: 13,
 };
 
 const STORAGE_KEY = 'settings-state';

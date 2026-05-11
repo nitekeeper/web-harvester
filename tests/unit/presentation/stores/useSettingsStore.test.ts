@@ -15,7 +15,6 @@ const defaultSettings: AppSettings = {
   defaultDestinationId: null,
   defaultTemplateId: null,
   customCss: '',
-  fontSize: 13,
 };
 
 const sampleTemplate: TemplateConfig = {

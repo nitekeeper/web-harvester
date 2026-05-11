@@ -28,7 +28,6 @@ const baseSettings: AppSettings = {
   defaultDestinationId: null,
   defaultTemplateId: null,
   customCss: '',
-  fontSize: 13,
 };
 
 function setupStore(overrides: Partial<AppSettings> = {}): void {
@@ -178,31 +177,15 @@ describe('AppearanceSection — custom CSS field — autosave', () => {
   });
 });
 
-describe('AppearanceSection — font size field', () => {
+describe('AppearanceSection — font size field removed', () => {
   afterEach(() => {
     cleanup();
     vi.clearAllMocks();
   });
 
-  it('renders a range input with current fontSize value', () => {
-    setupStore({ fontSize: 13 });
+  it('does not render a range slider', () => {
+    setupStore();
     render(<AppearanceSection />);
-    const slider = screen.getByRole('slider') as HTMLInputElement;
-    expect(slider.value).toBe('13');
-  });
-
-  it('displays the live value label', () => {
-    setupStore({ fontSize: 13 });
-    render(<AppearanceSection />);
-    expect(screen.getByText('13px')).toBeDefined();
-  });
-
-  it('calls updateSettings on slider change', () => {
-    setupStore({ fontSize: 13 });
-    render(<AppearanceSection />);
-    const slider = screen.getByRole('slider');
-    // fireEvent.change simulates the user moving the slider to 14
-    fireEvent.change(slider, { target: { value: '14' } });
-    expect(mockUpdateSettings).toHaveBeenCalledWith({ fontSize: 14 });
+    expect(screen.queryByRole('slider')).toBeNull();
   });
 });

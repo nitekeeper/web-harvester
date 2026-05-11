@@ -1,6 +1,6 @@
 // src/presentation/settings/sections/AppearanceSection.tsx
 
-import { type ReactNode, useEffect, useState } from 'react';
+import { type ReactNode, useEffect } from 'react';
 
 import { ChevIcon } from '@presentation/components/icons';
 import { useFormatMessage } from '@presentation/hooks/useFormatMessage';
@@ -15,9 +15,6 @@ type SupportedLocale = 'en' | 'ko' | 'ja';
 
 /** Theme preference values mirrored from AppSettings. */
 type ThemePreference = AppSettings['theme'];
-
-/** Font size values mirrored from AppSettings. */
-type FontSize = AppSettings['fontSize'];
 
 const LOCALE_LABEL_EN = 'English';
 const LOCALE_LABEL_KO = '한국어 · Korean';
@@ -214,84 +211,6 @@ function ThemeField({
   );
 }
 
-const FONT_SIZE_MIN = 11;
-const FONT_SIZE_MAX = 15;
-const FONT_SIZE_CSS_VAR = '--wh-font-size-base';
-
-/** Horizontal track row: min label, range input, live value label. */
-function FontSizeTrack({
-  liveValue,
-  pct,
-  ariaLabel,
-  onInputChange,
-}: {
-  readonly liveValue: FontSize;
-  readonly pct: number;
-  readonly ariaLabel: string;
-  readonly onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-}) {
-  const liveLabel = `${liveValue}px`;
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, maxWidth: 360 }}>
-      <span style={{ fontSize: 11, color: COLOR_MUTED }}>{FONT_SIZE_MIN}</span>
-      <input
-        type="range"
-        min={FONT_SIZE_MIN}
-        max={FONT_SIZE_MAX}
-        step={1}
-        value={liveValue}
-        onChange={onInputChange}
-        className="wh-slider"
-        style={{ flex: 1, '--slider-fill': `${pct}%` } as React.CSSProperties}
-        aria-label={ariaLabel}
-      />
-      <span style={{ fontSize: 13, color: COLOR_MUTED, fontVariantNumeric: 'tabular-nums' }}>
-        {liveLabel}
-      </span>
-    </div>
-  );
-}
-
-/** Range slider for preview font size with live px label and CSS var sync. */
-function FontSizeField({
-  value,
-  onChange,
-}: {
-  readonly value: FontSize;
-  readonly onChange: (v: FontSize) => void;
-}) {
-  const fmt = useFormatMessage();
-  const [liveValue, setLiveValue] = useState(value);
-  const pct = ((liveValue - FONT_SIZE_MIN) / (FONT_SIZE_MAX - FONT_SIZE_MIN)) * 100;
-  const ariaLabel = fmt({
-    id: 'settings.appearance.fontSize',
-    defaultMessage: 'Preview font size',
-  });
-
-  useEffect(() => {
-    document.documentElement.style.setProperty(FONT_SIZE_CSS_VAR, `${value}px`);
-  }, []);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = Number(e.target.value) as FontSize;
-    setLiveValue(v);
-    document.documentElement.style.setProperty(FONT_SIZE_CSS_VAR, `${v}px`);
-    onChange(v);
-  };
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <FieldLabel>{ariaLabel}</FieldLabel>
-      <FontSizeTrack
-        liveValue={liveValue}
-        pct={pct}
-        ariaLabel={ariaLabel}
-        onInputChange={handleChange}
-      />
-    </div>
-  );
-}
-
 /** Page heading block with title and description. */
 function PageChrome({
   fmt,
@@ -323,9 +242,8 @@ function PageChrome({
 }
 
 /**
- * Settings section for visual preferences: language, theme, custom CSS,
- * and preview font size. Reads from and writes to the singleton settings
- * store — no props required.
+ * Settings section for visual preferences: language, theme, and custom CSS.
+ * Reads from and writes to the singleton settings store — no props required.
  */
 export function AppearanceSection() {
   const settings = useSettingsStore((s) => s.settings);
@@ -360,10 +278,6 @@ export function AppearanceSection() {
       <CustomCssField
         value={settings.customCss}
         onChange={(customCss) => updateSettings({ customCss })}
-      />
-      <FontSizeField
-        value={settings.fontSize}
-        onChange={(fontSize) => updateSettings({ fontSize })}
       />
     </div>
   );
