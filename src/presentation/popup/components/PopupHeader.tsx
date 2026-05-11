@@ -2,14 +2,16 @@
 //
 // Header bar for the popup surface: WHLogo + title + spacer + theme toggle
 // dropdown + gear settings button. Selecting a theme calls `onTheme(theme)`
-// and immediately toggles the `.dark` class on `document.documentElement` so
-// the chrome reflows without waiting for the settings store round-trip.
+// and immediately applies `.dark`/`.light` classes on `document.documentElement`
+// via `applyThemeToDocument` so the chrome reflows without waiting for the
+// settings store round-trip.
 
 import { useState } from 'react';
 
 import { IconSvg } from '@presentation/components/IconSvg';
 import { WHLogo } from '@presentation/components/WHLogo';
 import { useFormatMessage } from '@presentation/hooks/useFormatMessage';
+import { applyThemeToDocument } from '@presentation/theme/applyTheme';
 
 /** Active theme value accepted by {@link PopupHeader}. */
 export type Theme = 'light' | 'dark' | 'system' | 'custom';
@@ -70,14 +72,7 @@ function themeIcon(theme: Theme) {
   return <MoonIcon />;
 }
 
-/** Applies `theme` immediately to `document.documentElement` via the `.dark` class. */
-function applyThemeClass(theme: Theme): void {
-  const root = document.documentElement;
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const isDark = theme === 'dark' || theme === 'custom' || (theme === 'system' && prefersDark);
-  root.classList.toggle('dark', isDark);
-}
-
+// 'custom' is intentionally omitted — Custom theme is selected from Settings → Appearance only.
 /** Static descriptor for each theme option rendered in the dropdown. */
 const THEME_OPTIONS: readonly { value: Theme; labelId: string; defaultLabel: string }[] = [
   { value: 'light', labelId: 'popup.header.theme.light', defaultLabel: 'Light' },
@@ -131,7 +126,7 @@ function ThemeToggle({
   const fmt = useFormatMessage();
 
   function handleSelect(next: Theme): void {
-    applyThemeClass(next);
+    applyThemeToDocument(next);
     onTheme(next);
     setMenuOpen(false);
   }
