@@ -1,2 +1,2 @@
 // src/application/i18n/localeService.ts
-export { formatMessage, loadLocale } from '@domain/i18n/i18n';
+export { formatMessage, getCurrentLocale, isRTL, loadLocale } from '@domain/i18n/i18n';
