@@ -11,7 +11,7 @@ export interface NoteNameFieldProps {
   /** Called when the pattern changes. */
   readonly onChange: (value: string) => void;
   /** Called when the user clicks "Insert {{...}}" in the label. */
-  readonly onInsertVariable: () => void;
+  readonly onInsertVariable: (e: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
 /** Shared CSS style objects extracted to keep functions under 40 lines. */
@@ -41,7 +41,7 @@ interface NoteNameLabelRowProps {
   /** Whether the insert-variable button should be hidden. */
   readonly isReadonly: boolean;
   /** Called when the user clicks the insert-variable button. */
-  readonly onInsertVariable: () => void;
+  readonly onInsertVariable: (e: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
 /** Renders the label row above the note-name input, including the insert-variable button. */
@@ -54,7 +54,7 @@ function NoteNameLabelRow({ isReadonly, onInsertVariable }: NoteNameLabelRowProp
       </label>
       {!isReadonly ? (
         <button
-          onClick={onInsertVariable}
+          onClick={(e) => onInsertVariable(e)}
           style={{
             background: 'transparent',
             border: 0,

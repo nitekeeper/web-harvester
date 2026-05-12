@@ -408,6 +408,24 @@
   background: oklch(0.556 0 0 / 70%);
 }
 
+/* Thin, styled scrollbar for the variable picker popover */
+.vp-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+
+.vp-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.vp-scroll::-webkit-scrollbar-thumb {
+  background: oklch(0.556 0 0 / 40%);
+  border-radius: 9999px;
+}
+
+.vp-scroll::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.556 0 0 / 70%);
+}
+
 /* Custom range slider for the Appearance font-size field */
 .wh-slider {
   -webkit-appearance: none;

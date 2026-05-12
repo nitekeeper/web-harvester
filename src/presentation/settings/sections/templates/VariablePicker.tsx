@@ -90,6 +90,23 @@ const VARIABLE_GROUPS: readonly VariableGroup[] = [
 ];
 
 const WH_BORDER = 'var(--wh-border)';
+const POPOVER_WIDTH = 280;
+
+/**
+ * Computes a `position: fixed` style that places the 280px wide popover just
+ * below `anchorRect`. Clamps left so the popover never overflows the viewport.
+ */
+export function computePopoverPosition(
+  anchorRect: DOMRect,
+  viewportWidth: number,
+): React.CSSProperties {
+  const left = Math.min(anchorRect.left, viewportWidth - POPOVER_WIDTH - 4);
+  return {
+    position: 'fixed',
+    top: anchorRect.bottom + 4,
+    left: Math.max(0, left),
+  };
+}
 
 /** Filters groups by a lowercase search query; empty query returns all. */
 function filterGroups(query: string): readonly VariableGroup[] {
@@ -217,12 +234,12 @@ interface PickerPopoverProps {
   readonly onSelect: (variable: string) => void;
   readonly onClose: () => void;
   readonly containerRef: React.RefObject<HTMLDivElement | null>;
+  readonly anchorRect?: DOMRect;
 }
 
-const POPOVER_STYLE: React.CSSProperties = {
-  position: 'absolute',
+const POPOVER_BASE_STYLE: React.CSSProperties = {
   zIndex: 1000,
-  width: 280,
+  width: POPOVER_WIDTH,
   maxHeight: 360,
   background: 'var(--wh-panel)',
   border: `1px solid ${WH_BORDER}`,
@@ -242,23 +259,27 @@ function PickerPopover({
   onSelect,
   onClose,
   containerRef,
+  anchorRect,
 }: PickerPopoverProps) {
   const ariaLabel = fmt({
     id: 'settings.templates.variablePicker',
     defaultMessage: 'Variable picker',
   });
+  const positionStyle = anchorRect
+    ? computePopoverPosition(anchorRect, window.innerWidth)
+    : { position: 'absolute' as const, top: 0, left: 0 };
   return (
     <div
       ref={containerRef}
       role="listbox"
       aria-label={ariaLabel}
-      style={POPOVER_STYLE}
+      style={{ ...POPOVER_BASE_STYLE, ...positionStyle }}
       onKeyDown={(e) => {
         if (e.key === 'Escape') onClose();
       }}
     >
       <SearchInput fmt={fmt} value={query} onChange={onQueryChange} />
-      <div style={{ overflowY: 'auto', flex: 1, padding: '4px 0' }}>
+      <div className="vp-scroll" style={{ overflowY: 'auto', flex: 1, padding: '4px 0' }}>
         {filteredGroups.map((group) => (
           <VariableGroupSection key={group.label} group={group} onSelect={onSelect} />
         ))}
@@ -275,6 +296,8 @@ export interface VariablePickerProps {
   readonly onInsert: (variable: string) => void;
   /** Called when the picker should close. */
   readonly onClose: () => void;
+  /** Bounding rect of the trigger button; used to anchor the popover. */
+  readonly anchorRect?: DOMRect;
 }
 
 /**
@@ -283,7 +306,7 @@ export interface VariablePickerProps {
  * entry — the caller is responsible for inserting at the cursor position.
  * Closes on Escape or outside click.
  */
-export function VariablePicker({ open, onInsert, onClose }: VariablePickerProps) {
+export function VariablePicker({ open, onInsert, onClose, anchorRect }: VariablePickerProps) {
   const fmt = useFormatMessage();
   const [query, setQuery] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
@@ -313,6 +336,7 @@ export function VariablePicker({ open, onInsert, onClose }: VariablePickerProps)
         onSelect={handleSelect}
         onClose={onClose}
         containerRef={containerRef}
+        anchorRect={anchorRect}
       />
     </>
   );

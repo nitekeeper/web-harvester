@@ -10,10 +10,12 @@ import { parseFrontmatter, serializeFrontmatter } from './frontmatterUtils';
 import type { TemplateView } from './templateTypes';
 import { useAutosave } from './useAutosave';
 
-/** Holds the pending variable-picker target (which field + row). */
+/** Holds the pending variable-picker target (which field + row + anchor position). */
 export interface VarPickerTarget {
   readonly field: 'noteName' | 'frontmatter';
   readonly rowIndex?: number;
+  /** Bounding rect of the trigger button, used to anchor the popover. */
+  readonly anchorRect: DOMRect;
 }
 
 /** Local draft type mirroring template fields (excluding id). */

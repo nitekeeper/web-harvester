@@ -62,8 +62,11 @@ interface EditorFieldsProps {
   readonly previewOn: boolean;
   readonly bodyEditorRef: React.RefObject<BodyEditorHandle | null>;
   readonly onUpdateField: (changes: Partial<TemplateDraft>) => void;
-  readonly onOpenNoteNamePicker: () => void;
-  readonly onOpenFrontmatterPicker: (rowIndex: number) => void;
+  readonly onOpenNoteNamePicker: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  readonly onOpenFrontmatterPicker: (
+    rowIndex: number,
+    e: React.MouseEvent<HTMLButtonElement>,
+  ) => void;
 }
 
 /** Renders the three editable fields plus the live preview panel. */
@@ -128,9 +131,12 @@ function EditorScrollArea({
       }}
     >
       {varPickerTarget ? (
-        <div style={{ position: 'absolute', top: 50, left: 22, zIndex: 200 }}>
-          <VariablePicker open onInsert={onInsertVariable} onClose={onCloseVarPicker} />
-        </div>
+        <VariablePicker
+          open
+          onInsert={onInsertVariable}
+          onClose={onCloseVarPicker}
+          anchorRect={varPickerTarget.anchorRect}
+        />
       ) : null}
       <EditorFields {...fieldProps} />
     </div>
@@ -218,9 +224,17 @@ interface EditorPaneScrollProps {
 /** Renders the scrollable section and a11y announcer of the editor pane. */
 function EditorPaneScroll({ state: s, template, readyMessage }: EditorPaneScrollProps) {
   const closeVarPicker = () => s.setVarPickerTarget(null);
-  const openNoteNamePicker = () => s.setVarPickerTarget({ field: 'noteName' });
-  const openFmPicker = (rowIndex: number) =>
-    s.setVarPickerTarget({ field: 'frontmatter', rowIndex });
+  const openNoteNamePicker = (e: React.MouseEvent<HTMLButtonElement>) =>
+    s.setVarPickerTarget({
+      field: 'noteName',
+      anchorRect: e.currentTarget.getBoundingClientRect(),
+    });
+  const openFmPicker = (rowIndex: number, e: React.MouseEvent<HTMLButtonElement>) =>
+    s.setVarPickerTarget({
+      field: 'frontmatter',
+      rowIndex,
+      anchorRect: e.currentTarget.getBoundingClientRect(),
+    });
   return (
     <>
       <EditorScrollArea

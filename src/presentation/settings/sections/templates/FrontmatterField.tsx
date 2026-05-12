@@ -20,7 +20,7 @@ export interface FrontmatterFieldProps {
   /** Called whenever a row is added, removed, reordered, or edited. */
   readonly onChange: (value: string) => void;
   /** Called when user clicks the Insert variable button in a value cell. */
-  readonly onInsertVariable: (rowIndex: number) => void;
+  readonly onInsertVariable: (rowIndex: number, e: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
 /** Props for {@link FrontmatterRowItem}. */
@@ -32,7 +32,7 @@ interface RowItemProps {
   readonly onKeyChange: (index: number, key: string) => void;
   readonly onValueChange: (index: number, value: string) => void;
   readonly onRemove: (index: number) => void;
-  readonly onInsertVariable: (index: number) => void;
+  readonly onInsertVariable: (index: number, e: React.MouseEvent<HTMLButtonElement>) => void;
   readonly onDragStart: (index: number) => void;
   readonly onDragOver: (index: number) => void;
   readonly onDrop: () => void;
@@ -92,12 +92,12 @@ function InsertVarButton({
 }: {
   readonly index: number;
   readonly fmt: FormatMessageFn;
-  readonly onInsert: (i: number) => void;
+  readonly onInsert: (i: number, e: React.MouseEvent<HTMLButtonElement>) => void;
 }) {
   return (
     <button
       data-testid={`fm-insert-var-${index}`}
-      onClick={() => onInsert(index)}
+      onClick={(e) => onInsert(index, e)}
       aria-label={fmt({ id: 'settings.templates.fmInsertVar', defaultMessage: 'Insert variable' })}
       style={iconBtnStyle}
     >
@@ -120,7 +120,7 @@ function ValueCell({
   readonly isReadonly: boolean;
   readonly fmt: FormatMessageFn;
   readonly onChange: (i: number, v: string) => void;
-  readonly onInsertVariable: (i: number) => void;
+  readonly onInsertVariable: (i: number, e: React.MouseEvent<HTMLButtonElement>) => void;
 }) {
   return (
     <td>

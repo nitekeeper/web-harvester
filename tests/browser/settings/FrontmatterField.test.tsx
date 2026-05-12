@@ -16,7 +16,7 @@ function Wrapper({
   onInsertVariable,
 }: {
   readonly initial: string;
-  readonly onInsertVariable?: (i: number) => void;
+  readonly onInsertVariable?: (i: number, e: React.MouseEvent<HTMLButtonElement>) => void;
 }) {
   const [value, setValue] = React.useState(initial);
   return (
@@ -72,6 +72,6 @@ describe('FrontmatterField — insert variable button', () => {
     // Row 1 (index 1) — author row
     fireEvent.click(screen.getByTestId('fm-insert-var-1'));
 
-    expect(onInsertVariable).toHaveBeenCalledWith(1);
+    expect(onInsertVariable).toHaveBeenCalledWith(1, expect.any(Object));
   });
 });

@@ -79,6 +79,19 @@ function makePickerToggleHandler(adapter: ChromeAdapter): () => void {
   };
 }
 
+/** Subscribes to settings-store template changes and refreshes the preview. */
+function wireTemplateChangeRefresh(adapter: ChromeAdapter): void {
+  let prevTemplates = useSettingsStore.getState().templates;
+  useSettingsStore.subscribe((state) => {
+    if (state.templates !== prevTemplates) {
+      prevTemplates = state.templates;
+      triggerPreview(adapter, logger).catch((err: unknown) => {
+        logger.error('template-change preview failed', err);
+      });
+    }
+  });
+}
+
 /** Mounts the React tree into `rootEl` and fires the initial preview. */
 function mountPopup(rootEl: HTMLElement, adapter: ChromeAdapter, onSave: () => void): void {
   bootstrapTheme().catch((err: unknown) => {
@@ -106,6 +119,7 @@ function mountPopup(rootEl: HTMLElement, adapter: ChromeAdapter, onSave: () => v
   triggerPreview(adapter, logger).catch((err: unknown) => {
     logger.error('initial preview failed', err);
   });
+  wireTemplateChangeRefresh(adapter);
 }
 
 async function init(): Promise<void> {
