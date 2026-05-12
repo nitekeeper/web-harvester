@@ -2,7 +2,13 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import type { CoreHookSystem } from '@core/hooks';
-import { buildClipHooksPort, compileTemplateForService } from '@presentation/background/bridges';
+import type { ChromeAdapter } from '@infrastructure/adapters/chrome/ChromeAdapter';
+import {
+  buildClipHooksPort,
+  buildTemplateService,
+  compileTemplateForService,
+} from '@presentation/background/bridges';
+import type { TemplateConfig } from '@shared/types';
 
 /** Creates a minimal CoreHookSystem mock with a custom beforeClip call handler. */
 function createMockCoreHooks(beforeClipCall: (v: unknown) => Promise<unknown>): CoreHookSystem {
@@ -106,5 +112,95 @@ describe('buildClipHooksPort — metadata', () => {
     });
 
     expect(captured).toMatchObject(BRIDGE_METADATA);
+  });
+});
+
+// ── buildTemplateService — reads from settings-state ─────────────────────────
+
+/** Minimal hook stub for TemplateService (only onTemplateRender is needed). */
+function makeMinimalHooks(): CoreHookSystem {
+  return {
+    beforeClip: { tapAsync: vi.fn(), tap: vi.fn(), call: vi.fn() },
+    afterClip: { tap: vi.fn(), tapAsync: vi.fn(), call: vi.fn() },
+    beforeSave: { tap: vi.fn(), tapAsync: vi.fn(), call: vi.fn(async (v: unknown) => v) },
+    afterSave: { tap: vi.fn(), tapAsync: vi.fn(), call: vi.fn() },
+    onClip: { tap: vi.fn(), tapAsync: vi.fn(), call: vi.fn() },
+    onHighlight: { tap: vi.fn(), tapAsync: vi.fn(), call: vi.fn() },
+    onTemplateRender: {
+      tap: vi.fn(),
+      tapAsync: vi.fn(),
+      call: vi.fn(async (v: unknown) => v as string),
+    },
+  } as unknown as CoreHookSystem;
+}
+
+/** Builds a mock adapter whose getLocal returns the supplied settings-state value. */
+function makeSettingsAdapter(templates: TemplateConfig[]): ChromeAdapter {
+  return {
+    getLocal: vi.fn().mockImplementation((key: string) => {
+      if (key === 'settings-state') return Promise.resolve({ templates });
+      return Promise.resolve(undefined);
+    }),
+    setLocal: vi.fn().mockResolvedValue(undefined),
+  } as unknown as ChromeAdapter;
+}
+
+const SAMPLE_TEMPLATE: TemplateConfig = {
+  id: 'default',
+  name: 'Obsidian Style',
+  frontmatterTemplate: 'title: {{title}}\nnewkey: custom',
+  bodyTemplate: '{{content}}',
+  noteNameTemplate: '{{date}}-{{title}}',
+};
+
+describe('buildTemplateService — reads templates from settings-state', () => {
+  it('getAll() returns templates array from settings-state', async () => {
+    const adapter = makeSettingsAdapter([SAMPLE_TEMPLATE]);
+    const service = buildTemplateService(adapter, makeMinimalHooks());
+
+    const result = await service.getAll();
+
+    expect(result).toEqual([SAMPLE_TEMPLATE]);
+  });
+
+  it('getById() returns template with matching id including any edited frontmatter', async () => {
+    const adapter = makeSettingsAdapter([SAMPLE_TEMPLATE]);
+    const service = buildTemplateService(adapter, makeMinimalHooks());
+
+    const result = await service.getById('default');
+
+    expect(result?.frontmatterTemplate).toBe('title: {{title}}\nnewkey: custom');
+  });
+
+  it('getById() returns undefined when id is not in settings-state templates', async () => {
+    const adapter = makeSettingsAdapter([SAMPLE_TEMPLATE]);
+    const service = buildTemplateService(adapter, makeMinimalHooks());
+
+    const result = await service.getById('nonexistent');
+
+    expect(result).toBeUndefined();
+  });
+
+  it('getAll() returns [] when settings-state has no templates array', async () => {
+    const adapter = {
+      getLocal: vi.fn().mockResolvedValue({ settings: {} }),
+      setLocal: vi.fn().mockResolvedValue(undefined),
+    } as unknown as ChromeAdapter;
+    const service = buildTemplateService(adapter, makeMinimalHooks());
+
+    const result = await service.getAll();
+
+    expect(result).toEqual([]);
+  });
+
+  it('reads from settings-state key, not the legacy templates key', async () => {
+    const getLocal = vi.fn().mockResolvedValue(undefined);
+    const adapter = { getLocal, setLocal: vi.fn() } as unknown as ChromeAdapter;
+    const service = buildTemplateService(adapter, makeMinimalHooks());
+
+    await service.getAll();
+
+    expect(getLocal).toHaveBeenCalledWith('settings-state');
+    expect(getLocal).not.toHaveBeenCalledWith('templates');
   });
 });

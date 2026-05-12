@@ -169,22 +169,25 @@ export function buildNotificationsPort(adapter: ChromeAdapter): {
   };
 }
 
-/** Storage key under which the persisted template map is stored. */
-export const TEMPLATES_KEY = 'templates';
+/** Storage key used by the settings store (source of truth for user templates). */
+const SETTINGS_STATE_KEY = 'settings-state';
 
-/** Reads the persisted template map keyed by template id. */
-export async function readTemplateMap(
-  adapter: ChromeAdapter,
-): Promise<Record<string, TemplateConfig>> {
-  const raw = await adapter.getLocal(TEMPLATES_KEY);
-  return (raw ?? {}) as Record<string, TemplateConfig>;
+/** Reads the user template list from the settings-state storage entry. */
+async function readTemplatesFromSettings(adapter: ChromeAdapter): Promise<TemplateConfig[]> {
+  const raw = await adapter.getLocal(SETTINGS_STATE_KEY);
+  if (!raw || typeof raw !== 'object') return [];
+  const state = raw as { templates?: unknown };
+  return Array.isArray(state.templates) ? (state.templates as TemplateConfig[]) : [];
 }
 
 /**
- * Builds a `TemplateService` whose backing storage persists templates under
- * the `templates` key as a `Record<id, TemplateConfig>` in the underlying
- * `IStorageAdapter`. Mutations read-modify-write the map back to storage so
- * the `getAll`/`get` callers always see the latest state.
+ * Builds a `TemplateService` whose backing storage reads user templates from
+ * the `settings-state` key written by `useSettingsStore`. This ensures the
+ * background service worker always sees the same template data that the
+ * settings page edits (including newly added frontmatter keys).
+ *
+ * `set` and `remove` are no-ops because template mutations are owned
+ * exclusively by the settings store; the background only reads them.
  */
 export function buildTemplateService(
   adapter: ChromeAdapter,
@@ -192,25 +195,14 @@ export function buildTemplateService(
 ): ITemplateService {
   const storage = {
     async get(key: string): Promise<TemplateConfig | undefined> {
-      const all = await readTemplateMap(adapter);
-      return Object.prototype.hasOwnProperty.call(all, key)
-        ? (Reflect.get(all, key) as TemplateConfig)
-        : undefined;
+      const all = await readTemplatesFromSettings(adapter);
+      return all.find((t) => t.id === key);
     },
     async getAll(): Promise<TemplateConfig[]> {
-      const all = await readTemplateMap(adapter);
-      return Object.values(all);
+      return readTemplatesFromSettings(adapter);
     },
-    async set(key: string, value: TemplateConfig): Promise<void> {
-      const all = await readTemplateMap(adapter);
-      Reflect.set(all, key, value);
-      await adapter.setLocal(TEMPLATES_KEY, all);
-    },
-    async remove(key: string): Promise<void> {
-      const all = await readTemplateMap(adapter);
-      Reflect.deleteProperty(all, key);
-      await adapter.setLocal(TEMPLATES_KEY, all);
-    },
+    async set() {},
+    async remove() {},
   };
   return new TemplateService(storage, hooks, compileTemplateForService);
 }
