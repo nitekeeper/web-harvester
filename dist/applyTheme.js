@@ -1,4 +1,4 @@
-import{d as S,b as x,U as C,V as w,X as E,u as v,j as o,r as c}from"./WHLogo.js";const f=S("bootstrap-locale");function b(e){return E.includes(e)?e:"en"}async function g(e){await C(e),w.getState().setLocale(e)}async function P(e){const t=b(e);try{await g(t)}catch(s){if(f.error(`failed to load locale "${t}"`,s),t!=="en")try{await g("en")}catch(r){f.error("failed to load english fallback locale",r)}}let a=e;return x.subscribe(s=>{const r=s.settings.locale;if(r===a)return;a=r;const i=b(r);g(i).catch(l=>{f.error("locale subscription update failed",l)})})}const h=`/* Web Harvestor — Custom CSS
+import{d as S,b as x,K as C,L as w,M as E,u as v,j as o,r as c}from"./WHLogo.js";const f=S("bootstrap-locale");function b(e){return E.includes(e)?e:"en"}async function g(e){await C(e),w.getState().setLocale(e)}async function U(e){const t=b(e);try{await g(t)}catch(s){if(f.error(`failed to load locale "${t}"`,s),t!=="en")try{await g("en")}catch(r){f.error("failed to load english fallback locale",r)}}let a=e;return x.subscribe(s=>{const r=s.settings.locale;if(r===a)return;a=r;const i=b(r);g(i).catch(l=>{f.error("locale subscription update failed",l)})})}const h=`/* Web Harvestor — Custom CSS
  * Theme tiles set the base. Rules here win on top.
  *
  * Blueprint below: "Purple Midnight" — a dark theme with a violet
@@ -24,7 +24,7 @@ import{d as S,b as x,U as C,V as w,X as E,u as v,j as o,r as c}from"./WHLogo.js"
 
 > Clipped {{ now | date:"MMMM D, YYYY" }} from [{{page.domain}}]({{page.url}})
 
-{{ content | markdown }}`,F="{{date}}-{{title|safe_name}}",V=[{id:"sys-default-article",name:"Default Article",isSystem:!0,noteNameTemplate:F,frontmatterTemplate:`title: {{page.title}}
+{{ content | markdown }}`,F="{{date}}-{{title|safe_name}}",B=[{id:"sys-default-article",name:"Default Article",isSystem:!0,noteNameTemplate:F,frontmatterTemplate:`title: {{page.title}}
 url: {{page.url}}
 author: {{meta.author ?? "unknown"}}
 published: {{page.published_date | date:"YYYY-MM-DD"}}
@@ -42,4 +42,4 @@ tags: [reference]`,bodyTemplate:`# {{page.title}}
 
 ## Summary
 
-{{content | markdown}}`}];function q(e){const t=[...V].sort((n,s)=>n.name.localeCompare(s.name)),a=[...e].sort((n,s)=>n.name.localeCompare(s.name)).map(n=>({...n,isSystem:!1}));return[...t,...a]}function G(e){const t=e==="custom"?"dark":e,a=document.documentElement.classList;if(t==="system"){const n=window.matchMedia("(prefers-color-scheme: dark)").matches;a.toggle("dark",n),a.toggle("light",!n)}else a.toggle("dark",t==="dark"),a.toggle("light",t==="light")}export{W as C,h as D,G as a,P as b,q as m};
+{{content | markdown}}`}];function q(e){const t=[...B].sort((n,s)=>n.name.localeCompare(s.name)),a=[...e].sort((n,s)=>n.name.localeCompare(s.name)).map(n=>({...n,isSystem:!1}));return[...t,...a]}function G(e){const t=e==="custom"?"dark":e,a=document.documentElement.classList;if(t==="system"){const n=window.matchMedia("(prefers-color-scheme: dark)").matches;a.toggle("dark",n),a.toggle("light",!n)}else a.toggle("dark",t==="dark"),a.toggle("light",t==="light")}export{W as C,h as D,G as a,U as b,q as m};
