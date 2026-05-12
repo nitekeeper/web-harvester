@@ -6,6 +6,7 @@ import { useCallback, useRef, useState } from 'react';
 import type { TemplateConfig } from '@shared/types';
 
 import type { BodyEditorHandle } from './BodyEditorField';
+import { parseFrontmatter, serializeFrontmatter } from './frontmatterUtils';
 import type { TemplateView } from './templateTypes';
 import { useAutosave } from './useAutosave';
 
@@ -28,14 +29,18 @@ function draftFromTemplate(t: TemplateView): TemplateDraft {
   };
 }
 
+/** Returns a new string with `text` inserted at the current cursor selection in `el`. */
+function insertTextAtCursor(el: HTMLInputElement, text: string): string {
+  const start = el.selectionStart ?? el.value.length;
+  const end = el.selectionEnd ?? el.value.length;
+  return el.value.slice(0, start) + text + el.value.slice(end);
+}
+
 /** Inserts `variable` at the cursor position of the note-name input element. */
 function insertIntoNoteNameInput(variable: string, update: (v: string) => void): void {
   const el = document.getElementById('note-name-input') as HTMLInputElement | null;
   if (!el) return;
-  const start = el.selectionStart ?? el.value.length;
-  const end = el.selectionEnd ?? el.value.length;
-  const next = el.value.slice(0, start) + variable + el.value.slice(end);
-  update(next);
+  update(insertTextAtCursor(el, variable));
 }
 
 /** Return value of {@link useEditorState}. */
@@ -83,6 +88,18 @@ function useEditorKeyDown(
   );
 }
 
+/** Resets the draft whenever the active template's id changes. */
+function useDraftSync(
+  template: TemplateView,
+  setDraft: React.Dispatch<React.SetStateAction<TemplateDraft>>,
+): void {
+  const prevIdRef = useRef(template.id);
+  if (prevIdRef.current !== template.id) {
+    prevIdRef.current = template.id;
+    setDraft(draftFromTemplate(template));
+  }
+}
+
 /** Builds the save callback and autosave integration for the editor. */
 function useEditorSave(
   template: TemplateView,
@@ -96,9 +113,30 @@ function useEditorSave(
   return useAutosave(save);
 }
 
+/**
+ * Inserts `variable` at the cursor position of the specified frontmatter value
+ * input, then serializes the updated row back into `frontmatterTemplate`.
+ */
+function insertIntoFrontmatterValueInput(
+  variable: string,
+  rowIndex: number,
+  frontmatterTemplate: string,
+  updateField: (changes: Partial<TemplateDraft>) => void,
+): void {
+  const el = document.querySelector(
+    `[data-testid="fm-value-${rowIndex}"]`,
+  ) as HTMLInputElement | null;
+  if (!el) return;
+  const next = insertTextAtCursor(el, variable);
+  const rows = parseFrontmatter(frontmatterTemplate);
+  const updated = rows.map((r, i) => (i === rowIndex ? { ...r, value: next } : r));
+  updateField({ frontmatterTemplate: serializeFrontmatter(updated) });
+}
+
 /** Builds the variable-insertion handler from current varPickerTarget state. */
 function buildInsertVariableHandler(
   varPickerTarget: VarPickerTarget | null,
+  draft: TemplateDraft,
   updateField: (changes: Partial<TemplateDraft>) => void,
   setVarPickerTarget: React.Dispatch<React.SetStateAction<VarPickerTarget | null>>,
 ): (variable: string) => void {
@@ -106,6 +144,13 @@ function buildInsertVariableHandler(
     if (!varPickerTarget) return;
     if (varPickerTarget.field === 'noteName') {
       insertIntoNoteNameInput(variable, (v) => updateField({ noteNameTemplate: v }));
+    } else if (varPickerTarget.field === 'frontmatter' && varPickerTarget.rowIndex !== undefined) {
+      insertIntoFrontmatterValueInput(
+        variable,
+        varPickerTarget.rowIndex,
+        draft.frontmatterTemplate,
+        updateField,
+      );
     }
     setVarPickerTarget(null);
   };
@@ -122,11 +167,7 @@ export function useEditorState(
   const [previewOn, setPreviewOn] = useState(false);
   const [varPickerTarget, setVarPickerTarget] = useState<VarPickerTarget | null>(null);
   const [draft, setDraft] = useState<TemplateDraft>(() => draftFromTemplate(template));
-  const prevIdRef = useRef(template.id);
-  if (prevIdRef.current !== template.id) {
-    prevIdRef.current = template.id;
-    setDraft(draftFromTemplate(template));
-  }
+  useDraftSync(template, setDraft);
   const bodyEditorRef = useRef<BodyEditorHandle>(null);
   const { status, trigger, flush } = useEditorSave(template, draft, onUpdate);
   const updateField = useCallback(
@@ -138,6 +179,7 @@ export function useEditorState(
   );
   const handleInsertVariable = buildInsertVariableHandler(
     varPickerTarget,
+    draft,
     updateField,
     setVarPickerTarget,
   );

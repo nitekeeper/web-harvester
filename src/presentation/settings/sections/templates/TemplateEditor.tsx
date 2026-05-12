@@ -1,7 +1,6 @@
 // src/presentation/settings/sections/templates/TemplateEditor.tsx
 
 import type React from 'react';
-import { useCallback, useRef } from 'react';
 
 import { useFormatMessage } from '@presentation/hooks/useFormatMessage';
 import type { TemplateConfig } from '@shared/types';
@@ -11,9 +10,7 @@ import { EditorHeader } from './EditorHeader';
 import { FrontmatterField } from './FrontmatterField';
 import { LivePreview } from './LivePreview';
 import { NoteNameField } from './NoteNameField';
-import { PickElementButton } from './PickElementButton';
 import type { TemplateView } from './templateTypes';
-import { useCssPicker } from './useCssPicker';
 import {
   type EditorState,
   type TemplateDraft,
@@ -67,12 +64,6 @@ interface EditorFieldsProps {
   readonly onUpdateField: (changes: Partial<TemplateDraft>) => void;
   readonly onOpenNoteNamePicker: () => void;
   readonly onOpenFrontmatterPicker: (rowIndex: number) => void;
-  /** Whether a CSS pick session is active (disables the Pick element button). */
-  readonly isPicking: boolean;
-  /** Start a CSS pick session targeting the frontmatter field. */
-  readonly onPickFrontmatter: () => void;
-  /** Start a CSS pick session targeting the body field. */
-  readonly onPickBody: () => void;
 }
 
 /** Renders the three editable fields plus the live preview panel. */
@@ -84,9 +75,6 @@ function EditorFields({
   onUpdateField,
   onOpenNoteNamePicker,
   onOpenFrontmatterPicker,
-  isPicking,
-  onPickFrontmatter,
-  onPickBody,
 }: EditorFieldsProps) {
   return (
     <>
@@ -96,14 +84,12 @@ function EditorFields({
         onChange={(noteNameTemplate) => onUpdateField({ noteNameTemplate })}
         onInsertVariable={onOpenNoteNamePicker}
       />
-      {!isSystem ? <PickElementButton isPicking={isPicking} onClick={onPickFrontmatter} /> : null}
       <FrontmatterField
         value={draft.frontmatterTemplate}
         readonly={isSystem}
         onChange={(frontmatterTemplate) => onUpdateField({ frontmatterTemplate })}
         onInsertVariable={onOpenFrontmatterPicker}
       />
-      {!isSystem ? <PickElementButton isPicking={isPicking} onClick={onPickBody} /> : null}
       <BodyEditorField
         ref={bodyEditorRef}
         value={draft.bodyTemplate}
@@ -220,12 +206,6 @@ interface EditorPaneProps extends EditorState {
   readonly onExport: (id: string) => void;
   readonly onDelete: (id: string) => void;
   readonly readyMessage: string;
-  /** Whether a CSS pick session is active. */
-  readonly isPicking: boolean;
-  /** Start a CSS pick session targeting the frontmatter field. */
-  readonly onPickFrontmatter: () => void;
-  /** Start a CSS pick session targeting the body field. */
-  readonly onPickBody: () => void;
 }
 
 /** Props for {@link EditorPaneScroll}. */
@@ -233,23 +213,10 @@ interface EditorPaneScrollProps {
   readonly state: EditorState;
   readonly template: TemplateView;
   readonly readyMessage: string;
-  /** Whether a CSS pick session is active. */
-  readonly isPicking: boolean;
-  /** Start a CSS pick session targeting the frontmatter field. */
-  readonly onPickFrontmatter: () => void;
-  /** Start a CSS pick session targeting the body field. */
-  readonly onPickBody: () => void;
 }
 
 /** Renders the scrollable section and a11y announcer of the editor pane. */
-function EditorPaneScroll({
-  state: s,
-  template,
-  readyMessage,
-  isPicking,
-  onPickFrontmatter,
-  onPickBody,
-}: EditorPaneScrollProps) {
+function EditorPaneScroll({ state: s, template, readyMessage }: EditorPaneScrollProps) {
   const closeVarPicker = () => s.setVarPickerTarget(null);
   const openNoteNamePicker = () => s.setVarPickerTarget({ field: 'noteName' });
   const openFmPicker = (rowIndex: number) =>
@@ -267,9 +234,6 @@ function EditorPaneScroll({
         onUpdateField={s.updateField}
         onOpenNoteNamePicker={openNoteNamePicker}
         onOpenFrontmatterPicker={openFmPicker}
-        isPicking={isPicking}
-        onPickFrontmatter={onPickFrontmatter}
-        onPickBody={onPickBody}
       />
       {s.varPickerTarget === null ? <EditorA11yAnnouncer message={readyMessage} /> : null}
     </>
@@ -283,9 +247,6 @@ function EditorPane({
   onExport,
   onDelete,
   readyMessage,
-  isPicking,
-  onPickFrontmatter,
-  onPickBody,
   ...s
 }: EditorPaneProps) {
   return (
@@ -305,56 +266,9 @@ function EditorPane({
         onExport={onExport}
         onDelete={onDelete}
       />
-      <EditorPaneScroll
-        state={s}
-        template={template}
-        readyMessage={readyMessage}
-        isPicking={isPicking}
-        onPickFrontmatter={onPickFrontmatter}
-        onPickBody={onPickBody}
-      />
+      <EditorPaneScroll state={s} template={template} readyMessage={readyMessage} />
     </div>
   );
-}
-
-/** Return value of {@link usePickerCallbacks}. */
-interface PickerCallbacks {
-  readonly isPicking: boolean;
-  readonly onPickFrontmatter: () => void;
-  readonly onPickBody: () => void;
-}
-
-/**
- * Wires the CSS picker for the template editor.
- * Uses a draftRef to keep onPickResult stable across renders so the
- * chrome.storage listener is only attached once per session.
- */
-function usePickerCallbacks(state: EditorState): PickerCallbacks {
-  const draftRef = useRef(state.draft);
-  draftRef.current = state.draft;
-
-  const onPickResult = useCallback(
-    (field: 'frontmatter' | 'body', variable: string): void => {
-      const d = draftRef.current;
-      if (field === 'frontmatter') {
-        state.updateField({ frontmatterTemplate: d.frontmatterTemplate + variable });
-      } else {
-        state.updateField({ bodyTemplate: d.bodyTemplate + variable });
-      }
-    },
-    // state.updateField is already memoized in useEditorState so this is stable
-    [state.updateField],
-  );
-
-  const { isPicking, handlePickElement } = useCssPicker(onPickResult);
-
-  const onPickFrontmatter = useCallback(
-    () => handlePickElement('frontmatter'),
-    [handlePickElement],
-  );
-  const onPickBody = useCallback(() => handlePickElement('body'), [handlePickElement]);
-
-  return { isPicking, onPickFrontmatter, onPickBody };
 }
 
 /**
@@ -371,7 +285,6 @@ export function TemplateEditor({
   const fmt = useFormatMessage();
   const state = useEditorState(template, onUpdate);
   const readyMessage = fmt({ id: 'settings.templates.editorReady', defaultMessage: '' });
-  const { isPicking, onPickFrontmatter, onPickBody } = usePickerCallbacks(state);
 
   return (
     <EditorPane
@@ -381,9 +294,6 @@ export function TemplateEditor({
       onExport={onExport}
       onDelete={onDelete}
       readyMessage={readyMessage}
-      isPicking={isPicking}
-      onPickFrontmatter={onPickFrontmatter}
-      onPickBody={onPickBody}
     />
   );
 }

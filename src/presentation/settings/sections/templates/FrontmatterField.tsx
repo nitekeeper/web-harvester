@@ -96,6 +96,7 @@ function InsertVarButton({
 }) {
   return (
     <button
+      data-testid={`fm-insert-var-${index}`}
       onClick={() => onInsert(index)}
       aria-label={fmt({ id: 'settings.templates.fmInsertVar', defaultMessage: 'Insert variable' })}
       style={iconBtnStyle}
@@ -345,7 +346,8 @@ function TableBody(props: TableProps) {
   return (
     <>
       {rows.map((row, i) => (
-        <FrontmatterRowItem key={`${row.key}-${i}`} row={row} index={i} {...rest} />
+        // eslint-disable-next-line sonarjs/no-array-index-key -- drag-reorder commits synchronously so index is stable during typing; needed to prevent input remount on every keystroke
+        <FrontmatterRowItem key={i} row={row} index={i} {...rest} />
       ))}
     </>
   );
