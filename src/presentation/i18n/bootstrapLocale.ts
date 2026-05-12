@@ -35,6 +35,15 @@ export async function bootstrapLocale(rawLocale: string): Promise<() => void> {
     await applyLocale(locale);
   } catch (err: unknown) {
     logger.error(`failed to load locale "${locale}"`, err);
+    // Fall back to English if the requested locale bundle is unavailable so
+    // the UI always shows translated strings rather than raw message ids.
+    if (locale !== 'en') {
+      try {
+        await applyLocale('en');
+      } catch (enErr: unknown) {
+        logger.error('failed to load english fallback locale', enErr);
+      }
+    }
   }
 
   let prevRawLocale = rawLocale;

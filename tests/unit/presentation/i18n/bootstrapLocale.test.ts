@@ -65,9 +65,11 @@ function setupMocks(): { triggerSubscriber: (state: SettingsStoreState) => void 
 }
 
 beforeEach(() => {
-  vi.clearAllMocks();
+  vi.resetAllMocks();
   mockLoadLocale.mockResolvedValue(undefined);
 });
+
+const BUNDLE_MISSING_ERR = new Error('bundle missing');
 
 // --- tests ---
 
@@ -91,18 +93,37 @@ describe('bootstrapLocale — initial load', () => {
     expect(mockSetLocale).toHaveBeenCalledWith('en');
   });
 
-  it('does not call setLocale when loadLocale throws', async () => {
-    setupMocks();
-    mockLoadLocale.mockRejectedValue(new Error('bundle missing'));
-    await bootstrapLocale('en');
-    expect(mockSetLocale).not.toHaveBeenCalled();
-  });
-
   it('registers a subscription on useSettingsStore and returns the unsubscribe function', async () => {
     setupMocks();
     const cleanup = await bootstrapLocale('en');
     expect(mockedSettingsStore.subscribe).toHaveBeenCalledOnce();
     expect(cleanup).toBe(mockUnsubscribe);
+  });
+});
+
+describe('bootstrapLocale — initial load error handling', () => {
+  it('does not call setLocale when loadLocale throws', async () => {
+    setupMocks();
+    mockLoadLocale.mockRejectedValue(BUNDLE_MISSING_ERR);
+    await bootstrapLocale('en');
+    expect(mockSetLocale).not.toHaveBeenCalled();
+  });
+
+  it('falls back to "en" when a non-en locale bundle fails to load', async () => {
+    setupMocks();
+    mockLoadLocale.mockRejectedValueOnce(BUNDLE_MISSING_ERR).mockResolvedValueOnce(undefined);
+    await bootstrapLocale('ko');
+    expect(mockLoadLocale).toHaveBeenCalledWith('ko');
+    expect(mockLoadLocale).toHaveBeenCalledWith('en');
+    expect(mockSetLocale).toHaveBeenCalledWith('en');
+  });
+
+  it('does not attempt en fallback when "en" itself fails to load', async () => {
+    setupMocks();
+    mockLoadLocale.mockRejectedValue(BUNDLE_MISSING_ERR);
+    await bootstrapLocale('en');
+    expect(mockLoadLocale).toHaveBeenCalledTimes(1);
+    expect(mockSetLocale).not.toHaveBeenCalled();
   });
 });
 
