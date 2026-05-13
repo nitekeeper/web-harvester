@@ -183,7 +183,7 @@ function parseFilterExpression(state: ParserState): Expression | null {
 /**
  * Logical OR: `left or right`, `left || right`.
  */
-export function parseOrExpression(state: ParserState): Expression | null {
+function parseOrExpression(state: ParserState): Expression | null {
   let left = parseAndExpression(state);
   if (!left) return null;
 
