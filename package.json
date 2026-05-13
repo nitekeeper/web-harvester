@@ -132,5 +132,12 @@
     "vite-plugin-web-extension": "^4.5.1",
     "vitest": "^2.1.9",
     "web-ext": "^8.10.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "minimatch": ">=10.2.3",
+      "fast-uri": ">=3.1.2",
+      "@babel/plugin-transform-modules-systemjs": ">=7.29.4"
+    }
   }
 }
