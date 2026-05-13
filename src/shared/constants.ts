@@ -1,7 +1,5 @@
-export const EXTENSION_NAME = 'Web Harvester';
 export const EXTENSION_VERSION = '1.0.0';
 export const MAX_FILE_NAME_LENGTH = 200;
-export const STORAGE_KEY_PREFIX = 'web-harvester:';
 
 export const SUPPORTED_LOCALES = [
   'ar',

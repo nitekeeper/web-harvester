@@ -289,7 +289,7 @@ function PickerPopover({
 }
 
 /** Props for {@link VariablePicker}. */
-export interface VariablePickerProps {
+interface VariablePickerProps {
   /** Whether the picker popover is visible. */
   readonly open: boolean;
   /** Called when a variable is selected; the caller inserts it. */

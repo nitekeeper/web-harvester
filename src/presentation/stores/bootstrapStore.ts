@@ -17,7 +17,7 @@ const logger = createLogger('bootstrap-store');
 /**
  * Optional configuration for {@link bootstrapStore}.
  */
-export interface BootstrapStoreOptions<T extends object> {
+interface BootstrapStoreOptions<T extends object> {
   /**
    * Returns the slice of `state` that should be persisted to storage. When
    * omitted, every non-function property is persisted via `stripFunctions`.

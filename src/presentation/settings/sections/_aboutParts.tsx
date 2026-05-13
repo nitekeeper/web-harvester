@@ -8,12 +8,8 @@
 //   _aboutDiag.tsx    — DiagnosticsBlockProps, DiagnosticsBlock, CopyButton, DiagFieldRows
 //   _aboutLegal.tsx   — LegalBlockProps, LegalBlock
 
-export { C, BORDER_1, MONO, COPY_FLASH_MS, DIAG_LABELS, Eyebrow } from './_aboutShared';
-export { HeroNameRow, HeroCard } from './_aboutHero';
+export { HeroCard } from './_aboutHero';
 export type { ResourceRowDef } from './_aboutResources';
-export { ResourceRow, ResourcesCard } from './_aboutResources';
-export { CopyButton, DiagFieldRows } from './_aboutDiag';
-export type { DiagnosticsBlockProps } from './_aboutDiag';
+export { ResourcesCard } from './_aboutResources';
 export { DiagnosticsBlock } from './_aboutDiag';
-export type { LegalBlockProps } from './_aboutLegal';
 export { LegalBlock } from './_aboutLegal';

@@ -3,7 +3,7 @@ import { useFormatMessage } from '@presentation/hooks/useFormatMessage';
 import { FIXTURE_PAGE, hasIllegalFilenameChars, resolveNoteNamePattern } from './noteNamePreview';
 
 /** Props for {@link NoteNameField}. */
-export interface NoteNameFieldProps {
+interface NoteNameFieldProps {
   /** Current note-name pattern value. */
   readonly value: string;
   /** Whether the field is read-only (system templates). */

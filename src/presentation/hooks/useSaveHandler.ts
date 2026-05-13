@@ -16,7 +16,7 @@ const logger = createLogger('use-save-handler');
  * worker. `ChromeAdapter` satisfies this structurally so no `@infrastructure`
  * import is needed here.
  */
-export interface ISendMessagePort {
+interface ISendMessagePort {
   /** Sends `msg` to the background and resolves with its response. */
   sendMessage(msg: unknown): Promise<unknown>;
 }

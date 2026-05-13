@@ -28,7 +28,7 @@ function ChannelPill({ channel }: { readonly channel: string }) {
 }
 
 /** Hero name + version row inside the hero card. */
-export function HeroNameRow({
+function HeroNameRow({
   name,
   versionLabel,
   channel,

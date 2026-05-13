@@ -68,7 +68,7 @@ export async function saveToWithStringStrategy(
 }
 
 /** Maps a string strategy literal to the infrastructure `ConflictStrategy` enum. */
-export function mapStrategy(strategy: string): ConflictStrategy {
+function mapStrategy(strategy: string): ConflictStrategy {
   if (strategy === 'overwrite') return ConflictStrategy.Overwrite;
   if (strategy === 'skip') return ConflictStrategy.Skip;
   return ConflictStrategy.Suffix;

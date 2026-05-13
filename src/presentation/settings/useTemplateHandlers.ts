@@ -16,7 +16,7 @@ import type { TemplateConfig } from '@shared/types';
  * `bootstrapStore` watching the settings store, so handlers do not need to
  * call any storage facade directly.
  */
-export interface TemplateHandlers {
+interface TemplateHandlers {
   /** Appends a new template (id generated via `crypto.randomUUID`). */
   onAdd: (template: Omit<TemplateConfig, 'id'>) => Promise<void>;
   /** Removes the template identified by `id`. */

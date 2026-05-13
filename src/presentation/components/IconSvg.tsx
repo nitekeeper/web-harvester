@@ -9,7 +9,7 @@
 import type { CSSProperties, ReactNode } from 'react';
 
 /** Props for the shared {@link IconSvg} wrapper. */
-export interface IconSvgProps {
+interface IconSvgProps {
   /** Stroke width applied to the inline SVG path(s). */
   readonly strokeWidth: number;
   /** Whether to round line joins (used by glyphs with corners — check, warn, etc.). */

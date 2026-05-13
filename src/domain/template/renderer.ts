@@ -377,4 +377,4 @@ async function renderNodes(nodes: ASTNode[], state: RenderState): Promise<string
 }
 
 // Re-export types from renderer-eval for consumers that need them.
-export type { RenderState } from '@domain/template/renderer-eval';
+// RenderState is internal — not re-exported from the public barrel.

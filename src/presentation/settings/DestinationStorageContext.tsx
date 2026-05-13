@@ -18,7 +18,7 @@ import type { IDestinationPort } from '@presentation/ports/IDestinationPort';
 export const DestinationStorageContext = createContext<IDestinationPort | null>(null);
 
 /** Props for {@link DestinationStorageProvider}. */
-export interface DestinationStorageProviderProps {
+interface DestinationStorageProviderProps {
   /** Concrete destination storage facade exposed to the subtree. */
   readonly storage: IDestinationPort;
   /** React subtree that will be able to read the storage handle. */

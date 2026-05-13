@@ -55,7 +55,7 @@ function getOrCreateStyleEl(): HTMLStyleElement {
 }
 
 /** Injects CSS into the document and returns a save state based on parse heuristic. */
-export function injectAndValidateCss(css: string): SaveState {
+function injectAndValidateCss(css: string): SaveState {
   const el = getOrCreateStyleEl();
   el.textContent = css;
   if (css.trim() === '') return 'saved';

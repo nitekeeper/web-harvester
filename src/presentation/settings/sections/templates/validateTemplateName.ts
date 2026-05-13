@@ -1,5 +1,5 @@
 /** Result of validating a template name. */
-export type NameValidationResult =
+type NameValidationResult =
   | { readonly valid: true }
   | { readonly valid: false; readonly reason: 'empty' | 'duplicate' };
 

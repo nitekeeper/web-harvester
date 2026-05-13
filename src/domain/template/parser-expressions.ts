@@ -55,7 +55,7 @@ export function parseExpression(state: ParserState): Expression | null {
 /**
  * Nullish coalescing has lowest precedence: `value ?? fallback`.
  */
-export function parseNullishExpression(state: ParserState): Expression | null {
+function parseNullishExpression(state: ParserState): Expression | null {
   let left = parseFilterExpression(state);
   if (!left) return null;
 
@@ -165,7 +165,7 @@ function applyOneFilter(state: ParserState, left: Expression): Expression | null
 /**
  * Filter chain: `value | filter1 | filter2:arg`.
  */
-export function parseFilterExpression(state: ParserState): Expression | null {
+function parseFilterExpression(state: ParserState): Expression | null {
   let left = parseOrExpression(state);
   if (!left) return null;
 
@@ -201,7 +201,7 @@ export function parseOrExpression(state: ParserState): Expression | null {
 /**
  * Logical AND: `left and right`, `left && right`.
  */
-export function parseAndExpression(state: ParserState): Expression | null {
+function parseAndExpression(state: ParserState): Expression | null {
   let left = parseNotExpression(state);
   if (!left) return null;
 
@@ -221,7 +221,7 @@ export function parseAndExpression(state: ParserState): Expression | null {
 /**
  * Logical NOT: `not expr`, `!expr`. Right-associative.
  */
-export function parseNotExpression(state: ParserState): Expression | null {
+function parseNotExpression(state: ParserState): Expression | null {
   if (!check(state, 'op_not')) return parseComparisonExpression(state);
 
   const opToken = advance(state);
@@ -244,7 +244,7 @@ export function parseNotExpression(state: ParserState): Expression | null {
  * are read directly off the token's `value` field (the tokenizer emits the
  * source text — e.g. `'=='`, `'contains'` — verbatim).
  */
-export function parseComparisonExpression(state: ParserState): Expression | null {
+function parseComparisonExpression(state: ParserState): Expression | null {
   const left = parsePostfixExpression(state);
   if (!left) return null;
 

@@ -13,7 +13,7 @@ import type { RenderState } from '@domain/template/renderer-eval';
  * Used for `trimLeft` handling (removes whitespace at the end of previous output).
  */
 /* v8 ignore start */
-export function trimTrailingWhitespace(str: string): string {
+function trimTrailingWhitespace(str: string): string {
   // Mirrors /[\t ]*\r?\n?$/ — strips trailing tabs/spaces and an optional
   // trailing CRLF/LF that follows them. Hand-rolled to sidestep
   // sonarjs/slow-regex warnings on anchored quantifier patterns.

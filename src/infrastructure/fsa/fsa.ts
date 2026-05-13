@@ -20,7 +20,7 @@ export enum ConflictStrategy {
  * Thrown when read/write permission to a `FileSystemDirectoryHandle`
  * cannot be obtained from the user.
  */
-export class PermissionDeniedError extends Error {
+class PermissionDeniedError extends Error {
   constructor(dirName: string) {
     super(`Permission denied for directory "${dirName}"`);
     this.name = 'PermissionDeniedError';

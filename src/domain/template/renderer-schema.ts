@@ -38,7 +38,7 @@ export function resolveSchemaVariable(name: string, variables: Record<string, un
  * Parse a `key[*].prop` or `key[0].prop` schema key into its components.
  * Returns `null` when the key does not match the expected pattern.
  */
-export function parseNestedArrayKey(schemaKey: string): NestedArrayKey | null {
+function parseNestedArrayKey(schemaKey: string): NestedArrayKey | null {
   const openIdx = schemaKey.indexOf('[');
   if (openIdx < 0) return null;
   const closeIdx = schemaKey.indexOf(']', openIdx + 1);
@@ -61,7 +61,7 @@ export function parseNestedArrayKey(schemaKey: string): NestedArrayKey | null {
 /**
  * Parse a schema value - if it's a JSON string, parse it to get the actual value.
  */
-export function parseSchemaValue(value: unknown): unknown {
+function parseSchemaValue(value: unknown): unknown {
   if (typeof value === 'string') {
     if (value.startsWith('[') || value.startsWith('{')) {
       try {

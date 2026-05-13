@@ -9,7 +9,7 @@ import { useFormatMessage } from '@presentation/hooks/useFormatMessage';
 import type { TemplateView } from './templateTypes';
 
 /** Props for {@link TemplateListRail}. */
-export interface TemplateListRailProps {
+interface TemplateListRailProps {
   /** All templates (system + user, pre-sorted). */
   readonly templates: readonly TemplateView[];
   /** Currently selected template id, or `null` if none. */

@@ -289,7 +289,7 @@ function reportExpressionEofError(state: TokenizerState, mode: 'variable' | 'tag
  * Tokenize a single expression element shared between variable and tag modes
  * (a literal, identifier, operator, or punctuation).
  */
-export function tokenizeExpression(state: TokenizerState, mode: 'variable' | 'tag'): void {
+function tokenizeExpression(state: TokenizerState, mode: 'variable' | 'tag'): void {
   skipWhitespace(state);
 
   if (state.pos >= state.input.length) {

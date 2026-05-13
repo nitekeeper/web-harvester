@@ -2,13 +2,8 @@
 
 import IntlMessageFormat from 'intl-messageformat';
 
-import {
-  RTL_LOCALES as RTL_LOCALE_LIST,
-  SUPPORTED_LOCALES,
-  type SupportedLocale,
-} from '@shared/constants';
+import { RTL_LOCALES as RTL_LOCALE_LIST, type SupportedLocale } from '@shared/constants';
 
-export { SUPPORTED_LOCALES };
 export type { SupportedLocale };
 
 // ---------------------------------------------------------------------------
@@ -28,7 +23,7 @@ type MessageRecord = Record<string, { message: string }>;
 const localeModules = import.meta.glob<{ default: MessageRecord }>('./_locales/*/messages.json');
 
 /** Pre-built lookup set for O(1) RTL membership tests. */
-export const RTL_LOCALES: ReadonlySet<SupportedLocale> = new Set(RTL_LOCALE_LIST);
+const RTL_LOCALES: ReadonlySet<SupportedLocale> = new Set(RTL_LOCALE_LIST);
 
 let currentLocale: SupportedLocale = 'en';
 let activeMessages: MessageRecord = {};

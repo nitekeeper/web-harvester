@@ -19,7 +19,7 @@ import type { TemplateView } from './templateTypes';
 import type { AutosaveStatus } from './useAutosave';
 
 /** Props for {@link EditorHeader}. */
-export interface EditorHeaderProps {
+interface EditorHeaderProps {
   /** Template currently open in the editor. */
   readonly template: TemplateView;
   /** Current autosave lifecycle status. */

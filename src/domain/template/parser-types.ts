@@ -6,7 +6,7 @@
  * Common fields shared by every AST node — the discriminant `type` plus the
  * source position the node originated from.
  */
-export interface BaseNode {
+interface BaseNode {
   type: string;
   line: number;
   column: number;

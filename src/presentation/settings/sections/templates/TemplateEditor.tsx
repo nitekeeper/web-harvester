@@ -20,7 +20,7 @@ import {
 import { VariablePicker } from './VariablePicker';
 
 /** Props for {@link TemplateEditor}. */
-export interface TemplateEditorProps {
+interface TemplateEditorProps {
   /** Template to edit. */
   readonly template: TemplateView;
   /** Persists field changes for user templates. No-op for system templates. */

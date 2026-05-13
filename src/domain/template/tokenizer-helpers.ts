@@ -53,7 +53,7 @@ export function skipWhitespace(state: TokenizerState): void {
 /**
  * True for ASCII whitespace characters relevant to template syntax.
  */
-export function isWhitespace(char: string): boolean {
+function isWhitespace(char: string): boolean {
   return char === ' ' || char === '\t' || char === '\n' || char === '\r';
 }
 

@@ -229,27 +229,6 @@ export function isPickerResultMessage(msg: unknown): msg is PickerResultMessage 
 /** Type discriminant for the extractSelectors message sent to the content script. */
 export const MSG_EXTRACT_SELECTORS = 'extractSelectors' as const;
 
-/**
- * Message sent from `TemplatePlugin` (background) to the content script to
- * resolve CSS selector expressions against the live DOM. The response is a
- * `Record<string, string>` mapping each expression to its extracted value.
- */
-export interface ExtractSelectorsMessage {
-  readonly type: typeof MSG_EXTRACT_SELECTORS;
-  /** Selector expressions without braces, e.g. `['selector:.byline']`. */
-  readonly selectors: readonly string[];
-}
-
-/** Type guard for {@link ExtractSelectorsMessage}. */
-export function isExtractSelectorsMessage(msg: unknown): msg is ExtractSelectorsMessage {
-  return (
-    typeof msg === 'object' &&
-    msg !== null &&
-    (msg as Record<string, unknown>)['type'] === MSG_EXTRACT_SELECTORS &&
-    Array.isArray((msg as Record<string, unknown>)['selectors'])
-  );
-}
-
 /** Type discriminant for the start-css-picker message. */
 export const MSG_START_CSS_PICKER = 'START_CSS_PICKER' as const;
 

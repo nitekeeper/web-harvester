@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 export type AutosaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
 /** Return value of {@link useAutosave}. */
-export interface UseAutosaveResult {
+interface UseAutosaveResult {
   /** Current save lifecycle status. */
   readonly status: AutosaveStatus;
   /** Marks the content as dirty and schedules a save after `delayMs`. */

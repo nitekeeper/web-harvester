@@ -176,7 +176,7 @@ function parseTag(state: ParserState): ASTNode | null {
  * encountered as the next tag keyword. Used to read `{% if %}` / `{% for %}`
  * bodies up to their terminator.
  */
-export function parseBody(state: ParserState, stopKeywords: TokenType[]): ASTNode[] {
+function parseBody(state: ParserState, stopKeywords: TokenType[]): ASTNode[] {
   const nodes: ASTNode[] = [];
   while (!isAtEnd(state)) {
     if (checkTagKeyword(state, ...stopKeywords)) break;

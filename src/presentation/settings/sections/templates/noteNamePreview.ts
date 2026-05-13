@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 
 /** Fixture web page used to render live note-name pattern previews. */
-export interface FixturePage {
+interface FixturePage {
   readonly title: string;
   readonly date: string;
   readonly url: string;

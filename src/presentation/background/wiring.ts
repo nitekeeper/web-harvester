@@ -91,7 +91,7 @@ export async function wireContextMenus(
  * tab id and the user's default destination from settings before invoking
  * `clip()`. Errors are caught by the caller.
  */
-export async function handleContextMenuClick(
+async function handleContextMenuClick(
   info: ContextMenuInfo,
   adapter: ITabAdapter,
   clipService: IClipService,
@@ -122,7 +122,7 @@ export function wireCommands(adapter: ChromeAdapter, clipService: IClipService):
  * Resolves the active tab and asks the clip service to clip it into the
  * default destination. Used by both keyboard commands and context menus.
  */
-export async function runClipForActiveTab(
+async function runClipForActiveTab(
   adapter: ChromeAdapter,
   clipService: IClipService,
 ): Promise<void> {

@@ -7,7 +7,7 @@ import { useFormatMessage } from '@presentation/hooks/useFormatMessage';
 import { useToast } from '@presentation/hooks/useToast';
 import type { TemplateConfig } from '@shared/types';
 
-import { mergeTemplates, SYSTEM_TEMPLATES } from './templates/systemTemplates';
+import { mergeTemplates } from './templates/systemTemplates';
 import { TemplateEditor } from './templates/TemplateEditor';
 import { TemplateListRail } from './templates/TemplateListRail';
 import type { TemplateView } from './templates/templateTypes';
@@ -282,5 +282,3 @@ export function TemplatesSection({
   }
   return <SplitPane {...paneProps} onUpdate={onUpdate} />;
 }
-
-export { SYSTEM_TEMPLATES };

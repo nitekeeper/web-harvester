@@ -45,13 +45,7 @@ function ResourceRowBody({ def }: { readonly def: ResourceRowDef }) {
 }
 
 /** A single clickable row that opens an external URL in a new tab. */
-export function ResourceRow({
-  def,
-  isLast,
-}: {
-  readonly def: ResourceRowDef;
-  readonly isLast: boolean;
-}) {
+function ResourceRow({ def, isLast }: { readonly def: ResourceRowDef; readonly isLast: boolean }) {
   const [hovered, setHovered] = useState(false);
 
   const openUrl = () => {

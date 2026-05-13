@@ -123,7 +123,7 @@ export interface ITemplateService {
  * Thrown by `render()` when the supplied template id does not match any
  * persisted template.
  */
-export class TemplateNotFoundError extends Error {
+class TemplateNotFoundError extends Error {
   /**
    * @param templateId - The id that was looked up but not found.
    */

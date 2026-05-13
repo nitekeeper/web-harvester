@@ -24,7 +24,7 @@ import type { ASTNode, Expression, ForNode, IfNode, SetNode } from './parser-typ
  * bodies up to their terminator. Imported lazily to avoid a circular
  * import with `parser-statements.ts`.
  */
-export type ParseBodyFn = (state: ParserState, stopKeywords: TokenType[]) => ASTNode[];
+type ParseBodyFn = (state: ParserState, stopKeywords: TokenType[]) => ASTNode[];
 
 function pushHereError(state: ParserState, message: string): void {
   state.errors.push({

@@ -6,7 +6,7 @@
 import { tokenizeTag, tokenizeText, tokenizeVariable } from './tokenizer-modes';
 import type { Token, TokenizerError, TokenizerResult, TokenizerState } from './tokenizer-types';
 
-export type { Token, TokenizerError, TokenizerResult, TokenType } from './tokenizer-types';
+export type { Token, TokenizerResult, TokenType } from './tokenizer-types';
 
 function dispatch(state: TokenizerState): void {
   switch (state.mode) {

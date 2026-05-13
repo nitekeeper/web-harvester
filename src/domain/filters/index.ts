@@ -51,7 +51,7 @@ import { upper } from '@domain/filters/upper';
 import { wikilink } from '@domain/filters/wikilink';
 
 export { createFilterRegistry } from '@domain/filters/registry';
-export type { FilterFn, IFilterRegistry } from '@domain/filters/registry';
+export type { IFilterRegistry } from '@domain/filters/registry';
 
 const PURE_FILTERS: ReadonlyArray<readonly [string, FilterFn]> = [
   ['blockquote', blockquote],

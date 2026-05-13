@@ -22,7 +22,7 @@ interface CopyButtonProps {
 }
 
 /** Copy button shown in the diagnostics header row. */
-export function CopyButton({ copied, onCopy, copyLabel, copiedLabel }: CopyButtonProps) {
+function CopyButton({ copied, onCopy, copyLabel, copiedLabel }: CopyButtonProps) {
   return (
     <button
       type="button"
@@ -50,7 +50,7 @@ export function CopyButton({ copied, onCopy, copyLabel, copiedLabel }: CopyButto
 }
 
 /** Diagnostics field table rows. */
-export function DiagFieldRows({ fields }: { readonly fields: readonly [string, string][] }) {
+function DiagFieldRows({ fields }: { readonly fields: readonly [string, string][] }) {
   return (
     <>
       {fields.map(([key, value]) => (
@@ -69,7 +69,7 @@ export function DiagFieldRows({ fields }: { readonly fields: readonly [string, s
 }
 
 /** Props for the diagnostics read-only table. */
-export interface DiagnosticsBlockProps {
+interface DiagnosticsBlockProps {
   /** Extension version string. */
   readonly version: string;
   /** CI build identifier. */

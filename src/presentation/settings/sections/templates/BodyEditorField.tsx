@@ -36,7 +36,7 @@ export interface BodyEditorHandle {
 }
 
 /** Props for {@link BodyEditorField}. */
-export interface BodyEditorFieldProps {
+interface BodyEditorFieldProps {
   /** Current template body string. */
   readonly value: string;
   /** Whether the editor is read-only (system templates). */

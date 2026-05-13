@@ -148,7 +148,7 @@ function resolveTarget(el: Element | null): HTMLElement | null {
  * Computes an XPath for the given element. Format: `/html/body/div[2]/p[1]`.
  * The `[n]` index is added only when the element has same-tag siblings.
  */
-export function computeXPath(el: Element): string {
+function computeXPath(el: Element): string {
   const segments: string[] = [];
   let cur: Element | null = el;
   while (cur && cur.nodeType === Node.ELEMENT_NODE) {

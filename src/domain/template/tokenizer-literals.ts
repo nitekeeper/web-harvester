@@ -288,7 +288,7 @@ function trackSelectorDepth(state: TokenizerState, sel: SelectorState, char: str
  * brackets, pseudo-class parentheses, and quoted strings. We only stop at
  * actual template delimiters.
  */
-export function tokenizeCssSelector(state: TokenizerState, prefix: string): string {
+function tokenizeCssSelector(state: TokenizerState, prefix: string): string {
   const sel: SelectorState = { bracketDepth: 0, parenDepth: 0, inString: null };
   let value = prefix;
 

@@ -5,7 +5,7 @@ import { useFormatMessage } from '@presentation/hooks/useFormatMessage';
 import { FIXTURE_PAGE } from './noteNamePreview';
 
 /** Props for {@link LivePreview}. */
-export interface LivePreviewProps {
+interface LivePreviewProps {
   /** Whether the preview panel is visible. */
   readonly open: boolean;
   /** Current body template content. */

@@ -6,7 +6,7 @@
 import { BORDER_1, C, Eyebrow } from './_aboutShared';
 
 /** Props for the legal section. */
-export interface LegalBlockProps {
+interface LegalBlockProps {
   /** URL of the open-source licenses page. */
   readonly licensesUrl: string;
   /** URL of the privacy policy page. */

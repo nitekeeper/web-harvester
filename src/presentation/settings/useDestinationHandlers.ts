@@ -20,7 +20,7 @@ const logger = createLogger('use-destination-handlers');
  * Remove, Rename, and SetPrimary flows. Every storage-mutating handler
  * refreshes the destinations slice in the global settings store afterward.
  */
-export interface DestinationHandlers {
+interface DestinationHandlers {
   /** Opens the FSA picker, persists the selection, refreshes the store. */
   onAdd: () => Promise<void>;
   /** Removes the destination identified by `id`, refreshes the store. */

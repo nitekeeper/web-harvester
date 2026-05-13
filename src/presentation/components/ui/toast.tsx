@@ -5,7 +5,7 @@ import { useFormatMessage } from '@presentation/hooks/useFormatMessage';
 import type { ToastOptions } from '@presentation/hooks/useToast';
 
 /** Props for {@link Toast}. */
-export interface ToastProps {
+interface ToastProps {
   /** Active toast options, or `null`/`undefined` when no toast is showing. */
   readonly toast: ToastOptions | null | undefined;
   /** Called when the user clicks Undo or the toast is dismissed. */

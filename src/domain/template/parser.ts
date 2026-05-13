@@ -27,11 +27,7 @@ export type {
   BinaryExpression,
   UnaryExpression,
   FilterExpression,
-  GroupExpression,
   MemberExpression,
-  BaseNode,
-  ParserError,
-  ParserResult,
 } from './parser-types';
 
 export { formatAST, formatExpression, formatParserError } from './parser-format';

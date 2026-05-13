@@ -11,7 +11,7 @@ export interface ToastOptions {
 }
 
 /** Shape returned by {@link useToast}. */
-export interface UseToastResult {
+interface UseToastResult {
   readonly toast: ToastOptions | null;
   readonly show: (opts: ToastOptions) => void;
   readonly dismiss: () => void;
