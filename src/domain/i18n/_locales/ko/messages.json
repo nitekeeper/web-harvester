@@ -523,6 +523,10 @@
     "message": "저장 중…",
     "description": "Status message shown while template auto-save is in flight"
   },
+  "settings.templates.systemBadge": {
+    "message": "시스템",
+    "description": "Badge label shown next to system (built-in) template names in the template list"
+  },
   "settings.templates.variablePicker": {
     "message": "변수 선택기",
     "description": "Title of the variable picker panel"

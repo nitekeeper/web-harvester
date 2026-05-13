@@ -523,6 +523,10 @@
     "message": "Saving…",
     "description": "Status message shown while template auto-save is in flight"
   },
+  "settings.templates.systemBadge": {
+    "message": "system",
+    "description": "Badge label shown next to system (built-in) template names in the template list"
+  },
   "settings.templates.variablePicker": {
     "message": "Variable picker",
     "description": "Title of the variable picker panel"
