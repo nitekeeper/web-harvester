@@ -141,6 +141,7 @@ function DataPanels() {
           onAdd={destHandlers.onAdd}
           onRemove={destHandlers.onRemove}
           onSetPrimary={destHandlers.onSetPrimary}
+          onRename={destHandlers.onRename}
         />
       </TabsContent>
       <TabsContent value="templates">
