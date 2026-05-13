@@ -13,7 +13,7 @@ afterEach(() => {
 describe('EditableLabel — static state', () => {
   it('renders the label text as a span', () => {
     render(<EditableLabel value="My Folder" onCommit={vi.fn()} />);
-    expect(screen.getByText('My Folder')).toBeDefined();
+    expect(screen.getByText('My Folder')).not.toBeNull();
     expect(screen.queryByRole('textbox')).toBeNull();
   });
 });
@@ -23,7 +23,7 @@ describe('EditableLabel — edit mode', () => {
     const user = userEvent.setup();
     render(<EditableLabel value="My Folder" onCommit={vi.fn()} />);
     await user.click(screen.getByText('My Folder'));
-    expect(screen.getByRole('textbox')).toBeDefined();
+    expect(screen.getByRole('textbox')).not.toBeNull();
   });
 
   it('pre-fills the input with the current value', async () => {
@@ -31,6 +31,15 @@ describe('EditableLabel — edit mode', () => {
     render(<EditableLabel value="My Folder" onCommit={vi.fn()} />);
     await user.click(screen.getByText('My Folder'));
     expect((screen.getByRole('textbox') as HTMLInputElement).value).toBe('My Folder');
+  });
+
+  it('switches to an input when Enter is pressed on the span', async () => {
+    const user = userEvent.setup();
+    render(<EditableLabel value="My Folder" onCommit={vi.fn()} />);
+    const span = screen.getByText('My Folder');
+    span.focus();
+    await user.keyboard('{Enter}');
+    expect(screen.getByRole('textbox')).not.toBeNull();
   });
 });
 
@@ -56,7 +65,9 @@ describe('EditableLabel — commit', () => {
     await user.tab();
     expect(onCommit).toHaveBeenCalledWith('Trimmed');
   });
+});
 
+describe('EditableLabel — commit no-op cases', () => {
   it('does not call onCommit when the value is unchanged', async () => {
     const user = userEvent.setup();
     const onCommit = vi.fn();
@@ -72,6 +83,17 @@ describe('EditableLabel — commit', () => {
     render(<EditableLabel value="My Folder" onCommit={onCommit} />);
     await user.click(screen.getByText('My Folder'));
     await user.clear(screen.getByRole('textbox'));
+    await user.keyboard('{Enter}');
+    expect(onCommit).not.toHaveBeenCalled();
+  });
+
+  it('does not call onCommit when the input contains only whitespace', async () => {
+    const user = userEvent.setup();
+    const onCommit = vi.fn();
+    render(<EditableLabel value="My Folder" onCommit={onCommit} />);
+    await user.click(screen.getByText('My Folder'));
+    await user.clear(screen.getByRole('textbox'));
+    await user.type(screen.getByRole('textbox'), '   ');
     await user.keyboard('{Enter}');
     expect(onCommit).not.toHaveBeenCalled();
   });
@@ -96,6 +118,6 @@ describe('EditableLabel — cancel', () => {
     await user.clear(screen.getByRole('textbox'));
     await user.type(screen.getByRole('textbox'), 'New Name');
     await user.keyboard('{Escape}');
-    expect(screen.getByText('My Folder')).toBeDefined();
+    expect(screen.getByText('My Folder')).not.toBeNull();
   });
 });

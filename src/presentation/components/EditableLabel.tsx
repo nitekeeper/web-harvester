@@ -8,13 +8,16 @@ export interface EditableLabelProps {
   readonly value: string;
   /**
    * Called with the trimmed new value when the user commits an edit.
-   * Not called when the value is unchanged or when the input is empty.
+   * Not called when the value is unchanged, when the input is empty, or when
+   * the input contains only whitespace.
    */
   readonly onCommit: (next: string) => void;
   /** CSS class applied to both the static span and the edit input. */
   readonly className?: string;
-  /** Inline styles applied to both the static span and the edit input. */
+  /** Inline styles applied to both the static span and the edit input. In edit mode, component-specific styles (border-bottom, background, etc.) take precedence over caller values. */
   readonly style?: React.CSSProperties;
+  /** Accessible name for the static span's `role="button"`. Defaults to `value` if omitted. */
+  readonly ariaLabel?: string;
 }
 
 /** Props for the internal {@link EditingInput} sub-component. */
@@ -31,6 +34,8 @@ interface EditingInputProps {
   readonly className?: string;
   /** Optional inline styles forwarded from the parent. */
   readonly style?: React.CSSProperties;
+  /** Accessible name for the edit input. */
+  readonly ariaLabel: string;
 }
 
 /**
@@ -44,10 +49,12 @@ function EditingInput({
   onCancel,
   className,
   style,
+  ariaLabel,
 }: EditingInputProps) {
   return (
     <input
       autoFocus
+      aria-label={ariaLabel}
       value={draft}
       onChange={(e) => onChange(e.target.value)}
       onBlur={onCommit}
@@ -85,17 +92,20 @@ interface StaticLabelProps {
   readonly className?: string;
   /** Optional inline styles forwarded from the parent. */
   readonly style?: React.CSSProperties;
+  /** Accessible name for the span's `role="button"`. */
+  readonly ariaLabel: string;
 }
 
 /**
  * Read-only span rendered when the label is not being edited. Clicking or
  * pressing Enter/Space activates edit mode.
  */
-function StaticLabel({ value, onStartEditing, className, style }: StaticLabelProps) {
+function StaticLabel({ value, onStartEditing, className, style, ariaLabel }: StaticLabelProps) {
   return (
     <span
       role="button"
       tabIndex={0}
+      aria-label={ariaLabel}
       onClick={onStartEditing}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') onStartEditing();
@@ -108,12 +118,24 @@ function StaticLabel({ value, onStartEditing, className, style }: StaticLabelPro
   );
 }
 
-/**
- * Click-to-edit inline text label. Renders as a static `<span>`; clicking it
- * switches to a focused `<input>`. Enter or blur commits; Escape cancels.
- * Empty or whitespace-only input reverts without committing.
- */
-export function EditableLabel({ value, onCommit, className, style }: EditableLabelProps) {
+/** Internal state returned by {@link useEditState}. */
+interface EditState {
+  /** Whether the label is currently in edit mode. */
+  readonly isEditing: boolean;
+  /** Current draft text in the input. */
+  readonly draft: string;
+  /** Switch to edit mode and seed the draft with the current value. */
+  readonly startEditing: () => void;
+  /** Commit the trimmed draft if non-empty and changed; exit edit mode. */
+  readonly commit: () => void;
+  /** Cancel the edit session without committing. */
+  readonly cancel: () => void;
+  /** Update the draft value. */
+  readonly setDraft: (v: string) => void;
+}
+
+/** Encapsulates edit-mode state and transition handlers for {@link EditableLabel}. */
+function useEditState(value: string, onCommit: (next: string) => void): EditState {
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState(value);
   const cancelledRef = useRef(false);
@@ -123,18 +145,37 @@ export function EditableLabel({ value, onCommit, className, style }: EditableLab
     cancelledRef.current = false;
     setIsEditing(true);
   };
-
   const commit = (): void => {
     if (cancelledRef.current) return;
     const trimmed = draft.trim();
     if (trimmed && trimmed !== value) onCommit(trimmed);
     setIsEditing(false);
   };
-
   const cancel = (): void => {
     cancelledRef.current = true;
     setIsEditing(false);
   };
+
+  return { isEditing, draft, startEditing, commit, cancel, setDraft };
+}
+
+/**
+ * Click-to-edit inline text label. Renders as a static `<span>`; clicking it
+ * switches to a focused `<input>`. Enter or blur commits; Escape cancels.
+ * Empty or whitespace-only input reverts without committing.
+ */
+export function EditableLabel({
+  value,
+  onCommit,
+  className,
+  style,
+  ariaLabel,
+}: EditableLabelProps) {
+  const { isEditing, draft, startEditing, commit, cancel, setDraft } = useEditState(
+    value,
+    onCommit,
+  );
+  const resolvedAriaLabel = ariaLabel ?? value;
 
   if (isEditing) {
     return (
@@ -145,11 +186,17 @@ export function EditableLabel({ value, onCommit, className, style }: EditableLab
         onCancel={cancel}
         className={className}
         style={style}
+        ariaLabel={resolvedAriaLabel}
       />
     );
   }
-
   return (
-    <StaticLabel value={value} onStartEditing={startEditing} className={className} style={style} />
+    <StaticLabel
+      value={value}
+      onStartEditing={startEditing}
+      className={className}
+      style={style}
+      ariaLabel={resolvedAriaLabel}
+    />
   );
 }
