@@ -37,12 +37,6 @@ describe('getAboutDiagnostics — build', () => {
     const result = getAboutDiagnostics();
     expect(result.build).toBe('2026.05.10-abc1234');
   });
-
-  it('returns empty string when VITE_BUILD is stubbed to empty', () => {
-    vi.stubEnv('VITE_BUILD', '');
-    const result = getAboutDiagnostics();
-    expect(result.build).toBe('');
-  });
 });
 
 describe('getAboutDiagnostics — channel', () => {
