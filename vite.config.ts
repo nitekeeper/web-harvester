@@ -5,7 +5,7 @@ import tailwindcss from '@tailwindcss/vite';
 import { defineConfig, loadEnv } from 'vite';
 import webExtension from 'vite-plugin-web-extension';
 
-import { resolveBuildStamp } from './scripts/buildStamp.ts';
+import { resolveBuildStamp } from './scripts/buildStamp';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 

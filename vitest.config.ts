@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 
 import { defineConfig } from 'vitest/config';
 
-import { resolveBuildStamp } from './scripts/buildStamp.ts';
+import { resolveBuildStamp } from './scripts/buildStamp';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
