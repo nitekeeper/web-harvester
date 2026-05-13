@@ -29,7 +29,7 @@
     "audit:coverage": "pnpm test:coverage -- --reporter=json --outputFile=audits/reports/$(date +%Y-%m-%d)/coverage.json",
     "audit:report": "mkdir -p audits/reports/$(date +%Y-%m-%d) && pnpm audit:deps && pnpm audit:static && pnpm audit:coverage && if [ -n \"$(ls -A audits/templates 2>/dev/null)\" ]; then cp -r audits/templates/* audits/reports/$(date +%Y-%m-%d)/; fi",
     "lint:manifest": "web-ext lint --source-dir dist/",
-    "lint:dupes": "jscpd src/",
+    "lint:dupes": "jscpd src/ scripts/",
     "analyze": "vite build --mode production && npx rollup-plugin-visualizer dist/stats.html",
     "prepare": "husky"
   },
