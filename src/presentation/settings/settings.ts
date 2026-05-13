@@ -28,7 +28,7 @@ import { createLogger } from '@shared/logger';
 import { isPluginStatusPayload, PLUGIN_STATUS_STORAGE_KEY } from '@shared/pluginStatus';
 
 import { DestinationStorageProvider } from './DestinationStorageContext';
-import { Settings } from './Settings';
+import { Settings } from './Settings.tsx';
 
 const logger = createLogger('settings');
 
