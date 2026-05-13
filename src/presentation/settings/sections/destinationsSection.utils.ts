@@ -1,7 +1,7 @@
 // src/presentation/settings/sections/destinationsSection.utils.ts
 
 /** Month abbreviation names used to format last-used dates. */
-export const MONTHS = [
+const MONTHS = [
   'Jan',
   'Feb',
   'Mar',
@@ -17,7 +17,7 @@ export const MONTHS = [
 ] as const;
 
 /** Formatting function type for i18n message calls. */
-export type FmtFn = (msg: {
+type FmtFn = (msg: {
   id: string;
   defaultMessage: string;
   values?: Record<string, string | number>;

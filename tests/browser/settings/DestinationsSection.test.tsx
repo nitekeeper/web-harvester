@@ -195,3 +195,29 @@ describe('DestinationsSection — rename', () => {
     await expect(user.keyboard('{Enter}')).resolves.toBeUndefined();
   });
 });
+
+describe('DestinationsSection — accessibility', () => {
+  it('renders the destination label as an accessible button', () => {
+    render(
+      <DestinationsSection
+        {...emptyProps}
+        destinations={[makeDestination({ label: 'Research' })]}
+      />,
+    );
+    expect(screen.getByRole('button', { name: 'Research' })).not.toBeNull();
+  });
+
+  it('enters edit mode when Space is pressed on the destination label', async () => {
+    const user = userEvent.setup();
+    render(
+      <DestinationsSection
+        {...emptyProps}
+        destinations={[makeDestination({ label: 'Research' })]}
+      />,
+    );
+    const label = screen.getByRole('button', { name: 'Research' });
+    label.focus();
+    await user.keyboard(' ');
+    expect(screen.getByRole('textbox')).not.toBeNull();
+  });
+});
