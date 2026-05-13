@@ -33,6 +33,12 @@ vi.mock('@domain/i18n/_locales/ar/messages.json', () => ({
   },
 }));
 
+vi.mock('@domain/i18n/_locales/ko/messages.json', () => ({
+  default: {
+    [SAVE_BUTTON]: { message: '저장' },
+  },
+}));
+
 import { loadLocale, formatMessage, getCurrentLocale, isRTL } from '@domain/i18n/i18n';
 
 beforeEach(async () => {
@@ -84,6 +90,11 @@ describe('non-English locale', () => {
     // `import.meta.glob` so coverage hits every glob-generated function.
     await loadLocale('ar');
     expect(formatMessage(SAVE_BUTTON)).toBe('حفظ');
+  });
+
+  it('loads the ko locale via the glob loader', async () => {
+    await loadLocale('ko');
+    expect(formatMessage(SAVE_BUTTON)).toBe('저장');
   });
 });
 

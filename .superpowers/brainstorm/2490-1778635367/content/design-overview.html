@@ -1,0 +1,74 @@
+<h2>Design: Custom folder naming</h2>
+<p class="subtitle">Review the full design — let me know if anything needs adjusting</p>
+
+<div class="section">
+  <h3>1 · New component: <code>EditableLabel</code></h3>
+  <p>A small, reusable click-to-edit text widget. Lives at <code>src/presentation/components/EditableLabel.tsx</code>.</p>
+
+  <div class="split" style="margin-top:12px;">
+    <div class="mockup">
+      <div class="mockup-header">Static state (default)</div>
+      <div class="mockup-body" style="padding:16px;">
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg-secondary);border-radius:6px;">
+          <span style="font-size:14px;">📁</span>
+          <span style="font-size:13px;font-weight:600;color:var(--text);cursor:text;border-bottom:1px dashed transparent;" onmouseover="this.style.borderBottomColor='var(--border)'" onmouseout="this.style.borderBottomColor='transparent'">Obsidian Vault</span>
+          <span style="font-size:9.5px;font-weight:700;background:rgba(16,185,129,.15);color:#10b981;border-radius:999px;padding:1px 6px;text-transform:uppercase;">Primary</span>
+          <span style="margin-left:auto;font-size:13px;cursor:pointer;opacity:0.4;">★</span>
+          <span style="font-size:11px;color:var(--text-muted);cursor:pointer;opacity:0.6;">Remove</span>
+        </div>
+        <p style="font-size:11px;color:var(--text-muted);margin:6px 0 0;">Hover label → dashed underline hint. Click → edit mode.</p>
+      </div>
+    </div>
+    <div class="mockup">
+      <div class="mockup-header">Edit mode (after click)</div>
+      <div class="mockup-body" style="padding:16px;">
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg-secondary);border-radius:6px;">
+          <span style="font-size:14px;">📁</span>
+          <input style="flex:1;background:transparent;border:none;border-bottom:1.5px solid var(--accent);outline:none;font-size:13px;font-weight:600;padding:2px 0;color:var(--text);" value="Obsidian Vault" />
+          <span style="font-size:10px;color:var(--text-muted);white-space:nowrap;">↵ save · Esc cancel</span>
+        </div>
+        <p style="font-size:11px;color:var(--text-muted);margin:6px 0 0;">Blur also saves. Empty/whitespace → reverts to original.</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:14px;background:var(--bg-secondary);border-radius:6px;padding:12px 14px;font-size:12px;">
+    <div class="label" style="margin-bottom:6px;">Props</div>
+    <code style="font-size:11.5px;line-height:1.8;">value: string &nbsp;·&nbsp; onCommit: (next: string) =&gt; void &nbsp;·&nbsp; className?: string</code>
+    <div style="margin-top:10px;font-size:11.5px;color:var(--text-muted);">
+      <strong>Enter / blur</strong> → commits if value changed and non-empty &nbsp;·&nbsp;
+      <strong>Esc</strong> → cancels, reverts &nbsp;·&nbsp;
+      <strong>Empty trim</strong> → reverts (no-op save)
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>2 · Changes to existing files</h3>
+  <div style="background:var(--bg-secondary);border-radius:6px;padding:12px 14px;font-size:12px;line-height:2;">
+    <div><strong>DestinationsSection.tsx</strong> — add <code>onRename?</code> prop; thread through <code>DestinationList</code> → <code>DestinationRow</code>; swap static label in <code>NameStack</code> for <code>&lt;EditableLabel&gt;</code></div>
+    <div><strong>Settings.tsx</strong> — pass <code>onRename={handlers.onRename}</code> to <code>&lt;DestinationsSection&gt;</code></div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>3 · Data flow</h3>
+  <div style="background:var(--bg-secondary);border-radius:6px;padding:12px 14px;font-size:11.5px;font-family:monospace;line-height:2;color:var(--text);">
+    User clicks label<br/>
+    &nbsp;&nbsp;→ EditableLabel enters edit mode (local state)<br/>
+    User types new name, presses Enter<br/>
+    &nbsp;&nbsp;→ onCommit(newLabel) called<br/>
+    &nbsp;&nbsp;→ NameStack passes up to DestinationRow<br/>
+    &nbsp;&nbsp;→ DestinationRow calls onRename(id, newLabel)<br/>
+    &nbsp;&nbsp;→ useDestinationHandlers.onRename() → storage.update(id, {label})<br/>
+    &nbsp;&nbsp;→ refresh() → useSettingsStore updated → list re-renders
+  </div>
+</div>
+
+<div class="section">
+  <h3>4 · Tests</h3>
+  <div style="background:var(--bg-secondary);border-radius:6px;padding:12px 14px;font-size:12px;line-height:1.8;">
+    <div><strong>New:</strong> <code>tests/unit/presentation/components/EditableLabel.test.tsx</code> — click-to-edit, Enter commits, Esc cancels, blur commits, empty string reverts</div>
+    <div><strong>Updated:</strong> <code>tests/browser/settings/DestinationsSection.test.tsx</code> — click label → rename flow</div>
+  </div>
+</div>

@@ -1,0 +1,40 @@
+<h2>How should click-to-edit be wired in?</h2>
+<p class="subtitle">Three approaches for implementing inline renaming in the destination list</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Edit state in <code>DestinationRow</code> <span style="font-size:11px;background:var(--accent);color:#fff;border-radius:999px;padding:1px 8px;vertical-align:middle;margin-left:4px;">Recommended</span></h3>
+      <p><code>DestinationRow</code> holds <code>isEditing</code> + <code>draft</code> local state. Clicking the label flips <code>isEditing</code> on; Enter or blur saves and exits. <code>NameStack</code> receives <code>isEditing</code> + callbacks and renders either a <code>&lt;span&gt;</code> or an <code>&lt;input&gt;</code>.</p>
+      <div class="pros-cons" style="margin-top:10px;">
+        <div class="pros"><h4>Pros</h4><ul><li>Row owns state, NameStack stays display-only — matches existing pattern</li><li>No new files needed</li><li>Minimal prop changes</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>DestinationRow grows slightly</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Edit state inside <code>NameStack</code></h3>
+      <p><code>NameStack</code> receives the <code>id</code> and <code>onRename</code> handler directly and owns its own edit state internally. Fewer props thread through <code>DestinationRow</code>.</p>
+      <div class="pros-cons" style="margin-top:10px;">
+        <div class="pros"><h4>Pros</h4><ul><li>Less prop threading through DestinationRow</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>NameStack becomes business-logic-aware — breaks the display-only pattern</li><li>Harder to test NameStack in isolation</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>New <code>EditableLabel</code> component</h3>
+      <p>Extract a reusable <code>EditableLabel</code> component (click-to-edit generic widget) and use it inside <code>NameStack</code>.</p>
+      <div class="pros-cons" style="margin-top:10px;">
+        <div class="pros"><h4>Pros</h4><ul><li>Reusable elsewhere if needed</li><li>Clean abstraction</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Over-engineering — only one use case right now</li><li>New file for a small feature</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>

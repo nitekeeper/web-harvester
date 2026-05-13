@@ -1,0 +1,54 @@
+<h2>How should custom naming work?</h2>
+<p class="subtitle">Three approaches for letting users set a custom name on a destination folder</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Name prompt after picking</h3>
+      <p>After the OS folder picker closes, an inline input appears pre-filled with the folder's real name. User edits or confirms, then it saves.</p>
+      <div style="margin-top:12px;background:var(--bg-secondary);border-radius:6px;padding:12px;font-size:12px;">
+        <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--bg-primary);border:1px solid var(--border);border-radius:6px;">
+          <span style="font-size:14px;">📁</span>
+          <input style="flex:1;background:transparent;border:none;border-bottom:1.5px solid var(--accent);outline:none;font-size:13px;padding:2px 0;color:var(--text);" value="Obsidian Vault" />
+          <button style="background:var(--accent);color:#fff;border:none;border-radius:4px;padding:4px 10px;font-size:11px;cursor:pointer;">Save</button>
+        </div>
+        <p style="color:var(--text-muted);font-size:11px;margin:6px 0 0;">↑ Appears inline in the list after folder is picked</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Click-to-edit label (inline)</h3>
+      <p>The destination label in the list is click-to-edit at any time. Clicking it turns it into an editable field in-place. Works for both new and existing destinations.</p>
+      <div style="margin-top:12px;background:var(--bg-secondary);border-radius:6px;padding:12px;font-size:12px;">
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg-primary);border:1px solid var(--border);border-radius:6px;">
+          <span style="font-size:14px;">📁</span>
+          <input style="flex:1;background:transparent;border:none;border-bottom:1.5px solid var(--accent);outline:none;font-size:13px;font-weight:600;padding:2px 0;color:var(--text);" value="Obsidian Vault" />
+          <span style="font-size:10px;color:var(--text-muted);">↵ to save</span>
+        </div>
+        <p style="color:var(--text-muted);font-size:11px;margin:6px 0 0;">↑ User clicked the label — it became editable instantly</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Edit (pencil) icon on each row</h3>
+      <p>Each row in the list has a small pencil/edit icon. Clicking it opens an inline edit field. More explicit than click-to-edit; less automatic than the post-pick prompt.</p>
+      <div style="margin-top:12px;background:var(--bg-secondary);border-radius:6px;padding:12px;font-size:12px;">
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg-primary);border:1px solid var(--border);border-radius:6px;">
+          <span style="font-size:14px;">📁</span>
+          <span style="flex:1;font-size:13px;font-weight:600;color:var(--text);">Obsidian Vault</span>
+          <span style="font-size:13px;cursor:pointer;opacity:0.5;">✏️</span>
+          <span style="font-size:13px;cursor:pointer;opacity:0.5;">★</span>
+          <span style="font-size:11px;color:var(--text-muted);cursor:pointer;">Remove</span>
+        </div>
+        <p style="color:var(--text-muted);font-size:11px;margin:6px 0 0;">↑ Pencil icon appears on hover; clicking opens edit mode</p>
+      </div>
+    </div>
+  </div>
+</div>
