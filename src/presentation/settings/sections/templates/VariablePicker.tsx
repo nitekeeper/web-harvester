@@ -279,7 +279,7 @@ function PickerPopover({
       }}
     >
       <SearchInput fmt={fmt} value={query} onChange={onQueryChange} />
-      <div className="vp-scroll" style={{ overflowY: 'auto', flex: 1, padding: '4px 0' }}>
+      <div className="wh-scroll" style={{ overflowY: 'auto', flex: 1, padding: '4px 0' }}>
         {filteredGroups.map((group) => (
           <VariableGroupSection key={group.label} group={group} onSelect={onSelect} />
         ))}

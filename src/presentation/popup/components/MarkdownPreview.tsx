@@ -39,7 +39,7 @@ export function MarkdownPreview({ markdown, isPreviewing = false }: MarkdownPrev
   return (
     <pre
       data-testid="markdown-preview"
-      className="preview-scroll text-xs leading-[1.5] bg-muted p-2 rounded-sm max-h-32 overflow-auto whitespace-pre-wrap break-words"
+      className="wh-scroll text-xs leading-[1.5] bg-muted p-2 rounded-sm max-h-32 overflow-auto whitespace-pre-wrap break-words"
     >
       {markdown}
     </pre>

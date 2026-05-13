@@ -390,39 +390,22 @@
   to { transform: rotate(360deg); }
 }
 
-/* Thin, styled scrollbar for the markdown preview — consistent on Windows and macOS in Chromium */
-.preview-scroll::-webkit-scrollbar {
+/* Thin, styled scrollbar — consistent on Windows and macOS in Chromium */
+.wh-scroll::-webkit-scrollbar {
   width: 5px;
+  height: 5px;
 }
 
-.preview-scroll::-webkit-scrollbar-track {
+.wh-scroll::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.preview-scroll::-webkit-scrollbar-thumb {
+.wh-scroll::-webkit-scrollbar-thumb {
   background: oklch(0.556 0 0 / 40%);
   border-radius: 9999px;
 }
 
-.preview-scroll::-webkit-scrollbar-thumb:hover {
-  background: oklch(0.556 0 0 / 70%);
-}
-
-/* Thin, styled scrollbar for the variable picker popover */
-.vp-scroll::-webkit-scrollbar {
-  width: 5px;
-}
-
-.vp-scroll::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.vp-scroll::-webkit-scrollbar-thumb {
-  background: oklch(0.556 0 0 / 40%);
-  border-radius: 9999px;
-}
-
-.vp-scroll::-webkit-scrollbar-thumb:hover {
+.wh-scroll::-webkit-scrollbar-thumb:hover {
   background: oklch(0.556 0 0 / 70%);
 }
 

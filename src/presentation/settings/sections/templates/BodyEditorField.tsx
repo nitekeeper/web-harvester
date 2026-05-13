@@ -123,6 +123,13 @@ const whBaseTheme = EditorView.theme({
   '&.cm-focused .cm-selectionBackground': {
     background: 'rgba(121,192,255,0.2)',
   },
+  '.cm-scroller::-webkit-scrollbar': { width: '5px', height: '5px' },
+  '.cm-scroller::-webkit-scrollbar-track': { background: 'transparent' },
+  '.cm-scroller::-webkit-scrollbar-thumb': {
+    background: 'oklch(0.556 0 0 / 40%)',
+    borderRadius: '9999px',
+  },
+  '.cm-scroller::-webkit-scrollbar-thumb:hover': { background: 'oklch(0.556 0 0 / 70%)' },
 });
 
 /** Builds the CodeMirror extension array for the template body editor. */

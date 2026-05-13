@@ -167,7 +167,7 @@ function CssTextarea({
       value={value}
       onChange={onChange}
       spellCheck={false}
-      className="preview-scroll"
+      className="wh-scroll"
       style={{
         display: 'block',
         width: '100%',

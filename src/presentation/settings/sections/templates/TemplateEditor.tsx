@@ -120,6 +120,7 @@ function EditorScrollArea({
 }: EditorScrollAreaProps) {
   return (
     <div
+      className="wh-scroll"
       style={{
         flex: 1,
         overflowY: 'auto',
