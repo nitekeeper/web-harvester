@@ -1,0 +1,55 @@
+{
+  "manifest_version": 3,
+  "name": "Web Harvester",
+  "version": "1.0.0",
+  "description": "Clip web content to Markdown and save to your filesystem.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "web-harvester@nitekeeper.dev",
+      "strict_min_version": "128.0"
+    }
+  },
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting",
+    "contextMenus",
+    "clipboardWrite",
+    "notifications"
+  ],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "scripts": ["src/presentation/background/background.ts"],
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "src/presentation/popup/popup.html",
+    "default_icon": {
+      "48": "icons/icon-48.png"
+    }
+  },
+  "options_ui": {
+    "page": "src/presentation/settings/settings.html",
+    "open_in_tab": true
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["src/presentation/content/content.ts"],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Alt+Shift+D"
+      },
+      "description": "Open Web Harvester"
+    }
+  }
+}

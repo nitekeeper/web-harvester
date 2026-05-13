@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "VITE_BROWSER=chrome vite",
     "build:chrome": "vite build --mode production",
+    "build:firefox": "vite build --mode firefox",
     "lint": "eslint src tests scripts --no-error-on-unmatched-pattern --max-warnings 0",
     "lint:fix": "eslint src tests scripts --no-error-on-unmatched-pattern --fix",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.node.json",
@@ -28,7 +29,7 @@
     "audit:static": "eslint --format @microsoft/eslint-formatter-sarif src/ -o audits/reports/$(date +%Y-%m-%d)/eslint.sarif",
     "audit:coverage": "pnpm test:coverage -- --reporter=json --outputFile=audits/reports/$(date +%Y-%m-%d)/coverage.json",
     "audit:report": "mkdir -p audits/reports/$(date +%Y-%m-%d) && pnpm audit:deps && pnpm audit:static && pnpm audit:coverage && if [ -n \"$(ls -A audits/templates 2>/dev/null)\" ]; then cp -r audits/templates/* audits/reports/$(date +%Y-%m-%d)/; fi",
-    "lint:manifest": "web-ext lint --source-dir dist/",
+    "lint:manifest": "pnpm build:firefox && web-ext lint --source-dir dist-firefox/",
     "lint:dupes": "jscpd src/ scripts/",
     "analyze": "vite build --mode production && npx rollup-plugin-visualizer dist/stats.html",
     "prepare": "husky"
@@ -39,8 +40,10 @@
     "minTokens": 50,
     "ignore": [
       "dist/**",
+      "dist-firefox/**",
       "tests/**",
-      "docs/**"
+      "docs/**",
+      "src/manifest*.json"
     ]
   },
   "lint-staged": {

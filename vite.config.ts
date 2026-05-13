@@ -14,10 +14,11 @@ const buildStamp = resolveBuildStamp();
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
   const browser = env['VITE_BROWSER'] ?? 'chrome';
+  const outDir = browser === 'firefox' ? 'dist-firefox' : 'dist';
 
   return {
     build: {
-      outDir: 'dist',
+      outDir,
       emptyOutDir: true,
     },
     define: {
