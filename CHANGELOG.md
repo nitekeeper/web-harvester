@@ -4,6 +4,10 @@ All notable changes to Web Harvester are documented here.
 
 ## Unreleased
 
+---
+
+## [1.0.0] — 2026-05-13
+
 ### Fixed
 
 - Popup properties scroll container now uses the same thin styled scrollbar as the markdown preview field
