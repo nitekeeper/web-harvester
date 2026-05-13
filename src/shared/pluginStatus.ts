@@ -24,7 +24,7 @@ export interface PluginRow {
 }
 
 /** Shape written to `chrome.storage.local` by the background service worker. */
-export interface PluginStatusPayload {
+interface PluginStatusPayload {
   /** All registered plugins with their current state. */
   readonly plugins: readonly PluginRow[];
 }

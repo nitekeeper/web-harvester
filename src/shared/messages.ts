@@ -254,7 +254,7 @@ export function isExtractSelectorsMessage(msg: unknown): msg is ExtractSelectors
 export const MSG_START_CSS_PICKER = 'START_CSS_PICKER' as const;
 
 /** Message sent from the settings page to activate the CSS selector picker on the active tab. */
-export interface StartCssPickerMessage {
+interface StartCssPickerMessage {
   readonly type: typeof MSG_START_CSS_PICKER;
 }
 
@@ -271,7 +271,7 @@ export function isStartCssPickerMessage(msg: unknown): msg is StartCssPickerMess
 export const MSG_STOP_CSS_PICKER = 'STOP_CSS_PICKER' as const;
 
 /** Message sent from the settings page to deactivate the CSS selector picker. */
-export interface StopCssPickerMessage {
+interface StopCssPickerMessage {
   readonly type: typeof MSG_STOP_CSS_PICKER;
 }
 
