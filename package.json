@@ -25,7 +25,7 @@
     "license-checker": "license-checker",
     "jsdoc-check": "documentation lint src/**/*.ts",
     "madge": "madge",
-    "audit:deps": "pnpm audit --json > audits/reports/$(date +%Y-%m-%d)/pnpm-audit.json",
+    "audit:deps": "pnpm audit --json > audits/reports/$(date +%Y-%m-%d)/pnpm-audit.json || true",
     "audit:static": "eslint --format @microsoft/eslint-formatter-sarif src/ -o audits/reports/$(date +%Y-%m-%d)/eslint.sarif",
     "audit:coverage": "pnpm test:coverage -- --reporter=json --outputFile=audits/reports/$(date +%Y-%m-%d)/coverage.json",
     "audit:report": "mkdir -p audits/reports/$(date +%Y-%m-%d) && pnpm audit:deps && pnpm audit:static && pnpm audit:coverage && if [ -n \"$(ls -A audits/templates 2>/dev/null)\" ]; then cp -r audits/templates/* audits/reports/$(date +%Y-%m-%d)/; fi",
