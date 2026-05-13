@@ -1,7 +1,9 @@
 // src/presentation/settings/sections/DestinationsSection.tsx
 
 import { Folder, Plus, Star } from 'lucide-react';
+import type { CSSProperties } from 'react';
 
+import { EditableLabel } from '@presentation/components/EditableLabel';
 import { useFormatMessage } from '@presentation/hooks/useFormatMessage';
 import type { DestinationView } from '@presentation/stores/useSettingsStore';
 import { createLogger } from '@shared/logger';
@@ -18,15 +20,25 @@ export interface DestinationsSectionProps {
   readonly onRemove?: (id: string) => Promise<void>;
   /** Handler that sets the destination identified by `id` as primary. */
   readonly onSetPrimary?: (id: string) => Promise<void>;
+  /** Handler that renames the destination identified by `id` to `label`, refreshes the store. */
+  readonly onRename?: (id: string, label: string) => Promise<void>;
 }
 
 const logger = createLogger('destinations-section');
 const NOOP_ADD: () => Promise<void> = async () => undefined;
 const NOOP_REMOVE: (id: string) => Promise<void> = async () => undefined;
 const NOOP_SET_PRIMARY: (id: string) => Promise<void> = async () => undefined;
+const NOOP_RENAME: (id: string, label: string) => Promise<void> = async () => undefined;
 
 const COLOR_ACCENT = 'var(--wh-accent)';
 const COLOR_MUTED = 'var(--wh-muted)';
+
+const PANEL_STYLE: CSSProperties = {
+  background: 'var(--wh-panel)',
+  border: '1px solid var(--wh-border)',
+  borderRadius: 6,
+  overflow: 'hidden',
+};
 
 const MONTHS = [
   'Jan',
@@ -118,15 +130,19 @@ function IconTile({ isPrimary }: IconTileProps) {
 interface NameStackProps {
   readonly label: string;
   readonly isPrimary: boolean;
+  readonly onRename: (label: string) => void;
 }
 
-function NameStack({ label, isPrimary }: NameStackProps) {
+function NameStack({ label, isPrimary, onRename }: NameStackProps) {
   const fmt = useFormatMessage();
   return (
     <div className="flex min-w-0 flex-1 items-center" style={{ gap: 6 }}>
-      <span className="truncate" style={{ fontSize: 13, fontWeight: 600, color: 'var(--wh-text)' }}>
-        {label}
-      </span>
+      <EditableLabel
+        value={label}
+        onCommit={onRename}
+        className="truncate"
+        style={{ fontSize: 13, fontWeight: 600, color: 'var(--wh-text)' }}
+      />
       {isPrimary ? (
         <span
           style={{
@@ -229,6 +245,7 @@ interface DestinationRowProps {
   readonly isLast: boolean;
   readonly onRemove: (id: string) => void;
   readonly onSetPrimary: (id: string) => void;
+  readonly onRename: (id: string, label: string) => void;
 }
 
 function DestinationRow({
@@ -237,6 +254,7 @@ function DestinationRow({
   isLast,
   onRemove,
   onSetPrimary,
+  onRename,
 }: DestinationRowProps) {
   return (
     <li
@@ -248,7 +266,11 @@ function DestinationRow({
       }}
     >
       <IconTile isPrimary={isPrimary} />
-      <NameStack label={destination.label} isPrimary={isPrimary} />
+      <NameStack
+        label={destination.label}
+        isPrimary={isPrimary}
+        onRename={(label) => onRename(destination.id, label)}
+      />
       <Timestamp lastUsed={destination.lastUsed} />
       <StarButton
         destinationId={destination.id}
@@ -322,6 +344,7 @@ interface DestinationListProps {
   readonly primaryId: string | null;
   readonly onRemove: (id: string) => void;
   readonly onSetPrimary: (id: string) => void;
+  readonly onRename: (id: string, label: string) => void;
 }
 
 function DestinationList({
@@ -329,6 +352,7 @@ function DestinationList({
   primaryId,
   onRemove,
   onSetPrimary,
+  onRename,
 }: DestinationListProps) {
   if (destinations.length === 0) return <EmptyNotice />;
   return (
@@ -341,6 +365,7 @@ function DestinationList({
           isLast={index === destinations.length - 1}
           onRemove={onRemove}
           onSetPrimary={onSetPrimary}
+          onRename={onRename}
         />
       ))}
     </ul>
@@ -349,9 +374,10 @@ function DestinationList({
 
 /**
  * Settings page section that lists registered destination folders, allows
- * marking one as primary via the star button, removing entries, and adding
- * new ones via the FSA picker. All handlers are optional so the SPA shell
- * can render the section without wiring before the composition root lands.
+ * marking one as primary via the star button, removing entries, adding
+ * new ones via the FSA picker, and renaming existing ones inline. All
+ * handlers are optional so the SPA shell can render the section without
+ * wiring before the composition root lands.
  */
 export function DestinationsSection({
   destinations = [],
@@ -359,6 +385,7 @@ export function DestinationsSection({
   onAdd = NOOP_ADD,
   onRemove = NOOP_REMOVE,
   onSetPrimary = NOOP_SET_PRIMARY,
+  onRename = NOOP_RENAME,
 }: DestinationsSectionProps) {
   const handleAdd = (): void => {
     onAdd().catch((err: unknown) => logger.error('destination add failed', err));
@@ -369,23 +396,20 @@ export function DestinationsSection({
   const handleSetPrimary = (id: string): void => {
     onSetPrimary(id).catch((err: unknown) => logger.error('set-primary failed', err));
   };
+  const handleRename = (id: string, label: string): void => {
+    onRename(id, label).catch((err: unknown) => logger.error('destination rename failed', err));
+  };
 
   return (
     <div data-testid="destinations-section" style={{ padding: '22px 26px' }}>
       <SectionHeader handleAdd={handleAdd} />
-      <div
-        style={{
-          background: 'var(--wh-panel)',
-          border: '1px solid var(--wh-border)',
-          borderRadius: 6,
-          overflow: 'hidden',
-        }}
-      >
+      <div style={PANEL_STYLE}>
         <DestinationList
           destinations={destinations}
           primaryId={primaryId}
           onRemove={handleRemove}
           onSetPrimary={handleSetPrimary}
+          onRename={handleRename}
         />
       </div>
     </div>

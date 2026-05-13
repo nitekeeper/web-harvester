@@ -155,3 +155,23 @@ describe('DestinationsSection — interactions', () => {
     expect(onRemove).toHaveBeenCalledWith('d1');
   });
 });
+
+describe('DestinationsSection — rename', () => {
+  it('calls onRename with the destination id and new label when the label is edited', async () => {
+    const user = userEvent.setup();
+    const onRename = vi.fn().mockResolvedValue(undefined);
+    render(
+      <DestinationsSection
+        {...emptyProps}
+        destinations={[makeDestination({ id: 'd1', label: 'Research' })]}
+        onRename={onRename}
+      />,
+    );
+    await user.click(screen.getByText('Research'));
+    const input = screen.getByRole('textbox');
+    await user.clear(input);
+    await user.type(input, 'Science');
+    await user.keyboard('{Enter}');
+    expect(onRename).toHaveBeenCalledWith('d1', 'Science');
+  });
+});
