@@ -341,7 +341,7 @@ function resolveStateLabel(
   fmt: (msg: { id: string; defaultMessage: string }) => string,
 ): string {
   return fmt({
-    id: `settings.plugins.state.${state}`,
+    id: `settings.plugins.summary.${state}`,
     defaultMessage: state.charAt(0).toUpperCase() + state.slice(1),
   });
 }

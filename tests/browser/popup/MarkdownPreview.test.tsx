@@ -38,7 +38,7 @@ describe('MarkdownPreview', () => {
 
   it('applies preview-scroll class to the pre element for custom scrollbar styling', () => {
     render(<MarkdownPreview markdown="# Hello" />);
-    expect(screen.getByTestId(TESTID_PREVIEW).classList.contains('preview-scroll')).toBe(true);
+    expect(screen.getByTestId(TESTID_PREVIEW).classList.contains('wh-scroll')).toBe(true);
   });
 
   it('applies rounded-sm to the pre element for medium-container radius', () => {

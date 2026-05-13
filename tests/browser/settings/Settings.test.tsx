@@ -9,7 +9,7 @@ import { render, cleanup, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, afterEach } from 'vitest';
 
-import { Settings } from '@presentation/settings/Settings';
+import { Settings } from '@presentation/settings/Settings.tsx';
 import { useSettingsStore } from '@presentation/stores/useSettingsStore';
 
 const SIDEBAR_ID = 'settings-sidebar';

@@ -63,7 +63,7 @@ describe('PopupHeader — custom theme', () => {
   it('renders the theme toggle button with aria-label "custom" when theme is custom', () => {
     render(<PopupHeader theme="custom" onTheme={NOOP} onSettings={NOOP} />);
     const btn = screen.getByTestId(THEME_BTN_TESTID);
-    expect(btn.getAttribute('aria-label')).toBe('custom');
+    expect(btn.getAttribute('aria-label')).toBe('Custom');
   });
 
   it('shows Custom option in the theme dropdown', async () => {

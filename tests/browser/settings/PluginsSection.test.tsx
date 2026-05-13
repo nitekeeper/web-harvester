@@ -140,6 +140,14 @@ describe('PluginsSection — error block', () => {
   });
 });
 
+describe('PluginsSection — state pill label', () => {
+  it('renders translated label text in the state pill, not the raw i18n key', () => {
+    render(<PluginsSection plugins={[{ id: 'x', name: 'X', state: 'active' }]} />);
+    const pill = document.querySelector('[data-testid="state-pill"]');
+    expect(pill?.textContent).toBe('active');
+  });
+});
+
 describe('PluginsSection — missing version', () => {
   it('does not render v when version is absent', () => {
     render(<PluginsSection plugins={[{ id: 'x', name: 'NoVersion', state: 'active' }]} />);

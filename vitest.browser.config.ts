@@ -12,6 +12,7 @@ export default defineConfig({
   test: {
     passWithNoTests: true,
     include: ['tests/browser/**/*.test.ts', 'tests/browser/**/*.test.tsx'],
+    setupFiles: ['tests/browser/setup.ts'],
     globals: true,
     browser: {
       enabled: true,
