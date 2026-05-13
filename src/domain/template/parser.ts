@@ -10,6 +10,7 @@
 
 import { tokenize, type Token } from '@domain/template/tokenizer';
 
+import { parseExpression } from './parser-expressions';
 import type { ParserState } from './parser-state';
 import { parseTemplate } from './parser-statements';
 import type { ASTNode, ParserError, ParserResult } from './parser-types';
@@ -50,6 +51,7 @@ export function parse(input: string): ParserResult {
     tokens: tokenizerResult.tokens,
     pos: 0,
     errors,
+    parseExpr: parseExpression,
   };
 
   const ast = parseTemplate(state);
@@ -66,6 +68,7 @@ export function parseTokens(tokens: Token[]): ParserResult {
     tokens,
     pos: 0,
     errors: [],
+    parseExpr: parseExpression,
   };
 
   const ast: ASTNode[] = parseTemplate(state);

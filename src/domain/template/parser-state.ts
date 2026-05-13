@@ -4,16 +4,22 @@
 
 import type { Token, TokenType } from '@domain/template/tokenizer';
 
-import type { ParserError } from './parser-types';
+import type { Expression, ParserError } from './parser-types';
 
 /**
  * Mutable bookkeeping carried through the recursive-descent parser. Internal
  * — not exposed to consumers of the public API.
+ *
+ * `parseExpr` is injected by `parser.ts` at setup time so that
+ * `parsePrimaryExpression` can handle grouped `(expr)` nodes without
+ * importing directly from `parser-expressions.ts` (which would create a
+ * circular dependency via `parser-filter-args.ts`).
  */
 export interface ParserState {
   tokens: Token[];
   pos: number;
   errors: ParserError[];
+  parseExpr?: (state: ParserState) => Expression | null;
 }
 
 const EOF_TOKEN: Token = Object.freeze({ type: 'eof', value: '', line: 0, column: 0 });

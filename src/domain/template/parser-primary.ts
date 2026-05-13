@@ -1,10 +1,10 @@
-// Template parser — primary expression and postfix bracket-access parsing.
+// Template parser — atomic primary expression parsing.
 // Handles literals, identifiers (including special prefixes like `schema:` and
-// `selector:`), grouped expressions, and `expr[index]` member access.
+// `selector:`). Grouped `(expr)` and postfix `[index]` live in
+// `parser-expressions.ts` to avoid a circular import.
 
 import type { Token } from '@domain/template/tokenizer';
 
-import { parseOrExpression } from './parser-expressions';
 import { advance, check, peek, type ParserState } from './parser-state';
 import type { Expression } from './parser-types';
 
@@ -84,9 +84,16 @@ function parseIdentifier(state: ParserState): Expression {
   };
 }
 
+/**
+ * `(expr)` groups: delegates to `state.parseExpr` (injected by `parser.ts`)
+ * so this file has no direct import from `parser-expressions.ts`, avoiding
+ * the circular dependency via `parser-filter-args.ts`.
+ */
 function parseGroupedExpression(state: ParserState): Expression | null {
+  const parseExpr = state.parseExpr;
+  if (!parseExpr) return null;
   const token = advance(state); // consume '('
-  const expr = parseOrExpression(state);
+  const expr = parseExpr(state);
   if (!expr) {
     state.errors.push({
       message: 'Empty parentheses () - add an expression',
@@ -115,6 +122,8 @@ function parseGroupedExpression(state: ParserState): Expression | null {
 /**
  * Parse a primary expression — the lowest-precedence atom: literal,
  * identifier (with optional special prefix), or `(expr)` group.
+ * Postfix `[index]` access is handled by `parsePostfixExpression` in
+ * `parser-expressions.ts`.
  */
 export function parsePrimaryExpression(state: ParserState): Expression | null {
   if (check(state, 'lparen')) return parseGroupedExpression(state);
@@ -124,46 +133,4 @@ export function parsePrimaryExpression(state: ParserState): Expression | null {
   if (check(state, 'null')) return makeNullLiteral(advance(state));
   if (check(state, 'identifier')) return parseIdentifier(state);
   return null;
-}
-
-/**
- * Parse a primary expression followed by zero or more `[index]` member
- * accesses. Empty brackets and missing closes are reported as errors but
- * recovery continues so the parser can proceed.
- */
-export function parsePostfixExpression(state: ParserState): Expression | null {
-  let left = parsePrimaryExpression(state);
-  if (!left) return null;
-
-  while (check(state, 'lbracket')) {
-    const bracketToken = advance(state);
-    const property = parseOrExpression(state);
-    if (!property) {
-      state.errors.push({
-        message: 'Empty brackets [] - add an index or key',
-        line: bracketToken.line,
-        column: bracketToken.column,
-      });
-      break;
-    }
-    if (check(state, 'rbracket')) {
-      advance(state);
-    } else {
-      state.errors.push({
-        message: 'Missing closing ]',
-        line: peek(state).line,
-        column: peek(state).column,
-      });
-    }
-    left = {
-      type: 'member',
-      object: left,
-      property,
-      computed: true,
-      line: bracketToken.line,
-      column: bracketToken.column,
-    };
-  }
-
-  return left;
 }

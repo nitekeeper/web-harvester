@@ -1,12 +1,14 @@
 // Template parser — operator-precedence chain for expressions.
 // Implements the recursive descent from `parseExpression` (entry) down to
-// `parsePostfixExpression`. Filter, nullish, or, and, not, comparison —
-// each layer pulls the next-tighter parser in the chain.
+// `parsePrimaryExpression`. Filter, nullish, or, and, not, comparison,
+// postfix member access, and grouped expressions all live here.
+// `parsePrimaryExpression` (atoms only) is kept in `parser-primary.ts` so
+// that `parser-filter-args.ts` can import it without creating a cycle.
 
 import type { Token, TokenType } from '@domain/template/tokenizer';
 
 import { parseFilterArgument } from './parser-filter-args';
-import { parsePostfixExpression } from './parser-primary';
+import { parsePrimaryExpression } from './parser-primary';
 import { advance, check, isAtEnd, peek, type ParserState } from './parser-state';
 import type { Expression, FilterExpression, LiteralExpression } from './parser-types';
 
@@ -237,6 +239,48 @@ function parseNotExpression(state: ParserState): Expression | null {
     line: opToken.line,
     column: opToken.column,
   };
+}
+
+/**
+ * Primary expression with optional `[index]` postfix member accesses.
+ * Grouped `(expr)` is handled inside `parsePrimaryExpression` via the
+ * `state.parseExpr` callback injected by `parser.ts`.
+ */
+function parsePostfixExpression(state: ParserState): Expression | null {
+  let left = parsePrimaryExpression(state);
+  if (!left) return null;
+
+  while (check(state, 'lbracket')) {
+    const bracketToken = advance(state);
+    const property = parseOrExpression(state);
+    if (!property) {
+      state.errors.push({
+        message: 'Empty brackets [] - add an index or key',
+        line: bracketToken.line,
+        column: bracketToken.column,
+      });
+      break;
+    }
+    if (check(state, 'rbracket')) {
+      advance(state);
+    } else {
+      state.errors.push({
+        message: 'Missing closing ]',
+        line: peek(state).line,
+        column: peek(state).column,
+      });
+    }
+    left = {
+      type: 'member',
+      object: left,
+      property,
+      computed: true,
+      line: bracketToken.line,
+      column: bracketToken.column,
+    };
+  }
+
+  return left;
 }
 
 /**
