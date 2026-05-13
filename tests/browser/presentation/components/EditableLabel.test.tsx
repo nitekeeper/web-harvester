@@ -16,6 +16,11 @@ describe('EditableLabel — static state', () => {
     expect(screen.getByText('My Folder')).not.toBeNull();
     expect(screen.queryByRole('textbox')).toBeNull();
   });
+
+  it('applies a custom ariaLabel to the span', () => {
+    render(<EditableLabel value="My Folder" onCommit={vi.fn()} ariaLabel="Rename destination" />);
+    expect(screen.getByRole('button', { name: 'Rename destination' })).not.toBeNull();
+  });
 });
 
 describe('EditableLabel — edit mode', () => {
@@ -39,6 +44,15 @@ describe('EditableLabel — edit mode', () => {
     const span = screen.getByText('My Folder');
     span.focus();
     await user.keyboard('{Enter}');
+    expect(screen.getByRole('textbox')).not.toBeNull();
+  });
+
+  it('switches to an input when Space is pressed on the span', async () => {
+    const user = userEvent.setup();
+    render(<EditableLabel value="My Folder" onCommit={vi.fn()} />);
+    const span = screen.getByText('My Folder');
+    span.focus();
+    await user.keyboard(' ');
     expect(screen.getByRole('textbox')).not.toBeNull();
   });
 });
