@@ -12,6 +12,8 @@ import {
   type LiteralExpression,
   type VariableNode,
 } from '@domain/template/parser';
+import { parsePrimaryExpression } from '@domain/template/parser-primary';
+import type { ParserState } from '@domain/template/parser-state';
 
 const MISSING_VALUE = 'Missing value';
 
@@ -135,5 +137,21 @@ describe('parse — primary groups, brackets, prefixes', () => {
     const node = result.ast[0] as VariableNode;
     const idExpr = node.expression as IdentifierExpression;
     expect(idExpr.name.startsWith('schema:')).toBe(true);
+  });
+});
+
+describe('parsePrimaryExpression — internal null guard', () => {
+  test('returns null for lparen when state has no parseExpr', () => {
+    const state: ParserState = {
+      tokens: [
+        { type: 'lparen', value: '(', line: 1, column: 1 },
+        { type: 'eof', value: '', line: 1, column: 2 },
+      ],
+      pos: 0,
+      errors: [],
+    };
+    const result = parsePrimaryExpression(state);
+    expect(result).toBeNull();
+    expect(state.pos).toBe(0);
   });
 });
