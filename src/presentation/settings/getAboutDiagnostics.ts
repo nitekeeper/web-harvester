@@ -39,7 +39,7 @@ interface UserAgentData {
  * with a graceful fallback for non-Chromium environments.
  */
 export function getAboutDiagnostics(): AboutDiagnostics {
-  const build = import.meta.env.VITE_BUILD ?? '';
+  const build = import.meta.env.VITE_BUILD;
   const channel = import.meta.env.VITE_CHANNEL || 'stable';
 
   const uad = (navigator as Navigator & { userAgentData?: UserAgentData }).userAgentData;

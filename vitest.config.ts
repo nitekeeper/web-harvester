@@ -1,3 +1,4 @@
+import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -5,7 +6,22 @@ import { defineConfig } from 'vitest/config';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
+const buildStamp = (() => {
+  if (process.env.VITE_BUILD) return process.env.VITE_BUILD;
+  try {
+    // eslint-disable-next-line sonarjs/no-os-command-from-path
+    const hash = execSync('git rev-parse --short HEAD').toString().trim();
+    const date = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
+    return `${date}-${hash}`;
+  } catch {
+    return 'dev';
+  }
+})();
+
 export default defineConfig({
+  define: {
+    'import.meta.env.VITE_BUILD': JSON.stringify(buildStamp),
+  },
   test: {
     environment: 'jsdom',
     passWithNoTests: true,

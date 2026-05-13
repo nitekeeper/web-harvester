@@ -26,13 +26,19 @@ describe('getAboutDiagnostics — version', () => {
 });
 
 describe('getAboutDiagnostics — build', () => {
-  it('returns build from VITE_BUILD env var', () => {
+  it('returns a non-empty build stamp by default', () => {
+    // VITE_BUILD is injected by vite.config.ts define — always present
+    const result = getAboutDiagnostics();
+    expect(result.build).toMatch(/^\d{4}\.\d{2}\.\d{2}-[0-9a-f]+$|^dev$/);
+  });
+
+  it('returns build from VITE_BUILD env var when stubbed', () => {
     vi.stubEnv('VITE_BUILD', '2026.05.10-abc1234');
     const result = getAboutDiagnostics();
     expect(result.build).toBe('2026.05.10-abc1234');
   });
 
-  it('falls back to empty string when VITE_BUILD is not set', () => {
+  it('returns empty string when VITE_BUILD is stubbed to empty', () => {
     vi.stubEnv('VITE_BUILD', '');
     const result = getAboutDiagnostics();
     expect(result.build).toBe('');
