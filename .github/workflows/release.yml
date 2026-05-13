@@ -34,14 +34,12 @@ jobs:
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
       - run: curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.18.3/gitleaks_8.18.3_linux_x64.tar.gz | tar -xz -C /usr/local/bin gitleaks
-      - run: npm install -g web-ext@8
       - run: pnpm typecheck
       - run: pnpm format:check
       - run: pnpm lint
       - run: pnpm knip
       - run: pnpm jscpd src/ --threshold 0
       - run: gitleaks detect --source . --redact
-      - run: web-ext lint --source-dir src/
       - run: pnpm madge --circular --extensions ts src/
 
   medium:
@@ -60,6 +58,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm test:coverage
       - run: pnpm build:chrome
+      - run: pnpm lint:manifest
       - run: pnpm size-limit
       - run: npm audit --audit-level=high
       - run: pnpm license-checker --onlyAllow "MIT;ISC;Apache-2.0;BSD-2-Clause;BSD-3-Clause;0BSD;CC0-1.0;CC-BY-3.0;CC-BY-4.0;Unlicense;BlueOak-1.0.0"
