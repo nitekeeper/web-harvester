@@ -83,7 +83,7 @@ describe('getAboutDiagnostics — browser and platform', () => {
 });
 
 describe('getAboutDiagnostics — pickBrand fallback', () => {
-  it('falls back to first brand when all entries match skip list', () => {
+  it('falls back to chromium when no named product brand is present', () => {
     Object.defineProperty(navigator, 'userAgentData', {
       value: {
         brands: [
@@ -95,8 +95,25 @@ describe('getAboutDiagnostics — pickBrand fallback', () => {
       configurable: true,
     });
     const result = getAboutDiagnostics();
-    // Falls back to first entry when no product brand is available
-    expect(result.browser).toBe('Not A Brand 99');
+    expect(result.browser).toBe('Chromium 134');
     expect(result.platform).toBe('Linux');
+  });
+
+  it('filters out randomised not-brand entries like "Not/A)Brand" regardless of position', () => {
+    // Chrome places Not/A)Brand last in the list; without regex filtering it was picked as the "last" entry
+    Object.defineProperty(navigator, 'userAgentData', {
+      value: {
+        brands: [
+          { brand: 'Chromium', version: '134' },
+          { brand: 'Google Chrome', version: '134' },
+          { brand: 'Not/A)Brand', version: '99' },
+        ],
+        platform: 'Windows',
+      },
+      configurable: true,
+    });
+    const result = getAboutDiagnostics();
+    expect(result.browser).toContain('Chrome');
+    expect(result.browser).not.toContain('Not');
   });
 });

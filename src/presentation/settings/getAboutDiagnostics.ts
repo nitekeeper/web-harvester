@@ -11,17 +11,17 @@ export interface AboutDiagnostics {
   readonly platform: string;
 }
 
-/** Brand name substrings to skip when picking the display brand. */
-const SKIP_BRANDS = ['not a brand', 'chromium'];
+/** Matches all "Not A Brand" variants Chrome uses to prevent UA sniffing (e.g. "Not/A)Brand", "Not=A?Brand"). */
+const NOT_BRAND_RE = /not.+brand/i;
 
-/** Picks the most human-readable browser brand from the brands list, skipping
- *  generic entries like "Not A Brand" and "Chromium". Returns empty string for
- *  an empty list. */
+/** Picks the most human-readable browser brand from the brands list.
+ *  Strips all "Not A Brand" variants, then prefers non-Chromium entries.
+ *  Falls back to Chromium if that is the only real brand present.
+ *  Returns empty string for an empty list. */
 function pickBrand(brands: readonly { brand: string; version: string }[]): string {
-  const filtered = brands.filter(
-    (b) => !SKIP_BRANDS.some((skip) => b.brand.toLowerCase().includes(skip)),
-  );
-  const chosen = filtered.length > 0 ? filtered[filtered.length - 1] : brands[0];
+  const real = brands.filter((b) => !NOT_BRAND_RE.test(b.brand));
+  const preferred = real.filter((b) => b.brand.toLowerCase() !== 'chromium');
+  const chosen = preferred.at(-1) ?? real.at(-1);
   if (!chosen) return '';
   return `${chosen.brand} ${chosen.version}`;
 }
