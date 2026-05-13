@@ -81,7 +81,6 @@ export interface ITemplateStoragePort {
  */
 export interface ITemplateHooksPort {
   readonly onTemplateRender: {
-    /** Run all registered taps in priority order, returning the final string. */
     call(value: string): Promise<string>;
   };
 }
@@ -157,12 +156,6 @@ function combineTemplateSource(template: TemplateConfig): string {
  * `onTemplateRender` waterfall hook so plugins can transform the output.
  */
 export class TemplateService implements ITemplateService {
-  /**
-   * @param storage - Template storage port for persistence.
-   * @param hooks - Hook port exposing `onTemplateRender` for plugin notifications.
-   * @param compileTemplate - Compiler function injected to keep this service inside the application layer.
-   * @param logger - Scoped logger; defaults to a `TemplateService`-scoped logger.
-   */
   constructor(
     private readonly storage: ITemplateStoragePort,
     private readonly hooks: ITemplateHooksPort,

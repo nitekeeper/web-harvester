@@ -43,7 +43,7 @@
       "dist-firefox/**",
       "tests/**",
       "docs/**",
-      "src/manifest*.json"
+      "**/manifest*.json"
     ]
   },
   "lint-staged": {

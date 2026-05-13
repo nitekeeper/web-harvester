@@ -91,11 +91,6 @@ const STORAGE_KEY = 'app_settings';
 export class SettingsService implements ISettingsService {
   private readonly changeHandlers: Array<(s: AppSettings) => void> = [];
 
-  /**
-   * @param storage - Settings storage port for persistence.
-   * @param hooks - Hook port exposing `onSettingsChanged` for plugin notifications.
-   * @param logger - Scoped logger; defaults to a `SettingsService`-scoped logger.
-   */
   constructor(
     private readonly storage: ISettingsStoragePort,
     private readonly hooks: ISettingsHooksPort,

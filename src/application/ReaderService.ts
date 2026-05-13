@@ -47,10 +47,6 @@ export class ReaderService implements IReaderService {
   private readonly activeTabIds = new Set<number>();
   private lastTabId: number | undefined;
 
-  /**
-   * @param tabAdapter - Tab port providing `sendMessageToTab`.
-   * @param logger - Scoped logger; defaults to a `ReaderService`-scoped logger.
-   */
   constructor(
     private readonly tabAdapter: IReaderTabAdapterPort,
     private readonly logger: ILogger = createLogger('ReaderService'),

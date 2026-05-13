@@ -111,11 +111,6 @@ function generateId(): string {
  * `removeHighlight()` can locate an id without scanning all storage keys.
  */
 export class HighlightService implements IHighlightService {
-  /**
-   * @param storage - Storage port used to persist per-URL highlight buckets.
-   * @param hooks - Hook port exposing `onHighlight` for plugin notifications.
-   * @param logger - Scoped logger; defaults to a `HighlightService`-scoped logger.
-   */
   constructor(
     private readonly storage: IStorageAdapterPort,
     private readonly hooks: Pick<IHighlightHooksPort, 'onHighlight'>,

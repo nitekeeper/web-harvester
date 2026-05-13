@@ -289,14 +289,6 @@ function resolveFileName(pattern: string, content: ClipContent): string {
  * locally-defined port interfaces.
  */
 export class ClipService implements IClipService {
-  /**
-   * @param tabAdapter - Tab port used to read the active tab and request HTML from the content script.
-   * @param destinationStorage - Destination port used to resolve the target directory by id.
-   * @param hooks - Hook port exposing the four clip-flow hooks.
-   * @param notifications - Notification port used to surface success outcomes.
-   * @param saveTo - Persistence function (matches `@infrastructure/fsa.saveTo`).
-   * @param logger - Scoped logger; defaults to a `ClipService`-scoped logger.
-   */
   constructor(
     private readonly tabAdapter: ITabAdapterPort,
     private readonly destinationStorage: IDestinationStoragePort,
