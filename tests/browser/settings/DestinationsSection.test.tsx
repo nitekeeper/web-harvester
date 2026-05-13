@@ -12,6 +12,7 @@ import type { DestinationView } from '@presentation/stores/useSettingsStore';
 const NOOP_ADD: () => Promise<void> = async () => undefined;
 const NOOP_REMOVE: (id: string) => Promise<void> = async () => undefined;
 const NOOP_SET_PRIMARY: (id: string) => Promise<void> = async () => undefined;
+const NOOP_RENAME: (id: string, label: string) => Promise<void> = async () => undefined;
 
 function makeDestination(overrides: Partial<DestinationView> = {}): DestinationView {
   return {
@@ -30,6 +31,7 @@ const emptyProps = {
   onAdd: NOOP_ADD,
   onRemove: NOOP_REMOVE,
   onSetPrimary: NOOP_SET_PRIMARY,
+  onRename: NOOP_RENAME,
 };
 
 afterEach(() => {
@@ -173,5 +175,23 @@ describe('DestinationsSection — rename', () => {
     await user.type(input, 'Science');
     await user.keyboard('{Enter}');
     expect(onRename).toHaveBeenCalledWith('d1', 'Science');
+  });
+
+  it('does not throw when onRename rejects', async () => {
+    const user = userEvent.setup();
+    const onRename = vi.fn().mockRejectedValue(new Error('storage failure'));
+    render(
+      <DestinationsSection
+        {...emptyProps}
+        destinations={[makeDestination({ id: 'd1', label: 'Research' })]}
+        onRename={onRename}
+      />,
+    );
+    await user.click(screen.getByText('Research'));
+    const input = screen.getByRole('textbox');
+    await user.clear(input);
+    await user.type(input, 'Science');
+    // Should not throw — error is caught by handleRename's .catch
+    await expect(user.keyboard('{Enter}')).resolves.toBeUndefined();
   });
 });
