@@ -69,7 +69,7 @@
     "clsx": "^2.1.1",
     "dayjs": "^1.11.20",
     "defuddle": "^0.18.1",
-    "dompurify": "^3.4.2",
+    "dompurify": "^3.4.11",
     "intl-messageformat": "^10.7.18",
     "inversify": "^6.2.2",
     "lucide-react": "^1.14.0",
