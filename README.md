@@ -1,6 +1,6 @@
 # Web Harvester
 
-Web Harvester is a Chrome extension that lets you select any part of a web page, convert it to clean Markdown, and save it directly to a folder on your local filesystem — no account, no cloud, no intermediary app required.
+Web Harvester is a browser extension for Chrome and Firefox that lets you select any part of a web page, convert it to clean Markdown, and save it directly to a folder on your local filesystem — no account, no cloud, no intermediary app required.
 
 ## Features
 
@@ -10,7 +10,10 @@ Web Harvester is a Chrome extension that lets you select any part of a web page,
 - Template engine with `{{variable|filter}}` syntax for custom file naming and formatting
 - Highlight and annotate text on the page
 - Reader mode for distraction-free reading
-- Multi-destination support — save to different folders per clip
+- Side panel UI with **Highlights** and **Reader** tabs for managing saved highlights and reader-mode settings
+- Multi-destination support — save to different folders per clip, with editable/renamable destination labels
+- Internationalization — localized UI in English, Korean, German, and Arabic (with right-to-left layout support)
+- Customizable appearance — Light, Dark, System, and a Custom theme driven by your own CSS
 
 ## Prerequisites
 
@@ -42,7 +45,14 @@ winget install pnpm.pnpm
 
 ## Building
 
-### macOS
+Web Harvester ships builds for two browsers. Pick the script for your target:
+
+| Browser | Build command        | Output folder   |
+| ------- | -------------------- | --------------- |
+| Chrome  | `pnpm build:chrome`  | `dist/`         |
+| Firefox | `pnpm build:firefox` | `dist-firefox/` |
+
+### macOS / Linux
 
 ```bash
 # Install dependencies
@@ -50,9 +60,12 @@ pnpm install
 
 # Build the Chrome extension
 pnpm build:chrome
+
+# Build the Firefox extension
+pnpm build:firefox
 ```
 
-The built extension will be in the `dist/` folder.
+The Chrome build lands in `dist/` and the Firefox build in `dist-firefox/`.
 
 ### Windows
 
@@ -64,9 +77,12 @@ pnpm install
 
 # Build the Chrome extension
 pnpm build:chrome
+
+# Build the Firefox extension
+pnpm build:firefox
 ```
 
-The built extension will be in the `dist\` folder.
+The Chrome build lands in `dist\` and the Firefox build in `dist-firefox\`.
 
 > **Note for Windows users:** If you see a script execution policy error in PowerShell, run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once, then retry.
 
@@ -104,15 +120,27 @@ To update after rebuilding from source, click the refresh icon on the Web Harves
 
 ---
 
-## Future Browser Support
+## Installing into Firefox
 
-Web Harvester is currently available for Chrome. Support for additional browsers is planned, including:
+Build the Firefox extension into `dist-firefox/` (see [Building](#building)), then load it as a temporary add-on:
 
-- **Firefox** — via the WebExtensions API
-- **Edge** — Chromium-based, minimal changes required
+1. Open Firefox and navigate to `about:debugging#/runtime/this-firefox`
+2. Click **Load Temporary Add-on…**
+3. Select the `manifest.json` file inside the `dist-firefox/` folder
+4. The Web Harvester icon will appear in your Firefox toolbar
+
+> Temporary add-ons are removed when Firefox restarts; reload them the same way after a restart or rebuild. You can lint the Firefox build with `pnpm lint:manifest` (runs `web-ext lint` against `dist-firefox/`).
+
+---
+
+## Supported and Planned Browsers
+
+Web Harvester is available today for **Chrome** and **Firefox**. Support for additional browsers is planned:
+
+- **Edge** — Chromium-based, minimal changes expected
 - **Safari** — via the Safari Web Extension format
 
-The codebase is built on a browser adapter layer that abstracts all browser-specific APIs, making it straightforward to add new targets without touching core logic.
+Browser-specific APIs sit behind a set of adapter interfaces (storage, tabs, runtime, notifications, context menus, side panel, and more) under `src/infrastructure/adapters/interfaces/`. A Chrome implementation of those interfaces lives in `src/infrastructure/adapters/chrome/`; adding a new target means providing an implementation against the same interfaces rather than touching core logic.
 
 ---
 
