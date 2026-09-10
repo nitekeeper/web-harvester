@@ -130,7 +130,7 @@
     "typescript-eslint": "^8.59.1",
     "vite": "^6.4.2",
     "vite-plugin-web-extension": "^4.5.1",
-    "vitest": "^3.2.6",
+    "vitest": "^4.1.11",
     "web-ext": "^8.10.0"
   },
   "pnpm": {
